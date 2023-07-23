@@ -20,3 +20,5 @@ bin/
 # Ignore some of the unfinished 3rdparty libs for now
 thirdparty/microui
 thirdparty/vpxtone
+
+examples_cute*

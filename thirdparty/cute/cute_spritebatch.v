@@ -1,7 +1,7 @@
 [translated]
 module cute
 
-#include "@VMODROOT/c/cute_spritebatch.h"
+#include "@VMODROOT/cute/cute_spritebatch.h"
 #flag '-DSPRITEBATCH_IMPLEMENTATION'
 
 pub struct C.spritebatch_sprite_t {
