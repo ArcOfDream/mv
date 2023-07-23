@@ -21,6 +21,9 @@ Currently this library is a work in progress, and has quite a few unfinished fea
   - [ ] BMFont support
   - [ ] On-demand texture batching (via cute_spritebatch)
   - [ ] NodeTree based Scene tree
+- [ ] Resources
+  - [x] Basic loading of images and textures.
+  - [ ] RRES support
 - [ ] Collisions
   - [ ] Port [via](https://github.com/prime31/via) collisions
 - [ ] Audio
