@@ -24,10 +24,10 @@ pub fn load_shader(src string, shader_type gl.Flag) gl.GLuint {
 		print('shader compilation error \n')
 
 		if info_len > 1 {
-			mut info_log := []&char{}
+			mut info_log := []&u8{cap:500}
 
-			gl.get_shader_info_log(shader, 500, &info_len, info_log.data)
-			// println(info_log.str())
+			gl.get_shader_info_log(shader, -1, &info_len, info_log.data)
+			println('log: ${info_log}')
 		}
 		gl.delete_shader(shader)
 		return u32(0)
@@ -48,14 +48,14 @@ pub fn link_shader_program(vertex gl.GLuint, fragment gl.GLuint) gl.GLuint {
 
 	gl.get_programiv(program, .link_status, &success)
 	if success != 1 {
-		mut info_log := ''.str
+		mut info_log := []&u8{cap:32}
 		mut log_len := 0
 
 		gl.get_programiv(program, .info_log_length, &log_len)
 		if log_len >= 1 {
-			gl.get_program_info_log(program, log_len, &log_len, info_log)
+			gl.get_program_info_log(program, log_len, &log_len, info_log.data)
 		}
-		println("couldn't link program! " + info_log.str())
+		println('couldn\'t link program! \n ${info_log.str()}')
 
 		gl.detach_shader(program, vertex)
 		gl.detach_shader(program, fragment)

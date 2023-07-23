@@ -8,7 +8,6 @@ import mv.math
 
 const (
 	max_triangles = 2048
-		// max_vertices  = 12288 // i guess just multiply the max triangles by 3 yourself
 )
 
 [heap]
@@ -25,7 +24,6 @@ pub mut:
 	width       int
 	height      int
 	clear_color math.Vec4 = math.Vec4{0.1, 0.2, 0.5, 1.0}
-	// owner      ?&core.App // any instance of the renderer should probably be connected to the app struct
 	gl_context     sdl.GLContext
 	default_shader resource.Shader
 }
@@ -70,7 +68,7 @@ pub fn (mut ren Renderer) create_sdl_window(width int, height int) !&sdl.Window 
 
 pub fn (mut ren Renderer) init() {
 	ren.default_shader = util.load_default_shader()
-	// ren.vbo = VertexBuffer.new(sdl.null, mv.max_vertices * sizeof(RenderVertex))
+
 	ren.batches = []Batch{len: 8, cap: 8, init: Batch{
 		vbo: VertexBuffer.new(sdl.null, graphics.max_triangles * 3 * sizeof(RenderVertex))
 		shader_id: ren.default_shader.id
@@ -80,20 +78,14 @@ pub fn (mut ren Renderer) init() {
 	}}
 	ren.batch_amt = 8
 
-	// vfmt off
-	// ren.projection = math.Mat32.ortho(-ren.width, ren.width, ren.height, -ren.height, -0.01, 1)
 	ren.projection = math.Mat32.ortho(ren.width, ren.height)
-
 	ren.set_shader(ren.default_shader)
 	
-
 	gl.enable(.blend)
 	gl.blend_func(.src_alpha, .one_minus_src_alpha)
 }
 
 pub fn (mut ren Renderer) free() {
-	// gl.delete_buffers(1, ren.vbo.id)
-	// gl.delete_program(ren.shader)
 	for batch in ren.batches {
 		gl.delete_buffers(1, batch.vbo.id)
 		gl.delete_program(batch.shader_id)
@@ -107,9 +99,6 @@ pub fn (mut ren Renderer) clear_frame() {
 }
 
 pub fn (mut ren Renderer) begin_frame() {
-	// ren.triangle_count = 0
-	// ren.texture_count = 0
-	// ren.active_camera.view()
 	ren.projection = math.Mat32.ortho(ren.width, ren.height)
 	if mut cam := ren.active_camera {
 		cam.update()
@@ -147,8 +136,6 @@ pub fn (mut ren Renderer) flush_batch() {
 		gl.enable_vertex_attrib_array(1)
 		gl.vertex_attrib_pointer(2, 2, .gl_float, 0, sizeof(RenderVertex), voidptr(__offsetof(RenderVertex, uv)))
 		gl.enable_vertex_attrib_array(2)
-		// gl.vertex_attrib_pointer(3, 16, .gl_float, 0, sizeof(RenderVertex), voidptr(__offsetof(RenderVertex, model)))
-		// gl.enable_vertex_attrib_array(2)
 		
 		gl.buffer_subdata(.array_buffer, 0, batch.vertex_count * sizeof(RenderVertex), &batch.vertices[0])
 		
@@ -158,7 +145,7 @@ pub fn (mut ren Renderer) flush_batch() {
 		
 		}
 		ren.total_verts += batch.vertex_count
-		// batch.vbo.unbind()
+
 		gl.draw_arrays(.triangles, 0, batch.vertex_count)
 
 		batch.vertex_count = 0
