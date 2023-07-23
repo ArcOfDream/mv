@@ -19,6 +19,7 @@ Currently this library is a work in progress, and has quite a few unfinished fea
   - [x] Transforms
   - [ ] Text rendering (via fontstash)
   - [ ] BMFont support
+  - [ ] On-demand texture batching (via cute_spritebatch)
   - [ ] NodeTree based Scene tree
 - [ ] Collisions
   - [ ] Port [via](https://github.com/prime31/via) collisions
@@ -31,8 +32,6 @@ Currently this library is a work in progress, and has quite a few unfinished fea
 - [ ] Scripting (via Wren)
   - [ ] Export library functions to be accessible through Wren
   - [ ] Potentially automate generating foreign interfaces at compile time?
-
-*This list will be subject to active change*
 ___
 ## License
 Unless otherwise stated, this code is licensed under the MIT license.
