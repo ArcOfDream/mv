@@ -22,7 +22,7 @@ Currently this library is a work in progress, and has quite a few unfinished fea
   - [ ] On-demand texture batching (via cute_spritebatch)
   - [ ] NodeTree based Scene tree
 - [ ] Resources
-  - [x] Basic loading of images and textures.
+  - [x] Basic loading of images and shaders.
   - [ ] RRES support
 - [ ] Collisions
   - [ ] Port [via](https://github.com/prime31/via) collisions
