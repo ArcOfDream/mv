@@ -108,6 +108,7 @@ pub fn (mut ren Renderer) begin_frame() {
 
 pub fn (mut ren Renderer) end_frame() {
 	ren.flush_batch()
+	ren.reset_shader()
 	gl.bind_texture(.texture_2d, 0)
 }
 
@@ -150,6 +151,8 @@ pub fn (mut ren Renderer) flush_batch() {
 
 		batch.vertex_count = 0
 		batch.active_texture = 0
+		batch.shader_id = ren.default_shader.id
+		batch.shader_ref = &ren.default_shader
 	}
 		ren.total_verts = 0
 		
@@ -246,6 +249,21 @@ pub fn (mut ren Renderer) set_shader(shd &resource.Shader) {
 	}
 
 	shd.use()
+}
+
+pub fn (mut ren Renderer) reset_shader() {
+	if ren.default_shader.id != ren.batches[ren.active_batch].shader_id {
+		ren.next_batch()
+		ren.batches[ren.active_batch].shader_id = ren.default_shader.id
+		unsafe {
+			ren.batches[ren.active_batch].shader_ref = &ren.default_shader
+		}
+		if mut s := ren.batches[ren.active_batch].shader_ref {
+			s.use()
+			s.update_uniforms()
+			return
+		}
+	}
 }
 
 [direct_array_access; inline]

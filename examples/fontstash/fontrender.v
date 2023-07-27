@@ -8,7 +8,9 @@ import arrays
 
 // #flag -lfreetype
 
-// FontRender
+// TTF text renderer based on Fontstash.
+// Currently mostly works, except for the actual rendering where half of the text is drawn vertically down in a mess of triangles.
+// Also currently missing error handling and proper color support.
 [heap]
 struct FontRender {
 pub mut:

@@ -4,7 +4,13 @@ module math
 #include <float.h>
 #include <limits.h>
 
-#flag "-lm"
+$if windows {
+	$if tinyc {
+		#flag @VEXEROOT/thirdparty/tcc/lib/openlibm.o
+	}
+} $else {
+	#flag -lm
+}
 
 //#region C declarations
 

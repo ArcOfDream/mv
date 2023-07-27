@@ -24,6 +24,8 @@ mut:
 
 [params]
 pub struct SpriteConfig {
+	renderer	  &Renderer
+	shader ?&resource.Shader
 	position      math.Vec2
 	offset        math.Vec2
 	center_sprite bool      = true
@@ -35,12 +37,20 @@ pub struct SpriteConfig {
 
 pub fn Sprite.new(conf SpriteConfig) &Sprite {
 	mut s := &Sprite{
+		renderer: conf.renderer
+		shader: conf.shader
 		position: conf.position
 		offset: conf.offset
 		center_sprite: conf.center_sprite
 		scale: conf.scale
 		tint: conf.tint
 		angle: conf.angle
+	}
+	if t := conf.texture {
+		s.texture = t
+	}
+	if shd := conf.shader {
+		s.shader = shd
 	}
 	s.update_vertex()
 

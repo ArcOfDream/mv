@@ -1,13 +1,16 @@
 module gles2
 
-//#flag -I @VMODROOT/c
-//#flag @VMODROOT/c/GLE.o
 // GLES2 bindings, initially generated with v translate, and manually tweaked.
 
-#pkgconfig glesv2
-#include "GLES2/gl2.h"
-
-// #flag -DGL_GLEXT_PROTOTYPES=1
+// $if !windows {
+// 	$if $pkgconfig('glesv2') {
+// 		#pkgconfig glesv2
+// 	}
+// }
+#flag "-I@VMODROOT/include"
+#flag linux "-lGLESv2"
+#flag windows "-lopengl32"
+#include <GLES2/gl2.h>
 
 type GLbyte = i8
 type GLclampf = f32
