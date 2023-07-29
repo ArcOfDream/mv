@@ -11,21 +11,21 @@ struct Game {
 mut:
 	ctx &core.Context = sdl.null
 pub mut:
-	camera  g.Camera2D = g.Camera2D{
+	camera g.Camera2D = g.Camera2D{
 		size: math.Vec2{640, 480}
 		// center_camera: false
 	}
-	fons &FontRender
+	fons &g.FontRender
 
-	x       f32
-	y       f32
-	time    f32
+	x    f32
+	y    f32
+	time f32
 }
 
 fn main() {
 	mut game := Game{
 		ctx: &core.Context{}
-		fons: &FontRender{
+		fons: &g.FontRender{
 			width: 512
 			height: 512
 		}
@@ -99,10 +99,10 @@ fn (mut game Game) update(delta f32) {
 fn (mut game Game) draw() {
 	game.fons.set_font('proggy')
 	game.fons.set_size(20)
-	game.fons.set_color(math.Vec4{1,1,1,1})
-	game.fons.set_alignment(.center|.baseline)
+	game.fons.set_color(math.Vec4{1, 1, 1, 1})
+	game.fons.set_alignment(.center | .baseline)
 	game.fons.draw_string(game.x, -60 + game.y, 'the quick brown fox jumps over the lazy dog')
 	game.fons.set_size(60)
-	game.fons.set_color(math.Vec4{1,0,1,1})
+	game.fons.set_color(math.Vec4{1, 0, 1, 1})
 	game.fons.draw_string(-game.x, 50 - game.y, '${game.ctx.fps}')
 }

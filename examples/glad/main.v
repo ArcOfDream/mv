@@ -1,4 +1,4 @@
-module main 
+module main
 
 import mv.thirdparty.glad.gles2 as gl
 import sdl

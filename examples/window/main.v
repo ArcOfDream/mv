@@ -1,7 +1,6 @@
 module main
 
 import mv.core
-
 import sdl
 
 [heap]

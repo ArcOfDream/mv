@@ -8,6 +8,7 @@ module gles2
 
 type GLADapiproc = voidptr
 type GLADloadfunc = fn (&char) voidptr
+
 type GLADuserptrloadfunc = fn (voidptr, &char) voidptr
 
 // [c2v_variadic]
@@ -17,15 +18,15 @@ type GLADuserptrloadfunc = fn (voidptr, &char) voidptr
 // type GLADpostcallback = fn (voidptr, &i8, GLADapiproc, int, ...)
 
 enum Khronos_boolean_enum_t {
-	khronos_false = 0	
-	khronos_true = 1	
+	khronos_false = 0
+	khronos_true = 1
 	khronos_boolean_enum_force_size = 2147483646
 }
 
 type GLenum = u32
 type GLboolean = u8
 type GLbitfield = u32
-type GLvoid = nil
+type GLvoid = voidptr
 type GLbyte = i8
 type GLubyte = u8
 type GLshort = i16
@@ -491,8 +492,8 @@ pub fn compile_shader(shader GLuint) {
 fn C.glad_glCompressedTexImage2D(target ESFlag, level GLint, internalformat ESFlag, width GLsizei, height GLsizei, border GLint, imagesize GLsizei, data voidptr)
 
 pub fn compressed_teximage2d(target ESFlag, level GLint, internalformat ESFlag, width GLsizei, height GLsizei, border GLint, imagesize GLsizei, data voidptr) {
-	C.glad_glCompressedTexImage2D(target, level, internalformat, width, height, border, imagesize,
-		data)
+	C.glad_glCompressedTexImage2D(target, level, internalformat, width, height, border,
+		imagesize, data)
 }
 
 fn C.glad_glCompressedTexSubImage2D(target ESFlag, level GLint, xoffset GLint, yoffset GLint, width GLsizei, height GLsizei, format ESFlag, imagesize GLsizei, data voidptr)
@@ -998,8 +999,8 @@ pub fn stencil_op_separate(face ESFlag, sfail ESFlag, dpfail ESFlag, dppass ESFl
 fn C.glad_glTexImage2D(target ESFlag, level GLint, internalformat GLint, width GLsizei, height GLsizei, border GLint, format ESFlag, type_ ESFlag, pixels voidptr)
 
 pub fn tex_image2d(target ESFlag, level GLint, internalformat GLint, width GLsizei, height GLsizei, border GLint, format ESFlag, type_ ESFlag, pixels voidptr) {
-	C.glad_glTexImage2D(target, level, internalformat, width, height, border, format, type_,
-		pixels)
+	C.glad_glTexImage2D(target, level, internalformat, width, height, border, format,
+		type_, pixels)
 }
 
 fn C.glad_glTexParameterf(target ESFlag, pname ESFlag, param GLfloat)
@@ -1029,7 +1030,8 @@ pub fn tex_parameteriv(target ESFlag, pname ESFlag, params &GLint) {
 fn C.glad_glTexSubImage2D(target ESFlag, level GLint, xoffset GLint, yoffset GLint, width GLsizei, height GLsizei, format ESFlag, type_ ESFlag, pixels voidptr)
 
 pub fn tex_subimage2d(target ESFlag, level GLint, xoffset GLint, yoffset GLint, width GLsizei, height GLsizei, format ESFlag, type_ ESFlag, pixels voidptr) {
-	C.glad_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type_, pixels)
+	C.glad_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type_,
+		pixels)
 }
 
 fn C.glad_glUniform1f(location GLint, v0 GLfloat)
@@ -1229,4 +1231,3 @@ fn C.gladLoadGLES2(load GLADloadfunc) int
 pub fn load_gles2(load GLADloadfunc) int {
 	return C.gladLoadGLES2(load)
 }
-

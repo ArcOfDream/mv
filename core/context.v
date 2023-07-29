@@ -18,7 +18,7 @@ pub mut:
 	renderer      &graphics.Renderer = sdl.null
 	gl_context    sdl.GLContext
 	data          map[string]resource.Resource
-	fps u32
+	fps           u32
 mut:
 	should_close bool
 
@@ -65,7 +65,6 @@ pub fn (mut ctx Context) run() {
 			update(delta_time)
 		}
 		ctx.draw()
-
 
 		fps++
 		sdl.delay(minticks)

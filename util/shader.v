@@ -24,7 +24,7 @@ pub fn load_shader(src string, shader_type gl.Flag) gl.GLuint {
 		print('shader compilation error \n')
 
 		if info_len > 1 {
-			mut info_log := []&u8{cap:500}
+			mut info_log := []&u8{cap: 500}
 
 			gl.get_shader_info_log(shader, -1, &info_len, info_log.data)
 			println('log: ${info_log}')
@@ -48,7 +48,7 @@ pub fn link_shader_program(vertex gl.GLuint, fragment gl.GLuint) gl.GLuint {
 
 	gl.get_programiv(program, .link_status, &success)
 	if success != 1 {
-		mut info_log := []&u8{cap:32}
+		mut info_log := []&u8{cap: 32}
 		mut log_len := 0
 
 		gl.get_programiv(program, .info_log_length, &log_len)

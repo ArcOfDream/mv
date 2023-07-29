@@ -1,32 +1,27 @@
-module main
+module graphics
 
 import mv.thirdparty.fons as fontstash
 import mv.thirdparty.gles2 as gl
-import mv.graphics
 import mv.math
 import arrays
 
-// #flag -lfreetype
-
-// TTF text renderer based on Fontstash.
-// Currently mostly works, except for the actual rendering where half of the text is drawn vertically down in a mess of triangles.
-// Also currently missing error handling and proper color support.
+// TTF text renderer based on Fontstash. Currently able to provide basic functionality.
 [heap]
-struct FontRender {
+pub struct FontRender {
 pub mut:
 	width  int
 	height int
 
-	fonts map[string]int
-	ctx   ?&fontstash.Context
+	fonts    map[string]int
+	ctx      ?&fontstash.Context
+	renderer ?&Renderer
 mut:
-	active_color     math.Vec4  = math.Vec4{1, 1, 1, 1}
+	active_color math.Vec4 = math.Vec4{1, 1, 1, 1}
 	// active_color_u32 math.Color = math.Color.white()
-	renderer         ?&graphics.Renderer
-	tid              u32
+	tid u32
 }
 
-fn (mut fon FontRender) setup_context() {
+pub fn (mut fon FontRender) setup_context() {
 	mut conf := C.FONSparams{
 		width: fon.width
 		height: fon.height
@@ -113,7 +108,7 @@ fn atlas_update(fr &FontRender, rect &int, data &u8) {
 
 	// gl.pixel_storei(.unpack_alignment, 1)
 	gl.bind_texture(.texture_2d, fr.tid)
-	gl.tex_subimage2d(.texture_2d, 0, 0, 0, fr.width, math.ceilpow2_int(h-16), .luminance_alpha,
+	gl.tex_subimage2d(.texture_2d, 0, 0, 0, fr.width, math.ceilpow2_int(h - 16), .luminance_alpha,
 		.gl_unsigned_byte, data)
 }
 

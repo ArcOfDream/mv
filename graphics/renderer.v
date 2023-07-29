@@ -21,9 +21,9 @@ pub mut:
 	batch_amt    int
 	total_verts  u32
 
-	width       int
-	height      int
-	clear_color math.Vec4 = math.Vec4{0.1, 0.2, 0.5, 1.0}
+	width          int
+	height         int
+	clear_color    math.Vec4 = math.Vec4{0.1, 0.2, 0.5, 1.0}
 	gl_context     sdl.GLContext
 	default_shader resource.Shader
 }
@@ -80,7 +80,7 @@ pub fn (mut ren Renderer) init() {
 
 	ren.projection = math.Mat32.ortho(ren.width, ren.height)
 	ren.set_shader(ren.default_shader)
-	
+
 	gl.enable(.blend)
 	gl.blend_func(.src_alpha, .one_minus_src_alpha)
 }
@@ -137,13 +137,13 @@ pub fn (mut ren Renderer) flush_batch() {
 		gl.enable_vertex_attrib_array(1)
 		gl.vertex_attrib_pointer(2, 2, .gl_float, 0, sizeof(RenderVertex), voidptr(__offsetof(RenderVertex, uv)))
 		gl.enable_vertex_attrib_array(2)
-		
-		gl.buffer_subdata(.array_buffer, 0, batch.vertex_count * sizeof(RenderVertex), &batch.vertices[0])
-		
+
+		gl.buffer_subdata(.array_buffer, 0, batch.vertex_count * sizeof(RenderVertex),
+			&batch.vertices[0])
+
 		if s := batch.shader_ref {
 			s.use()
 			ren.set_default_uniforms(s)
-		
 		}
 		ren.total_verts += batch.vertex_count
 
@@ -154,15 +154,15 @@ pub fn (mut ren Renderer) flush_batch() {
 		batch.shader_id = ren.default_shader.id
 		batch.shader_ref = &ren.default_shader
 	}
-		ren.total_verts = 0
-		
-
+	ren.total_verts = 0
 }
 
 [direct_array_access]
 pub fn (mut ren Renderer) push_triangle(apos math.Vec2, bpos math.Vec2, cpos math.Vec2, col math.Vec4, auv math.Vec2, buv math.Vec2, cuv math.Vec2, tex u32) {
 	if tex != ren.batches[ren.active_batch].active_texture {
-		if ren.batches[ren.active_batch].active_texture != 0 { ren.next_batch() }
+		if ren.batches[ren.active_batch].active_texture != 0 {
+			ren.next_batch()
+		}
 		ren.batches[ren.active_batch].active_texture = tex
 	}
 

@@ -24,8 +24,8 @@ mut:
 
 [params]
 pub struct SpriteConfig {
-	renderer	  &Renderer
-	shader ?&resource.Shader
+	renderer      &Renderer
+	shader        ?&resource.Shader
 	position      math.Vec2
 	offset        math.Vec2
 	center_sprite bool      = true
