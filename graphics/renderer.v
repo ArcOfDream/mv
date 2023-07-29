@@ -58,10 +58,10 @@ pub fn (mut ren Renderer) create_sdl_window(width int, height int) !&sdl.Window 
 	sdl.gl_make_current(sdl_window, ren.gl_context)
 
 	// Enable VSYNC (Sync buffer swaps with monitors vertical refresh rate)
-	if sdl.gl_set_swap_interval(1) < 0 {
-		error_msg := unsafe { cstring_to_vstring(sdl.get_error()) }
-		error('Could not set OpenGL swap interval to vsync:\n${error_msg}')
-	}
+	// if sdl.gl_set_swap_interval(1) < 0 {
+	// 	error_msg := unsafe { cstring_to_vstring(sdl.get_error()) }
+	// 	error('Could not set OpenGL swap interval to vsync:\n${error_msg}')
+	// }
 
 	return sdl_window
 }

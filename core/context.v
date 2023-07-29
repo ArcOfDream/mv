@@ -5,7 +5,7 @@ import mv.resource
 import mv.graphics
 
 const (
-	target_fps = 60
+	target_fps = 120
 )
 
 [heap]
@@ -18,6 +18,7 @@ pub mut:
 	renderer      &graphics.Renderer = sdl.null
 	gl_context    sdl.GLContext
 	data          map[string]resource.Resource
+	fps u32
 mut:
 	should_close bool
 
@@ -63,14 +64,15 @@ pub fn (mut ctx Context) run() {
 		if update := ctx.update_func {
 			update(delta_time)
 		}
-
 		ctx.draw()
+
 
 		fps++
 		sdl.delay(minticks)
 
 		if time_since_last_frame > 1000 {
 			old_time = new_time
+			ctx.fps = fps
 			fps = 0
 		}
 	}

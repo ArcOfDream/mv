@@ -13,7 +13,7 @@ mut:
 pub mut:
 	camera  g.Camera2D = g.Camera2D{
 		size: math.Vec2{640, 480}
-		center_camera: false
+		// center_camera: false
 	}
 	fons &FontRender
 
@@ -92,17 +92,17 @@ fn (mut game Game) update(delta f32) {
 	// println('${game.camera}')
 	game.time++
 
-	game.x = 40 * (math.pi + math.sin(game.time * 0.01))
-	game.y = 40 * (math.pi + math.cos(game.time * 0.01))
+	game.x = 40 * math.sin(game.time * 0.01)
+	game.y = 40 * math.cos(game.time * 0.01)
 }
 
 fn (mut game Game) draw() {
-	if fons := game.fons.ctx {
-		fons.set_font(game.fons.fonts['proggy'])
-		fons.set_size(20)
-		fons.set_color(math.Color.blanched_almond().value)
-		fons.draw_text(game.x, game.y, 'asdfghjklQWERTYUIOP')
-
-		fons.draw_debug(256, 256)
-	}
+	game.fons.set_font('proggy')
+	game.fons.set_size(20)
+	game.fons.set_color(math.Vec4{1,1,1,1})
+	game.fons.set_alignment(.center|.baseline)
+	game.fons.draw_string(game.x, -60 + game.y, 'the quick brown fox jumps over the lazy dog')
+	game.fons.set_size(40)
+	game.fons.set_color(math.Vec4{1,0,1,1})
+	game.fons.draw_string(-game.x, 50 - game.y, '${game.ctx.fps}')
 }
