@@ -102,7 +102,7 @@ fn (mut game Game) draw() {
 	game.fons.set_color(math.Vec4{1,1,1,1})
 	game.fons.set_alignment(.center|.baseline)
 	game.fons.draw_string(game.x, -60 + game.y, 'the quick brown fox jumps over the lazy dog')
-	game.fons.set_size(40)
+	game.fons.set_size(60)
 	game.fons.set_color(math.Vec4{1,0,1,1})
 	game.fons.draw_string(-game.x, 50 - game.y, '${game.ctx.fps}')
 }
