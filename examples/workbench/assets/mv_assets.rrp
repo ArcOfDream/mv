@@ -1,0 +1,10 @@
+#
+# rrp v1.0 - rres project text file generated using rrespacker
+#
+# File info expected structure:
+# f <fileFullPath@mappingFileName>,<external-link>,<force-raw>,<custom-id>,<compressor>,<cipher>
+#
+# Number of files:     2
+#
+f /.glfw_dropped_files/agony.png@agony.png,0,0,0x00000000,40,0
+f /.glfw_dropped_files/bnuy.png@bnuy.png,0,0,0x00000000,40,0
