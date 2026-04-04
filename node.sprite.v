@@ -1,7 +1,7 @@
 module mv
 
 import raylib as rl
-import mv.resourcemanager { Handle, TextureResource, ShaderResource }
+import resourcemanager { Handle, TextureResource, ShaderResource }
 
 pub struct Sprite implements INode {
 	Node

@@ -3,11 +3,11 @@ module mv
 import raylib as rl
 import wren
 import math as m
-import mv.physics as phys
-import mv.resourcemanager { ResourceManager, ShaderResource, SoundResource, TextureResource }
-import mv.input
-import mv.stringname { StringNameMap }
-import mv.audio
+import physics as phys
+import resourcemanager { ResourceManager, ShaderResource, SoundResource, TextureResource }
+import input
+import stringname { StringNameMap }
+import audio
 
 // import sync
 

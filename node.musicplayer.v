@@ -1,6 +1,6 @@
 module mv
 
-import mv.audio
+import audio
 
 pub struct MusicPlayer {
 	Node

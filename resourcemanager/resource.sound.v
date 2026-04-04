@@ -1,7 +1,7 @@
 module resourcemanager
 
 import raylib as rl
-import mv.rres
+import rres
 
 pub struct SoundResource {
 pub:

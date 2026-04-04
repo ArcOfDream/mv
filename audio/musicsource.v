@@ -1,7 +1,7 @@
 module audio
 
 import raylib as rl
-import mv.pxtn { Pxtone }
+import pxtn { Pxtone }
 
 // musicsource.v implements the types of audio streams handled by the engine
 

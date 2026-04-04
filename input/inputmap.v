@@ -1,7 +1,7 @@
 module input
 
 import raylib as rl
-import mv.stringname { StringName, StringNameMap }
+import stringname { StringName, StringNameMap }
 
 pub enum InputDevice {
 	keyboard

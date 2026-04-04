@@ -1,6 +1,6 @@
 module audio
 
-import mv.pxtn
+import pxtn
 import raylib as rl
 
 pub type StreamID = u32

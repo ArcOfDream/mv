@@ -1,6 +1,6 @@
 module animation
 
-import mv.tween { Ease, apply_ease }
+import tween { Ease, apply_ease }
 
 pub struct Keyframe[T] {
 pub:
