@@ -1,0 +1,15 @@
+
+LIBMPXTN_0.0.1 {
+global:
+	mpxtn_fread;
+	mpxtn_mread;
+	mpxtn_vomit;
+	mpxtn_close;
+
+	mpxtn_get_total_samples;
+	mpxtn_get_repeat_sample;
+
+local:
+	*;
+};
+
