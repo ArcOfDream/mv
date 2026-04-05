@@ -28,20 +28,18 @@ pub fn (mut n TestNode) ready() {
 	// vfmt off
 	a.add_track_cb(
 		fn [mut n] (v Vec2) { n.set_pos(v) }, [
-		Keyframe{ time: 0.0, value: Vec2{100, 100}, ease: .in_out_quad },
-		Keyframe{ time: 0.5, value: Vec2{200, 100}, ease: .linear },
-		Keyframe{ time: 1.0, value: Vec2{200, 200}, ease: .out_bounce },
-		Keyframe{ time: 1.5, value: Vec2{100, 200}, ease: .out_expo },
-		Keyframe{ time: 2.0, value: Vec2{100, 100}, ease: .in_out_quad }
-		], lerp_vec2
-	)
+		Keyframe[Vec2]{ time: 0.0, value: Vec2{100, 100}, ease: .in_out_quad },
+		Keyframe[Vec2]{ time: 0.5, value: Vec2{200, 100}, ease: .linear },
+		Keyframe[Vec2]{ time: 1.0, value: Vec2{200, 200}, ease: .out_bounce },
+		Keyframe[Vec2]{ time: 1.5, value: Vec2{100, 200}, ease: .out_expo },
+		Keyframe[Vec2]{ time: 2.0, value: Vec2{100, 100}, ease: .in_out_quad }
+		], lerp_vec2 )
 
 	a.add_track_cb(
 		fn [mut n] (f f32) { n.set_angle_deg(f) }, [
-		Keyframe{ time: 0.0, value: f32(0  ), ease: .linear },
-		Keyframe{ time: 2.0, value: f32(360), ease: .in_out_back }
-		], lerp_f32
-	)
+		Keyframe[f32]{ time: 0.0, value: f32(0  ), ease: .linear },
+		Keyframe[f32]{ time: 2.0, value: f32(360), ease: .in_out_back }
+		], lerp_f32 )
 	// vfmt on
 
 	n.anim_player.add('loop', a)

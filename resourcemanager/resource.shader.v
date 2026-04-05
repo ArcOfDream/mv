@@ -32,21 +32,22 @@ pub fn (mut rm ResourceManager[ShaderResource]) load_from_rres(loader &rres.Rres
 	if h := rm.get_handle(name) {
 		return h
 	}
-
-	vs_src := if vs_rres_name != '' {
-		chunk := loader.load_single(vs_rres_name) or { return none }
-		defer { chunk.unload() }
-		rres.load_text_from_resource(chunk)
-	} else {
-		''
+	
+	mut vs_src := vs_rres_name
+	mut fs_src := fs_rres_name
+	
+	if vs_src != '' {
+		if chunk := loader.load_single(vs_rres_name) {
+			vs_src = rres.load_text_from_resource(chunk)
+			chunk.unload()
+		}
 	}
-
-	fs_src := if fs_rres_name != '' {
-		chunk := loader.load_single(fs_rres_name) or { return none }
-		defer { chunk.unload() }
-		rres.load_text_from_resource(chunk)
-	} else {
-		''
+	
+	if fs_src != '' {
+		if chunk := loader.load_single(fs_rres_name) {
+			fs_src = rres.load_text_from_resource(chunk)
+			chunk.unload()
+		}
 	}
 
 	shd := rl.load_shader_from_memory(vs_src, fs_src)

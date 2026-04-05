@@ -32,14 +32,17 @@ pub fn (mut rm ResourceManager[FontResource]) load_from_rres(loader &rres.RresLo
 	if h := rm.get_handle(name) {
 		return h
 	}
-
-	multi := loader.load_multi(rres_name) or { return none }
-	defer { multi.unload() }
-
-	fnt := rres.load_font_from_resource(multi)
-	if !rl.is_font_valid(fnt) {
-		return none
+	
+	if multi := loader.load_multi(rres_name) {
+		defer { multi.unload() }
+	
+		fnt := rres.load_font_from_resource(multi)
+		if !rl.is_font_valid(fnt) {
+			return none
+		}
+	
+		return rm.add(name, FontResource{ fnt: fnt })
 	}
-
-	return rm.add(name, FontResource{ fnt: fnt })
+	
+	return none
 }

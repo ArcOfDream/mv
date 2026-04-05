@@ -37,7 +37,7 @@ fn sprite_wren_allocate(vm &wren.VM) {
     node.wren_handle = vm.get_slot_handle(0)
 }
 
-fn sprite_wren_finalize(data voidptr) {}
+fn sprite_wren_finalize(_ voidptr) {}
 
 pub fn sprite_wren_class_methods() wren.ForeignClassMethods {
     return wren.ForeignClassMethods{

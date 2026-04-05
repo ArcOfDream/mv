@@ -32,7 +32,7 @@ fn color_wren_allocate(vm &wren.VM) {
     }
 }
 
-fn color_wren_finalize(data voidptr) {}
+fn color_wren_finalize(_ voidptr) {}
 
 pub fn color_wren_class_methods() wren.ForeignClassMethods {
     return wren.ForeignClassMethods{

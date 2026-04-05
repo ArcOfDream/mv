@@ -19,9 +19,7 @@ pub fn (mut anim Animation) add_track[T](mut target T, keys []Keyframe[T], lerp_
 		keys:      keys
 		lerp_fn:   lerp_fn
 		setter_cb: fn [mut target] [T](v T) {
-			unsafe {
-				*target = v
-			}
+			target = v
 		}
 	}
 }

@@ -77,7 +77,10 @@ pub fn (mut s AudioServer) alloc_id() !StreamID {
 pub fn (mut s AudioServer) play_pxtone(data []u8, bus string) !StreamID {
 	id := s.alloc_id()!
 	handle := pxtn.from_memory(data)!
+	
+	rl.set_audio_stream_buffer_size_default(buffer_frames)
 	stream := rl.load_audio_stream(pxtn_sps, pxtn_bps, pxtn_channels)
+	
 	source := PxtoneMusic{
 		handle: handle
 		stream: stream

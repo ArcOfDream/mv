@@ -187,6 +187,9 @@ fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
 
 pub fn (mut app App) run() {
 	app.is_running = true
+	
+	// making sure to init audio here!
+	rl.init_audio_device()
 
 	// sync channels
 	render_done := chan bool{}

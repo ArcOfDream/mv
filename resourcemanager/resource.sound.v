@@ -32,20 +32,24 @@ pub fn (mut rm ResourceManager[SoundResource]) load_from_rres(loader &rres.RresL
 		return h
 	}
 
-	chunk := loader.load_single(rres_name) or { return none }
-	defer { chunk.unload() }
-
-	wave := rres.load_wave_from_resource(chunk)
-	if !rl.is_wave_valid(wave) {
-		return none
+	raw_chunk := loader.load_single(rres_name)
+	if chunk := raw_chunk {
+		defer { chunk.unload() }
+	
+		wave := rres.load_wave_from_resource(chunk)
+		if !rl.is_wave_valid(wave) {
+			return none
+		}
+	
+		snd := rl.load_sound_from_wave(wave)
+		rl.unload_wave(wave)
+	
+		if !rl.is_sound_valid(snd) {
+			return none
+		}
+	
+		return rm.add(name, SoundResource{ snd: snd })
 	}
-
-	snd := rl.load_sound_from_wave(wave)
-	rl.unload_wave(wave)
-
-	if !rl.is_sound_valid(snd) {
-		return none
-	}
-
-	return rm.add(name, SoundResource{ snd: snd })
+	
+	return none
 }

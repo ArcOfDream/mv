@@ -205,23 +205,23 @@ pub fn (chunk ResourceChunk) unload() {
 }
 
 // data_type decodes the FourCC field and returns the matching ResourceDataType
-pub fn (chunk ResourceChunk) data_type() ResourceDataType {
+pub fn (chunk &ResourceChunk) data_type() ResourceDataType {
 	return fourcc_to_data_type(chunk.info.@type)
 }
 
 // is_compressed returns true when the chunk payload is compressed
-pub fn (chunk ResourceChunk) is_compressed() bool {
+pub fn (chunk &ResourceChunk) is_compressed() bool {
 	return CompressionType.from(chunk.info.compType) or { CompressionType.none } != CompressionType.none
 }
 
 // is_encrypted returns true when the chunk payload is encrypted
-pub fn (chunk ResourceChunk) is_encrypted() bool {
+pub fn (chunk &ResourceChunk) is_encrypted() bool {
 	return CipherType.from(chunk.info.cipherType) or { CipherType.none } != CipherType.none
 }
 
 // props returns the property array as a V slice (view into C-owned memory)
 // do not use after calling unload()
-pub fn (chunk ResourceChunk) props() []u32 {
+pub fn (chunk &ResourceChunk) props() []u32 {
 	count := int(chunk.data.propCount)
 	if count == 0 {
 		return []
@@ -231,7 +231,7 @@ pub fn (chunk ResourceChunk) props() []u32 {
 
 // font_glyphs interprets the raw payload of a FNTG chunk as []FontGlyphInfo.
 // Returns an empty slice when the chunk is not of type font_glyphs.
-pub fn (chunk ResourceChunk) font_glyphs() []FontGlyphInfo {
+pub fn (chunk &ResourceChunk) font_glyphs() []FontGlyphInfo {
     if chunk.data_type() != .font_glyphs {
         return []
     }
@@ -249,7 +249,7 @@ pub fn (multi ResourceMulti) unload() {
 }
 
 // chunk returns the i-th ResourceChunk.  Panics if i is out of range.
-pub fn (multi ResourceMulti) chunk(i int) ResourceChunk {
+pub fn (multi &ResourceMulti) chunk(i int) ResourceChunk {
 	if i < 0 || u32(i) >= multi.count {
 		panic('rres: ResourceMulti.chunk(${i}) out of range (count=${multi.count})')
 	}
@@ -258,7 +258,7 @@ pub fn (multi ResourceMulti) chunk(i int) ResourceChunk {
 
 // chunks_slice returns all chunks as a V slice (view into C-owned memory).
 // Do not use after calling unload().
-pub fn (multi ResourceMulti) chunks_slice() []ResourceChunk {
+pub fn (multi &ResourceMulti) chunks_slice() []ResourceChunk {
 	if multi.count == 0 {
 		return []
 	}
@@ -279,7 +279,7 @@ pub fn (dir CentralDir) get_resource_id(file_name string) u32 {
 }
 
 // find returns the DirEntry whose filename matches, or none if absent
-pub fn (dir CentralDir) find(file_name string) ?DirEntry {
+pub fn (dir &CentralDir) find(file_name string) ?DirEntry {
 	for i in 0 .. int(dir.count) {
 		entry := unsafe { dir.entries[i] }
 		if unsafe { tos_clone(&entry.fileName[0]) } == file_name {
@@ -291,7 +291,7 @@ pub fn (dir CentralDir) find(file_name string) ?DirEntry {
 
 // entries_slice returns all directory entries as a V slice (view into C-owned memory)
 // do not use after calling unload()
-pub fn (dir CentralDir) entries_slice() []DirEntry {
+pub fn (dir &CentralDir) entries_slice() []DirEntry {
 	if dir.count == 0 {
 		return []
 	}
@@ -301,7 +301,7 @@ pub fn (dir CentralDir) entries_slice() []DirEntry {
 // DirEntry methods
 
 // file_name returns the entry's stored filename as a V string
-pub fn (e DirEntry) file_name() string {
+pub fn (e &DirEntry) file_name() string {
 	return unsafe { tos_clone(&e.fileName[0]) }
 }
 

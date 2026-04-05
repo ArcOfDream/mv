@@ -25,7 +25,7 @@ pub mut:
 	angle_rad     f32
 	pos           Vec2
 	scale         Vec2 = Vec2{1, 1}
-	transform     Transform2D
+	transform     Transform2D = Transform2D{ dirty: true }
 }
 
 @[inline]

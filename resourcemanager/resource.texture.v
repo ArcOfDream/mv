@@ -77,20 +77,22 @@ pub fn (mut rm ResourceManager[TextureResource]) load_from_rres(loader &rres.Rre
 		return h
 	}
 
-	chunk := loader.load_single(rres_name) or { return none }
-	defer { chunk.unload() }
-
-	img := rres.load_image_from_resource(chunk)
-	if !rl.is_image_valid(img) {
-		return none
+	if chunk := loader.load_single(rres_name) {	
+		defer { chunk.unload() }
+	
+		img := rres.load_image_from_resource(chunk)
+		if !rl.is_image_valid(img) {
+			return none
+		}
+	
+		tex := rl.load_texture_from_image(img)
+		rl.unload_image(img)
+	
+		if tex.id <= 0 {
+			return none
+		}
+	
+		return rm.add(name, TextureResource{ tex: tex })
 	}
-
-	tex := rl.load_texture_from_image(img)
-	rl.unload_image(img)
-
-	if tex.id <= 0 {
-		return none
-	}
-
-	return rm.add(name, TextureResource{ tex: tex })
+	return none
 }

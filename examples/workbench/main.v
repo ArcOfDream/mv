@@ -4,6 +4,8 @@ import raylib as rl
 import mv
 import mv.rres
 
+const test_pxtone = $embed_file('assets/test.ptcop')
+
 @[heap]
 struct Game {
 mut:
@@ -46,13 +48,18 @@ fn (mut g Game) init() {
 			g.cam = c
 
 			c.register()
+			//c.set_pos(mv.Vec2{0, 0})
+			
+			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
+			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
+			player.seek(30)
 
 			mv.emit_notification(mut r, .ready, app.get_state())
 		}
 	}
 }
 
-fn (mut g Game) update(dt f32) {
+fn (mut g Game) update(_dt f32) {
 	if mut app := g.app {
 		if mut root := g.root {
 			mv.emit_notification(mut root, .update, app.get_state())
