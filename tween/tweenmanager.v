@@ -12,7 +12,7 @@ pub fn (mut m TweenManager) update(dt f32) {
 	m.tweeners = m.tweeners.filter(!it.is_done())
 }
 
-pub fn (mut m TweenManager) tween[T](target &T, from T, to T, dur f32, ease Ease, lerp fn (T, T, f32) T) {
+pub fn (mut m TweenManager) tween[T](target &T, from T, to T, dur f32, ease EaseFn, lerp fn (T, T, f32) T) {
 	m.tweeners << Tweener[T]{
 		target:   target
 		from:     from
@@ -23,7 +23,7 @@ pub fn (mut m TweenManager) tween[T](target &T, from T, to T, dur f32, ease Ease
 	}
 }
 
-pub fn (mut m TweenManager) cb_tween[T](cb fn (T), from T, to T, dur f32, ease Ease, lerp fn (T, T, f32) T) {
+pub fn (mut m TweenManager) cb_tween[T](cb fn (T), from T, to T, dur f32, ease EaseFn, lerp fn (T, T, f32) T) {
 	m.tweeners << Tweener[T]{
 		from:     from
 		to:       to

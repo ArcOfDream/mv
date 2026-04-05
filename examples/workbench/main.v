@@ -52,7 +52,7 @@ fn (mut g Game) init() {
 			
 			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
-			player.seek(30)
+			//player.seek(30)
 
 			mv.emit_notification(mut r, .ready, app.get_state())
 		}

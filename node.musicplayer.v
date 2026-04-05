@@ -5,9 +5,9 @@ import audio
 pub struct MusicPlayer {
 	Node
 pub mut:
-	process_flags ProcessFlags
     bus       string = 'Music'
 mut:
+	process_flags ProcessFlags
     stream_id ?audio.StreamId
 }
 

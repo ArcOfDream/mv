@@ -5,14 +5,14 @@ pub struct CallEvent {
 	callback fn () @[required]
 }
 
-pub struct CallTrack implements ITrack {
+pub struct CallTrack {
 mut:
 	events    []CallEvent
 	last_time f32 // tracks previous sample time to catch crossings
 }
 
 pub fn (mut tr CallTrack) sample(time f32) {
-	for e in tr.events {
+	for mut e in tr.events {
 		if e.time > tr.last_time && e.time <= time {
 			e.callback()
 		}

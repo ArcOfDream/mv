@@ -263,7 +263,7 @@ pub fn emit_notification(mut node INode, notification Notification, state &GameS
 				notify(mut node, .push_mat, state)
 				notify(mut node, .draw, state)
 
-				for mut child in node.get_children() {
+				for mut child in node.children {
 					emit_notification(mut child, .draw, state)
 				}
 				notify(mut node, .pop_mat, state)
@@ -301,7 +301,7 @@ pub fn emit_notification(mut node INode, notification Notification, state &GameS
 			node.dirty = false
 		}
 		else {
-			for mut child in node.get_children() {
+			for mut child in node.children {
 				emit_notification(mut child, notification, state)
 			}
 			notify(mut node, notification, state)
