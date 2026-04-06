@@ -55,10 +55,10 @@ pub fn (mut im InputMap) add_binding(name StringName, binding InputBinding) {
 }
 
 pub fn (mut im InputMap) remove_action(name StringName) {
-	im.actions.delete(name)
-	im.pressed.delete(name)
-	im.just_pressed.delete(name)
-	im.just_released.delete(name)
+	im.actions.delete(name.ptr)
+	im.pressed.delete(name.ptr)
+	im.just_pressed.delete(name.ptr)
+	im.just_released.delete(name.ptr)
 }
 
 pub fn (mut im InputMap) update() {
@@ -83,13 +83,13 @@ pub fn (mut im InputMap) update() {
 }
 
 pub fn (im &InputMap) is_action_pressed(name StringName) bool {
-	return im.pressed[name] or { false }
+	return im.pressed[name.ptr] or { false }
 }
 
 pub fn (im &InputMap) is_action_just_pressed(name StringName) bool {
-	return im.just_pressed[name] or { false }
+	return im.just_pressed[name.ptr] or { false }
 }
 
 pub fn (im &InputMap) is_action_just_released(name StringName) bool {
-	return im.just_released[name] or { false }
+	return im.just_released[name.ptr] or { false }
 }
