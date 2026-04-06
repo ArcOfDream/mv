@@ -291,6 +291,22 @@ pub fn (mut n Node) replace_by(mut node INode) {
 	n.parent = ?&INode(none)
 }
 
+pub fn (mut n Node) move_child(index int, to int) {
+	if index < 0 || index >= n.children.len || to < 0 || to >= n.children.len || index == to {
+		return
+	}
+	child := n.children[index]
+	n.children.delete(index)
+	n.children.insert(to, child)
+}
+
+pub fn (mut n Node) swap_children(index_a int, index_b int) {
+	if index_a < 0 || index_a >= n.children.len || index_b < 0 || index_b >= n.children.len || index_a == index_b {
+		return
+	}
+	n.children[index_a], n.children[index_b] = n.children[index_b], n.children[index_a]
+}
+
 pub fn emit_notification(mut node INode, notification Notification, state &GameState) {
 	match notification {
 		.draw {

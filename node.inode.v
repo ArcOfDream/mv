@@ -72,6 +72,8 @@ mut:
 	insert_child_at(index int, mut child INode)
 	reparent(mut new_parent INode)
 	replace_by(mut node INode)
+	move_child(index int, to int)
+	swap_children(index_a int, index_b int)
 	
 	ready_internal()
 	ready()
