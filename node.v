@@ -40,6 +40,8 @@ pub fn (n &Node) app() &App {
 	return n.app
 }
 
+// --- local getters and setters ---
+
 @[inline]
 pub fn (n &Node) get_pos() Vec2 {
 	return n.pos
@@ -94,6 +96,8 @@ pub fn (mut n Node) set_angle_rad(val f32) {
 	}
 }
 
+// --- matrix funcs ---
+
 @[inline]
 pub fn (mut n Node) get_global_matrix() rl.Matrix {
 	if mut p := n.parent {
@@ -130,6 +134,8 @@ fn (mut n Node) sync_transform() {
 	}
 }
 
+// --- global getters ---
+
 @[inline]
 pub fn (mut n Node) get_global_pos() Vec2 {
 	n.sync_transform()
@@ -153,6 +159,8 @@ pub fn (mut n Node) get_global_angle_deg() f32 {
 	n.sync_transform()
 	return f32(math.degrees(n.transform.rotation))
 }
+
+// --- global setters ---
 
 pub fn (mut n Node) set_global_pos(val Vec2) {
 	if p := n.parent {
@@ -191,6 +199,8 @@ pub fn (mut n Node) set_global_angle_deg(val f32) {
 	n.transform.dirty = true
 }
 
+// --- overridable functions ---
+
 fn (mut n Node) push_mat_internal() {
 	push_matrix()
 	mult_matrix_f(n.local_matrix_f)
@@ -211,6 +221,8 @@ pub fn (mut n Node) update(_dt f32) {}
 fn (mut n Node) draw_internal() {}
 
 pub fn (mut n Node) draw() {}
+
+// --- scene tree funcs ---
 
 @[inline]
 pub fn (n &Node) get_children() []&INode {
@@ -306,6 +318,8 @@ pub fn (mut n Node) swap_children(index_a int, index_b int) {
 	}
 	n.children[index_a], n.children[index_b] = n.children[index_b], n.children[index_a]
 }
+
+// --- notifications ---
 
 pub fn emit_notification(mut node INode, notification Notification, state &GameState) {
 	match notification {
