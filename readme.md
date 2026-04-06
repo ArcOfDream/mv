@@ -9,7 +9,7 @@ A lightweight 2D game engine written in [V](https://vlang.io), built as a projec
 ## Features
 
 - **Scene tree**: Godot-inspired node hierarchy with propagation, notifications, and tree manipulation
-- **Transform system**: matrix stack-based 2D transforms with `Camera2D` and `CanvasLayer` support
+- **Transform system**: matrix stack-based 2D transforms with `CameraNode` and `DrawLayer` support
 - **Input map**: action-based input mapping with `StringName`-interned keys
 - **Animation**: generic keyframe tracks, easing library, call events, and ping-pong loop support
 - **Wren scripting** *(WIP)*: embedded scripting via [Wren](https://wren.io) with foreign class bindings for engine types
