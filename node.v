@@ -24,8 +24,10 @@ pub mut:
 	angle_deg     f32
 	angle_rad     f32
 	pos           Vec2
-	scale         Vec2 = Vec2{1, 1}
-	transform     Transform2D = Transform2D{ dirty: true }
+	scale         Vec2        = Vec2{1, 1}
+	transform     Transform2D = Transform2D{
+		dirty: true
+	}
 }
 
 @[inline]
@@ -215,6 +217,11 @@ pub fn (n &Node) get_children() []&INode {
 	return n.children
 }
 
+@[inline]
+pub fn (n &Node) get_child_count() int {
+	return n.children.len
+}
+
 pub fn (mut n Node) add_child(mut child INode) {
 	child.parent = n
 	n.children << child
@@ -241,7 +248,7 @@ pub fn (n &Node) find_child(child &INode) int {
 			return i
 		}
 	}
-	
+
 	return -1
 }
 
@@ -254,6 +261,34 @@ pub fn (mut n Node) remove_child(index int) {
 	mut child := n.children[index]
 	child.parent = ?&INode(none)
 	n.children.delete(index)
+}
+
+pub fn (mut n Node) insert_child_at(index int, mut child INode) {
+	child.parent = n
+	n.children.insert(index, child)
+	emit_notification(mut child, .ready, n.app.state)
+}
+
+pub fn (mut n Node) reparent(mut new_parent INode) {
+	if mut p := n.parent {
+		idx := p.find_child(&n)
+		if idx != -1 {
+			// remove without clearing parent — we're about to set a new one
+			p.children.delete(idx)
+		}
+	}
+	new_parent.add_child(mut n)
+}
+
+pub fn (mut n Node) replace_by(mut node INode) {
+	if mut p := n.parent {
+		idx := p.find_child(&n)
+		if idx != -1 {
+			p.children.delete(idx)
+			p.insert_child_at(idx, mut node)
+		}
+	}
+	n.parent = ?&INode(none)
 }
 
 pub fn emit_notification(mut node INode, notification Notification, state &GameState) {

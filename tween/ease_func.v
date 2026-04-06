@@ -39,7 +39,7 @@ pub fn in_sine(t f32) f32     { return 1.0 - cosf((t * math.pi) / 2.0) }
 pub fn out_sine(t f32) f32    { return sinf((t * math.pi) / 2.0) }
 pub fn in_out_sine(t f32) f32 { return -(cosf(math.pi * t) - 1.0) / 2.0 }
 
-// quad
+// quad (quadratic)
 pub fn in_quad(t f32) f32     { return t * t }
 pub fn out_quad(t f32) f32    { return 1.0 - (1.0 - t) * (1.0 - t) }
 pub fn in_out_quad(t f32) f32 {
@@ -55,7 +55,7 @@ pub fn in_out_cubic(t f32) f32 {
 	return if t < 0.5 { 4.0 * t * t * t } else { 1.0 - b * b * b / 2.0 }
 }
 
-// quart
+// quart (quartic)
 pub fn in_quart(t f32) f32     { return t * t * t * t }
 pub fn out_quart(t f32) f32    { c := 1.0 - t; return 1.0 - c * c * c * c }
 pub fn in_out_quart(t f32) f32 {
@@ -63,7 +63,7 @@ pub fn in_out_quart(t f32) f32 {
 	return if t < 0.5 { 8.0 * t * t * t * t } else { 1.0 - b * b * b * b / 2.0 }
 }
 
-// quint
+// quint (quintic)
 pub fn in_quint(t f32) f32     { return t * t * t * t * t }
 pub fn out_quint(t f32) f32    { c := 1.0 - t; return 1.0 - c * c * c * c * c }
 pub fn in_out_quint(t f32) f32 {
@@ -71,7 +71,7 @@ pub fn in_out_quint(t f32) f32 {
 	return if t < 0.5 { 16.0 * t * t * t * t * t } else { 1.0 - b * b * b * b * b / 2.0 }
 }
 
-// expo
+// expo (exponential)
 pub fn in_expo(t f32) f32 {
 	return if t == 0.0 { 0.0 } else { powf(2.0, 10.0 * t - 10.0) }
 }
@@ -85,7 +85,7 @@ pub fn in_out_expo(t f32) f32 {
 	return (2.0 - powf(2.0, -20.0 * t + 10.0)) / 2.0
 }
 
-// circ
+// circ (circular)
 pub fn in_circ(t f32) f32  { return 1.0 - sqrtf(1.0 - t * t) }
 pub fn out_circ(t f32) f32 { c := t - 1.0; return sqrtf(1.0 - c * c) }
 pub fn in_out_circ(t f32) f32 {

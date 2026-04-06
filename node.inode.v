@@ -24,6 +24,7 @@ pub interface INode {
 	name() string
 	app() &App
 	get_children() []&INode
+	get_child_count() int
 	find_child(child &INode) int
 	get_pos() Vec2
 	get_scale() Vec2
@@ -68,12 +69,9 @@ mut:
 	
 	add_child(mut child INode)
 	remove_child(index int)
-	/* TODO: Implement the following functions:
-	get_child_count()
-	get_children()
-	reparent(new_parent INode)
-	replace_by(node INode)
-	*/
+	insert_child_at(index int, mut child INode)
+	reparent(mut new_parent INode)
+	replace_by(mut node INode)
 	
 	ready_internal()
 	ready()

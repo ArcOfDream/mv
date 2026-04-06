@@ -10,14 +10,14 @@ mut:
 
 pub struct Tweener[T] implements ITweener {
 mut:
-	target   ?&T
-	from     T
-	to       T
-	duration f32
-	elapsed  f32
-	done     bool
-	ease_fn     EaseFn @[required]
-	lerp_fn  fn (T, T, f32) T @[required]
+	target    ?&T
+	from      T
+	to        T
+	duration  f32
+	elapsed   f32
+	done      bool
+	ease_fn   EaseFn           @[required]
+	lerp_fn   fn (T, T, f32) T @[required]
 	setter_cb ?fn (T)
 }
 
@@ -29,14 +29,13 @@ pub fn (mut tw Tweener[T]) update(dt f32) {
 	tw.elapsed += dt
 	time := min(tw.elapsed / tw.duration, 1.0)
 	eased_time := tw.ease_fn(time)
-	
+
 	if cb := tw.setter_cb {
 		cb(tw.lerp_fn(tw.from, tw.to, eased_time))
-	}
-	else if _t := tw.target {
+	} else if _t := tw.target {
 		_t = tw.lerp_fn(tw.from, tw.to, eased_time)
 	}
-	
+
 	if time >= 1.0 {
 		tw.done = true
 	}
