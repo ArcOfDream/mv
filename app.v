@@ -75,7 +75,7 @@ pub fn App.new(init ?fn(), update ?fn (f32), draw ?fn (), backdrop ?fn (), input
 // helper function to create and return a node type.
 // ensure that the kind of node you're creating implements INode
 pub fn (app &App) new_node[T](name string, x f32, y f32) &T {
-	node := &T{
+	mut node := &T{
 		app:       app
 		node_name: name
 		pos:       Vec2{
@@ -83,7 +83,8 @@ pub fn (app &App) new_node[T](name string, x f32, y f32) &T {
 			y: y
 		}
 	}
-
+	
+	emit_notification(mut node, .init)
 	return node
 }
 

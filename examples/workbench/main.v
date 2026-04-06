@@ -54,27 +54,23 @@ fn (mut g Game) init() {
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
 			//player.seek(30)
 
-			mv.emit_notification(mut r, .ready, app.get_state())
+			mv.emit_notification(mut r, .ready)
 		}
 	}
 }
 
 fn (mut g Game) update(_dt f32) {
-	if mut app := g.app {
-		if mut root := g.root {
-			mv.emit_notification(mut root, .update, app.get_state())
-		}
+	if mut root := g.root {
+		mv.emit_notification(mut root, .update)
 	}
 }
 
 fn (mut g Game) draw() {
-	if mut app := g.app {
-		if mut root := g.root {
-			mv.emit_notification(mut root, .draw, app.get_state())
-		}
-
-		rl.draw_fps(2, 2)
+	if mut root := g.root {
+		mv.emit_notification(mut root, .draw)
 	}
+
+	rl.draw_fps(2, 2)
 }
 
 fn main() {

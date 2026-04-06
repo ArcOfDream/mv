@@ -5,13 +5,14 @@ import raylib.raymath as rm
 import wren
 
 pub enum Notification {
+	init
 	ready
+	exit_tree
 	update
 	draw
 	push_mat
 	pop_mat
 	transform
-	make_dirty
 }
 
 @[flag]
@@ -75,8 +76,12 @@ mut:
 	move_child(index int, to int)
 	swap_children(index_a int, index_b int)
 	
+	init_internal()
+	init()
 	ready_internal()
 	ready()
+	exit_tree_internal()
+	exit_tree()
 	update_internal(dt f32)
 	update(dt f32)
 	draw_internal()

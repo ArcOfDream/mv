@@ -54,7 +54,7 @@ struct C.c2h {
 }
 
 struct C.c2Circle {
-	p C.c2v
+	p Vec
 	r f32
 }
 

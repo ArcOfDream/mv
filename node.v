@@ -210,9 +210,17 @@ fn (mut n Node) pop_mat_internal() {
 	pop_matrix()
 }
 
+fn (n &Node) init_internal() {}
+
+pub fn (n &Node) init() {}
+
 fn (mut n Node) ready_internal() {}
 
 pub fn (mut n Node) ready() {}
+
+fn (n &Node) exit_tree_internal() {}
+
+pub fn (n &Node) exit_tree() {}
 
 fn (mut n Node) update_internal(_dt f32) {}
 
@@ -237,7 +245,7 @@ pub fn (n &Node) get_child_count() int {
 pub fn (mut n Node) add_child(mut child INode) {
 	child.parent = n
 	n.children << child
-	emit_notification(mut child, .ready, n.app.state)
+	emit_notification(mut child, .ready)
 	println('New count: ${n.children.len}')
 }
 
@@ -246,6 +254,7 @@ pub fn (mut n Node) create_and_add_child[T](name string) &T {
 		node_name: name
 		app:       n.app
 	}
+	emit_notification(mut node, .init)
 	n.add_child(mut node)
 
 	return node
@@ -272,13 +281,14 @@ pub fn (mut n Node) remove_child(index int) {
 
 	mut child := n.children[index]
 	child.parent = ?&INode(none)
+	emit_notification(mut child, .exit_tree)
 	n.children.delete(index)
 }
 
 pub fn (mut n Node) insert_child_at(index int, mut child INode) {
 	child.parent = n
 	n.children.insert(index, child)
-	emit_notification(mut child, .ready, n.app.state)
+	emit_notification(mut child, .ready)
 }
 
 pub fn (mut n Node) reparent(mut new_parent INode) {
@@ -300,6 +310,7 @@ pub fn (mut n Node) replace_by(mut node INode) {
 			p.insert_child_at(idx, mut node)
 		}
 	}
+	emit_notification(mut n, .exit_tree)
 	n.parent = ?&INode(none)
 }
 
@@ -313,7 +324,8 @@ pub fn (mut n Node) move_child(index int, to int) {
 }
 
 pub fn (mut n Node) swap_children(index_a int, index_b int) {
-	if index_a < 0 || index_a >= n.children.len || index_b < 0 || index_b >= n.children.len || index_a == index_b {
+	if index_a < 0 || index_a >= n.children.len || index_b < 0 || index_b >= n.children.len
+		|| index_a == index_b {
 		return
 	}
 	n.children[index_a], n.children[index_b] = n.children[index_b], n.children[index_a]
@@ -321,21 +333,21 @@ pub fn (mut n Node) swap_children(index_a int, index_b int) {
 
 // --- notifications ---
 
-pub fn emit_notification(mut node INode, notification Notification, state &GameState) {
+pub fn emit_notification(mut node INode, notification Notification) {
 	match notification {
 		.draw {
 			if node.process_flags.has(.draw) {
-				notify(mut node, .push_mat, state)
-				notify(mut node, .draw, state)
+				notify(mut node, .push_mat)
+				notify(mut node, .draw)
 
 				for mut child in node.children {
-					emit_notification(mut child, .draw, state)
+					emit_notification(mut child, .draw)
 				}
-				notify(mut node, .pop_mat, state)
+				notify(mut node, .pop_mat)
 			}
 		}
 		.update {
-			notify(mut node, notification, state)
+			notify(mut node, notification)
 
 			if node.process_flags.has(.transform) {
 				if p := node.parent {
@@ -360,21 +372,21 @@ pub fn emit_notification(mut node INode, notification Notification, state &GameS
 			}
 
 			for mut child in node.get_children() {
-				emit_notification(mut child, notification, state)
+				emit_notification(mut child, notification)
 			}
 
 			node.dirty = false
 		}
 		else {
 			for mut child in node.children {
-				emit_notification(mut child, notification, state)
+				emit_notification(mut child, notification)
 			}
-			notify(mut node, notification, state)
+			notify(mut node, notification)
 		}
 	}
 }
 
-pub fn notify(mut node INode, notification Notification, state &GameState) {
+pub fn notify(mut node INode, notification Notification) {
 	match notification {
 		.push_mat {
 			node.push_mat_internal()
@@ -396,27 +408,32 @@ pub fn notify(mut node INode, notification Notification, state &GameState) {
 		.pop_mat {
 			node.pop_mat_internal()
 		}
+		.init {
+			node.init_internal()
+			node.init()
+		}
 		.ready {
 			node.ready_internal()
 			node.ready()
 		}
+		.exit_tree {
+			node.exit_tree_internal()
+			node.exit_tree()
+		}
 		.update {
-			node.update_internal(state.dt)
-			node.update(state.dt)
+			node.update_internal(node.app.state.dt)
+			node.update(node.app.state.dt)
 
 			if handle := node.wren_handle {
 				if mut vm := node.app.wren_vm {
 					if update_h := node.app.wren_update_handle {
 						vm.ensure_slots(2)
 						vm.set_slot_handle(0, handle)
-						vm.set_slot_double(1, state.dt)
+						vm.set_slot_double(1, node.app.state.dt)
 						vm.call(update_h)
 					}
 				}
 			}
-		}
-		.make_dirty {
-			node.dirty = true
 		}
 		else {}
 	}

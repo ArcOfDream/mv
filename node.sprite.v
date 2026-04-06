@@ -3,7 +3,7 @@ module mv
 import raylib as rl
 import resourcemanager { Handle, TextureResource, ShaderResource }
 
-pub struct Sprite implements INode {
+pub struct Sprite {
 	Node
 mut:
 	centered   bool = true 
