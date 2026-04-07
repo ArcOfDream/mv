@@ -5,7 +5,7 @@ import raylib.raymath as rm
 import math
 import wren
 
-pub struct Node implements INode {
+pub struct Node {
 mut:
 	dirty          bool = true
 	node_name      string
@@ -333,6 +333,7 @@ pub fn (mut n Node) swap_children(index_a int, index_b int) {
 
 // --- notifications ---
 
+@[direct_array_access]
 pub fn emit_notification(mut node INode, notification Notification) {
 	match notification {
 		.draw {
@@ -378,7 +379,7 @@ pub fn emit_notification(mut node INode, notification Notification) {
 			node.dirty = false
 		}
 		else {
-			for mut child in node.children {
+    		for mut child in node.children {
 				emit_notification(mut child, notification)
 			}
 			notify(mut node, notification)
