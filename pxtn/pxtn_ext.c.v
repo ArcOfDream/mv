@@ -5,7 +5,6 @@ module pxtn
 
 // Link math library (required by the C sources)
 #flag -lm
-#flag -lvorbisfile
 #flag -DMPXTN_OGGVORBIS
 
 // Compile each C source file
