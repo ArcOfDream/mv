@@ -75,6 +75,14 @@ fn apply_volume(s &MusicSource, vol f32) {
 }
 
 @[inline]
+fn set_loop(mut s MusicSource, toggle bool) {
+	match mut s {
+		RaylibMusic { s.music.looping = toggle }
+		PxtoneMusic { s.handle.set_loop(toggle) }
+	}
+}
+
+@[inline]
 fn unload_source(s &MusicSource) {
 	match s {
 		RaylibMusic {

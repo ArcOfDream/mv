@@ -3,6 +3,7 @@ module main
 import raylib as rl
 import mv
 import mv.rres
+import mv.ldtk as _
 
 const test_pxtone = $embed_file('assets/test.ptcop')
 
@@ -52,6 +53,7 @@ fn (mut g Game) init() {
 			
 			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
+			player.loop(true)
 			//player.seek(30)
 
 			mv.emit_notification(mut r, .ready)

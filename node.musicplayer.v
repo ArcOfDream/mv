@@ -8,7 +8,7 @@ pub mut:
     bus       string = 'Music'
 mut:
 	process_flags ProcessFlags
-    stream_id ?audio.StreamId
+    stream_id ?audio.StreamID
 }
 
 pub fn (mut p MusicPlayer) play_pxtone(data []u8) ! {
@@ -45,6 +45,12 @@ pub fn (p &MusicPlayer) seek(position f32) {
     if id := p.stream_id {
         p.app.audio_server.seek(id, position)
     }
+}
+
+pub fn (p &MusicPlayer) loop(toggle bool) {
+	if id := p.stream_id {
+		p.app.audio_server.loop(id, toggle)
+	}
 }
 
 // Called by AudioServer.process() when the stream ends naturally.

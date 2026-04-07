@@ -78,6 +78,11 @@ fn audio_thread_loop(cmd_ch chan AudioMessage, event_ch chan AudioEvent, done_ch
 								apply_volume(s.src, msg.volume)
 							}
 						}
+						LoopMsg {
+							if mut s := streams[msg.id] {
+								set_loop(mut s.src, msg.toggle)
+							}
+						}
 						UnloadMsg {
 							if s := streams[msg.id] {
 								unload_source(s.src)

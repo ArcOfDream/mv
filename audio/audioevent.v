@@ -1,46 +1,50 @@
 module audio
 
-pub type StreamId = u32
-
 // commands (main → audio thread)
 
 pub struct LoadMsg {
 pub:
-	id     StreamId
+	id     StreamID
 	source MusicSource
 }
 
 pub struct StopMsg {
 pub:
-	id StreamId
+	id StreamID
 }
 
 pub struct PauseMsg {
 pub:
-	id StreamId
+	id StreamID
 }
 
 pub struct ResumeMsg {
 pub:
-	id StreamId
+	id StreamID
 }
 
 pub struct UnloadMsg {
 pub:
-	id StreamId
+	id StreamID
 }
 
 pub struct SeekMsg {
 pub:
-	id       StreamId
+	id       StreamID
 	position f32
 } // always in seconds
 
 pub struct VolumeMsg {
 pub:
-	id     StreamId
+	id     StreamID
 	volume f32
 } // linear [0.0, 1.0]
+
+pub struct LoopMsg {
+pub:
+	id     StreamID
+	toggle bool
+}
 
 pub enum GlobalCmd {
 	quit
@@ -53,13 +57,14 @@ pub type AudioMessage = LoadMsg
 	| UnloadMsg
 	| SeekMsg
 	| VolumeMsg
+	| LoopMsg
 	| GlobalCmd
 
 // events (audio thread → main)
 
 pub struct StreamFinishedEvent {
 pub:
-	id StreamId
+	id StreamID
 }
 
 pub type AudioEvent = StreamFinishedEvent

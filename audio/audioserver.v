@@ -139,23 +139,27 @@ pub fn (mut s AudioServer) play_music(source &MusicSource, bus string) !StreamID
 
 // stream control funcs
 
-pub fn (s &AudioServer) stop(id StreamId) {
+pub fn (s &AudioServer) stop(id StreamID) {
     s.audio_thread.cmd_ch <- StopMsg{ id: id }
 }
 
-pub fn (s &AudioServer) pause(id StreamId) {
+pub fn (s &AudioServer) pause(id StreamID) {
     s.audio_thread.cmd_ch <- PauseMsg{ id: id }
 }
 
-pub fn (s &AudioServer) resume(id StreamId) {
+pub fn (s &AudioServer) resume(id StreamID) {
     s.audio_thread.cmd_ch <- ResumeMsg{ id: id }
 }
 
-pub fn (s &AudioServer) seek(id StreamId, position f32) {
+pub fn (s &AudioServer) seek(id StreamID, position f32) {
     s.audio_thread.cmd_ch <- SeekMsg{ id: id, position: position }
 }
 
-pub fn (mut s AudioServer) unload(id StreamId) {
+pub fn (s &AudioServer) loop(id StreamID, toggle bool) {
+	s.audio_thread.cmd_ch <- LoopMsg{ id: id, toggle: toggle }
+}
+
+pub fn (mut s AudioServer) unload(id StreamID) {
     s.streams.delete(id)
     s.audio_thread.cmd_ch <- UnloadMsg{ id: id }
 }
