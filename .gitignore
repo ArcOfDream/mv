@@ -24,3 +24,6 @@ bin/
 *.db
 *.js
 examples/workbench/workbench
+
+# Bug related reproduction code
+*_bug.v
