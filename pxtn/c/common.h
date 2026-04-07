@@ -98,7 +98,7 @@ typedef double   f64;
 typedef struct {
 	s32 x;
 	s32 y;
-} POINT;
+} PTPOINT;
 
 #include "error.h"
 

@@ -99,12 +99,12 @@ static bool _read_wave(PTVINSTANCE *p_pi, DESCRIPTOR *p_desc)
 		if(!desc_u32_vr(p_desc, &p_pi->wav.reso)) return false;
 
 		/* alloc */
-		p_pi->wav.points = calloc(p_pi->wav.size, sizeof(POINT));
+		p_pi->wav.points = calloc(p_pi->wav.size, sizeof(PTPOINT));
 		if(!p_pi->wav.points) return false;
 
 		for(u32 i = 0; i < p_pi->wav.size; ++i) {
 
-			POINT *p = &p_pi->wav.points[i];
+			PTPOINT *p = &p_pi->wav.points[i];
 
 			if(!desc_u8_r(p_desc, &uc)) return false; p->x = uc;
 			if(!desc_s8_r(p_desc, &sc)) return false; p->y = sc;
@@ -116,12 +116,12 @@ static bool _read_wave(PTVINSTANCE *p_pi, DESCRIPTOR *p_desc)
 		if(!desc_u32_vr(p_desc, &p_pi->wav.size)) return false;
 
 		/* alloc */
-		p_pi->wav.points = calloc(p_pi->wav.size, sizeof(POINT));
+		p_pi->wav.points = calloc(p_pi->wav.size, sizeof(PTPOINT));
 		if(!p_pi->wav.points) return false;
 
 		for(u32 i = 0; i < p_pi->wav.size; ++i) {
 
-			POINT *p = &p_pi->wav.points[i];
+			PTPOINT *p = &p_pi->wav.points[i];
 
 			if(!desc_s32_vr(p_desc, &p->x)) return false;
 			if(!desc_s32_vr(p_desc, &p->y)) return false;
@@ -178,12 +178,12 @@ static bool _read_envelope(PTVINSTANCE *p_pi, DESCRIPTOR *p_desc)
 
 	/* alloc */
 	size = p_pi->env.head_num + p_pi->env.body_num + p_pi->env.tail_num;
-	p_pi->env.points = calloc(size, sizeof(POINT));
+	p_pi->env.points = calloc(size, sizeof(PTPOINT));
 	if(!p_pi->env.points) return false;
 
 	for(u32 i = 0; i < size; ++i)
 	{
-		POINT *p = &p_pi->env.points[i];
+		PTPOINT *p = &p_pi->env.points[i];
 
 		if(!desc_s32_vr(p_desc, &p->x)) return false;
 		if(!desc_s32_vr(p_desc, &p->y)) return false;

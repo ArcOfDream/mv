@@ -45,7 +45,7 @@ typedef enum {
 typedef struct {
 	u32 size;
 	u32 reso; // COORDINATERESOLUTION
-	POINT *points;
+	PTPOINT *points;
 } PTVWAVE;
 
 typedef struct {
@@ -53,7 +53,7 @@ typedef struct {
 	u32 head_num;
 	u32 body_num;
 	u32 tail_num;
-	POINT *points;
+	PTPOINT *points;
 } PTVENVELOPE;
 
 typedef struct {

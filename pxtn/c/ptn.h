@@ -66,7 +66,7 @@ typedef struct {
 typedef struct {
 	bool   enable;
 	u32    env_num;
-	POINT *envs;
+	PTPOINT *envs;
 	s8     pan;
 	NOISEDESIGN_OSCILLATOR main;
 	NOISEDESIGN_OSCILLATOR freq;

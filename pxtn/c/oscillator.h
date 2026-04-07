@@ -35,7 +35,7 @@ typedef struct {
 	s32 smp_num;
 	s32 point_num;
 	s32 point_reso;
-	POINT *points;
+	PTPOINT *points;
 } OSCILLATOR;
 
 f64 oscillator_get_sample_overtone(OSCILLATOR *p_osci, s32 idx);

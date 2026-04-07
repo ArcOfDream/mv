@@ -440,7 +440,7 @@ bool ptn_read(PTN *p_ptn, DESCRIPTOR *p_desc)
 			if(nu->env_num > NOISEENVELOPE_MAX) goto End;
 
 			/* allocate envelope */
-			nu->envs = calloc(nu->env_num, sizeof(POINT));
+			nu->envs = calloc(nu->env_num, sizeof(PTPOINT));
 			if(!nu->envs) goto End;
 
 			for(u32 e = 0; e < nu->env_num; ++e)

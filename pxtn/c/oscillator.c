@@ -35,7 +35,7 @@ f64 oscillator_get_sample_overtone(OSCILLATOR *p_osci, s32 idx)
 	f64 sss = 0;
 
 	for(s32 i = 0; i < p_osci->point_num; ++i) {
-		const POINT *p = &p_osci->points[i];
+		const PTPOINT *p = &p_osci->points[i];
 		sss = 2.0 * _pi * p->x * idx / p_osci->smp_num;
 		work += sin(sss) * p->y / p->x / 128.0;
 	}

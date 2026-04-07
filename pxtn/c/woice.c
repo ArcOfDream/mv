@@ -280,7 +280,7 @@ static bool _envelope_ptv(WOICEINSTANCE *p_wi, const PTVINSTANCE *p_pi)
 	bool ret = false;
 	u32 e = 0;
 	s32 size = 0;
-	POINT *points = NULL;
+	PTPOINT *points = NULL;
 
 	const PTVENVELOPE *p_env = &p_pi->env;
 
@@ -296,7 +296,7 @@ static bool _envelope_ptv(WOICEINSTANCE *p_wi, const PTVINSTANCE *p_pi)
 		if(!p_wi->envs) goto End;
 		p_wi->env_num = env_size;
 
-		points = calloc(p_env->head_num, sizeof(POINT));
+		points = calloc(p_env->head_num, sizeof(PTPOINT));
 		if(!points) goto End;
 
 		// convert points.
@@ -314,7 +314,7 @@ static bool _envelope_ptv(WOICEINSTANCE *p_wi, const PTVINSTANCE *p_pi)
 		}
 
 		/* save env */
-		POINT start;
+		PTPOINT start;
 
 		e = start.x = start.y = 0;
 
