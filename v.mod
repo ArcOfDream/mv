@@ -1,7 +1,7 @@
 Module {
 	name: 'mv'
-	description: '2D game engine'
+	description: 'A small, 2D-focused engine powered with V and Raylib.'
 	version: '0.0.0'
-	license: 'MIT'
+	license: 'zlib'
 	dependencies: ['raylib']
 }

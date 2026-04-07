@@ -43,3 +43,9 @@ A lightweight 2D game engine written in [V](https://vlang.io), built as a projec
 ## Status
 
 Currently still early into development. Functional, although the API itself will be subject to change.
+
+---
+
+## License
+ 
+Unless otherwise stated, mv is licensed under the [zlib License](LICENSE).
