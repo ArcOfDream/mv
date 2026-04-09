@@ -5,6 +5,10 @@ import mv
 import mv.rres
 import mv.ldtk as _
 
+// this is less of an example and more of a testbed for me to test some features
+// as i work on them.
+// this may vanish when the project reaches a certain degree of maturity!
+
 const test_pxtone = $embed_file('assets/test.ptcop')
 
 @[heap]
@@ -42,7 +46,7 @@ fn (mut g Game) init() {
 		g.root = app.new_node[mv.Node]('root', 0, 0)
 
 		if mut r := g.root {
-			mut test := r.create_and_add_child[mv.TestNode]('child')
+			mut test := r.create_and_add_child[TestNode]('child')
 			test.set_scale(mv.Vec2{0.4, 0.4})
 
 			mut c := r.create_and_add_child[mv.CameraNode]('camera')
@@ -53,6 +57,7 @@ fn (mut g Game) init() {
 			
 			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
+			player.loop(true)
 			//player.seek(30)
 
 			mv.emit_notification(mut r, .ready)

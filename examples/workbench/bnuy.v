@@ -1,8 +1,9 @@
-module mv
+module main
 
 import raylib as rl
-import animation as anim { Keyframe }
-import tween as tw { lerp_f32, lerp_vec2 }
+import mv { Sprite, Vec2 }
+import mv.animation as anim { Keyframe }
+import mv.tween as tw { lerp_f32, lerp_vec2 }
 
 struct Bnuy {
 pub mut:
