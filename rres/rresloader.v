@@ -17,9 +17,9 @@ pub mut:
 	dir CentralDir
 }
  
-// new_rres_loader opens file_path and loads its Central Directory.
-// Returns none if the file has no Central Directory (count == 0).
-pub fn new_rres_loader(file_path string) ?RresLoader {
+// opens file_path and loads its Central Directory.
+// returns none if the file has no Central Directory (count == 0).
+pub fn RresLoader.new(file_path string) ?RresLoader {
 	dir := rres.load_central_directory(file_path)
 	if dir.count == 0 {
 		return none

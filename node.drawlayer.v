@@ -4,7 +4,7 @@ import raylib as rl
 
 // DrawLayer renders its children in a fixed coordinate space that is
 // independent of the parent transform chain — exactly like Godot's DrawLayer.
-pub struct DrawLayer implements INode {
+pub struct DrawLayer {
     Node
 }
 

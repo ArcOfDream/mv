@@ -25,7 +25,7 @@ fn (mut g Game) setup() {
 }
 
 fn (mut g Game) init() {
-	loader := rres.new_rres_loader('assets/assets.rres')
+	loader := rres.RresLoader.new('assets/assets.rres')
 
 	if mut app := g.app {
 		app.set_window_title('Hello, raymv!')
@@ -53,7 +53,6 @@ fn (mut g Game) init() {
 			
 			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
-			player.loop(true)
 			//player.seek(30)
 
 			mv.emit_notification(mut r, .ready)

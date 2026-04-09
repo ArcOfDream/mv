@@ -24,7 +24,6 @@ pub enum ProcessFlags {
 pub interface INode {
 	name() string
 	app() &App
-	get_children() []&INode
 	get_child_count() int
 	find_child(child &INode) int
 	get_pos() Vec2
@@ -68,6 +67,7 @@ mut:
 	push_mat_internal()
 	pop_mat_internal()
 	
+	get_children() []&INode
 	add_child(mut child INode)
 	remove_child(index int)
 	insert_child_at(index int, mut child INode)

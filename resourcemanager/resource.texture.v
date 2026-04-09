@@ -70,6 +70,14 @@ pub fn (mut rm ResourceManager[TextureResource]) load(name string, path string) 
 	return rm.add(name, TextureResource{ tex: t })
 }
 
+pub fn (mut rm ResourceManager[TextureResource]) load_from_image(name string, img rl.Image) ?Handle[TextureResource] {
+    if h := rm.get_handle(name) { return h }
+    tex := rl.load_texture_from_image(img)
+    rl.unload_image(img)
+    if tex.id <= 0 { return none }
+    return rm.add(name, TextureResource{ tex: tex })
+}
+
 // load_from_rres loads an IMGE chunk named rres_name, promotes it to a
 // Texture2D via an intermediate Image, and registers it under name.
 pub fn (mut rm ResourceManager[TextureResource]) load_from_rres(loader &rres.RresLoader, name string, rres_name string) ?Handle[TextureResource] {

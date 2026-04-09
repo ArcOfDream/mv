@@ -233,7 +233,7 @@ pub fn (mut n Node) draw() {}
 // --- scene tree funcs ---
 
 @[inline]
-pub fn (n &Node) get_children() []&INode {
+pub fn (mut n Node) get_children() []&INode {
 	return n.children
 }
 
@@ -341,7 +341,7 @@ pub fn emit_notification(mut node INode, notification Notification) {
 				notify(mut node, .push_mat)
 				notify(mut node, .draw)
 
-				for mut child in node.children {
+				for mut child in node.get_children() {
 					emit_notification(mut child, .draw)
 				}
 				notify(mut node, .pop_mat)
@@ -379,7 +379,7 @@ pub fn emit_notification(mut node INode, notification Notification) {
 			node.dirty = false
 		}
 		else {
-    		for mut child in node.children {
+    	for mut child in node.get_children() {
 				emit_notification(mut child, notification)
 			}
 			notify(mut node, notification)

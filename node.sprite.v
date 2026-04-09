@@ -69,6 +69,8 @@ pub fn (mut s Sprite) set_shader_id(val string) {
 	}
 }
 
+pub fn (s &Sprite) get_shader_id() string { return s.shader_id }
+
 @[inline]
 fn (s &Sprite) get_source_rect(res &TextureResource) rl.Rectangle {
 	frame_w := res.tex.width / s.h_frames

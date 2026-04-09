@@ -25,6 +25,15 @@ pub fn (mut rm ResourceManager[ShaderResource]) load(name string, vs string, fs 
 	return rm.add(name, ShaderResource{ shd:s })
 }
 
+pub fn (mut rm ResourceManager[ShaderResource]) load_from_source(name string, vs string, fs string) ?Handle[ShaderResource] {
+    if h := rm.get_handle(name) { return h }
+    
+    shd := rl.load_shader_from_memory(vs, fs)
+    if shd.id <= 0 { return none }
+    
+    return rm.add(name, ShaderResource{ shd: shd })
+}
+
 // load_from_rres loads two TEXT chunks (vs_rres_name for the vertex shader,
 // fs_rres_name for the fragment shader) and compiles them into a Shader.
 // Pass '' for either name to use raylib's default shader for that stage.
