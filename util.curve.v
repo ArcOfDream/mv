@@ -109,6 +109,33 @@ pub fn (c &Curve) sample(x f32) f32 {
 	p1 := c.points[hi]
 	span := p1.pos.x - p0.pos.x
 	t := if !span.eq_epsilon(0) { (tx - p0.pos.x) / span } else { 0 }
+	y := hermite(p0.pos.y, p0.tangent_r * span, p1.pos.y, p1.tangent_l * span, t)
+	return f32( clamp(y, c.min_value, c.max_value) )
+}
+
+// same sampling, but without clamping to bounds
+pub fn (c &Curve) sample_unbound(x f32) f32 {
+	if c.points.len == 0 { return 0.0 }
+	if c.points.len == 1 { return c.points[0].pos.y }
+
+	tx := f32( clamp(x, 0.0, 1.0) )
+
+	if tx <= c.points[0].pos.x { return c.points[0].pos.y }
+	last := c.points.last()
+	if tx >= last.pos.x { return last.pos.y }
+
+	mut lo := 0
+	for i in 0 .. c.points.len - 1 {
+		if tx >= c.points[i].pos.x && tx <= c.points[i + 1].pos.x {
+			lo = i
+			break
+		}
+	}
+	hi := lo + 1
+	p0 := c.points[lo]
+	p1 := c.points[hi]
+	span := p1.pos.x - p0.pos.x
+	t := if !span.eq_epsilon(0) { (tx - p0.pos.x) / span } else { 0 }
 	return hermite(p0.pos.y, p0.tangent_r * span, p1.pos.y, p1.tangent_l * span, t)
 }
 
