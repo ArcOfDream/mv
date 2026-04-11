@@ -32,18 +32,17 @@ mut:
 	wren_update_handle ?&wren.Handle
 	wren_draw_handle   ?&wren.Handle
 
-	viewport      rl.RenderTexture2D
-	state         GameState = GameState{}
-	wren_cfg      wren.Configuration
-	names         &StringNameMap
-	
+	viewport rl.RenderTexture2D
+	state    GameState = GameState{}
+	wren_cfg wren.Configuration
+	names    &StringNameMap
 pub mut:
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
 	sounds   ResourceManager[SoundResource]
 
 	active_camera ?&CameraNode
-	audio_server audio.AudioServer
+	audio_server  audio.AudioServer
 	physics_world phys.PhysicsWorld
 	input_map     &input.InputMap
 
@@ -54,21 +53,21 @@ pub mut:
 	input_func         ?fn ()
 }
 
-pub fn App.new(init ?fn(), update ?fn (f32), draw ?fn (), backdrop ?fn (), input_fn ?fn ()) &App {
+pub fn App.new(init ?fn (), update ?fn (f32), draw ?fn (), backdrop ?fn (), input_fn ?fn ()) &App {
 	mut n := &StringNameMap{}
 	mut imap := input.InputMap.new(n)
-	
+
 	return &App{
-		names: n
+		names:     n
 		input_map: imap
-		
+
 		audio_server: audio.AudioServer.new()
-		
-		init_func: init
-		update_func: update
-		draw_func: draw
+
+		init_func:          init
+		update_func:        update
+		draw_func:          draw
 		backdrop_draw_func: backdrop
-		input_func: input_fn
+		input_func:         input_fn
 	}
 }
 
@@ -83,7 +82,7 @@ pub fn (app &App) new_node[T](name string, x f32, y f32) &T {
 			y: y
 		}
 	}
-	
+
 	emit_notification(mut node, .init)
 	return node
 }
@@ -176,7 +175,7 @@ pub fn (mut app App) set_active_camera(cam &CameraNode) {
 fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
 	for app.is_running {
 		app.audio_server.process()
-		
+
 		if update := app.update_func {
 			update(app.state.dt)
 		}
@@ -188,7 +187,7 @@ fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
 
 pub fn (mut app App) run() {
 	app.is_running = true
-	
+
 	// making sure to init audio here!
 	rl.init_audio_device()
 

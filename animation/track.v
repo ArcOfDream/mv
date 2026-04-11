@@ -23,7 +23,7 @@ mut:
 	setter_cb fn (T)           @[required]
 }
 
-//pub fn (mut tr Track[T]) write(value T) {
+// pub fn (mut tr Track[T]) write(value T) {
 //	tr.setter_cb(value)
 //}
 

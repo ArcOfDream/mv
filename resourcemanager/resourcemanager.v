@@ -89,7 +89,7 @@ pub fn (mut rm ResourceManager[T]) clear() {
 			slot.generation++
 		}
 	}
-	
+
 	rm.slots.clear()
 	rm.names.clear()
 	rm.free_indices.clear()

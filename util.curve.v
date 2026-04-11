@@ -81,7 +81,7 @@ fn (c &Curve) sample_raw(x f32) f32 {
 	if c.points.len == 1 {
 		return c.points[0].pos.y
 	}
-	
+
 	// clamping to edges
 	tx := f32(clamp(x, 0.0, 1.0))
 	if tx <= c.points[0].pos.x {
@@ -90,7 +90,7 @@ fn (c &Curve) sample_raw(x f32) f32 {
 	if tx >= c.points.last().pos.x {
 		return c.points.last().pos.y
 	}
-	
+
 	// finding the bracketing segment
 	mut lo := 0
 	for i in 0 .. c.points.len - 1 {
@@ -100,7 +100,7 @@ fn (c &Curve) sample_raw(x f32) f32 {
 		}
 	}
 	hi := lo + 1
-	
+
 	p0 := c.points[lo]
 	p1 := c.points[hi]
 	span := p1.pos.x - p0.pos.x

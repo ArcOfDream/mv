@@ -177,7 +177,7 @@ pub fn (ray Ray) impact(t f32) Vec {
 // collision shapes are not gigantic. For example, try to keep the volume of all your shapes
 // less than 100.0f. If you need large shapes, you should use tiny collision geometry for all
 // cute c2 function, and simply render the geometry larger on-screen by scaling it up.
-//fn C.c2GJK(shape_a voidptr, type_a int, x_a &XTransform, shape_b voidptr, type_b int, x_b &XTransform, out_v_a &Vec, out_v_b &Vec, use_radius int) f32
+// fn C.c2GJK(shape_a voidptr, type_a int, x_a &XTransform, shape_b voidptr, type_b int, x_b &XTransform, out_v_a &Vec, out_v_b &Vec, use_radius int) f32
 
 // --- boolean tests ---
 
@@ -314,8 +314,8 @@ pub fn collided(shape_a voidptr, x_a &XTransform, type_a CollisionType, shape_b 
 @[inline]
 pub fn collided_smart(shape_a voidptr, x_a ?&XTransform, type_a CollisionType, shape_b voidptr, x_b ?&XTransform, type_b CollisionType) bool {
 	// if no transform is provided, we pass a null pointer to C
-	ptr_a := if x := x_a { x } else { voidptr(0) }
-	ptr_b := if x := x_b { x } else { voidptr(0) }
+	ptr_a := if x := x_a { x } else { unsafe { nil } }
+	ptr_b := if x := x_b { x } else { unsafe { nil } }
 
 	return C.c2Collided(shape_a, ptr_a, int(type_a), shape_b, ptr_b, int(type_b)) != 0
 }

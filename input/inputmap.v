@@ -11,35 +11,37 @@ pub enum InputDevice {
 pub struct InputBinding {
 pub:
 	device InputDevice
-	code int
+	code   int
 }
 
 // helper functions for constructing InputBindings
 pub fn key(k rl.KeyboardKey) InputBinding {
 	return InputBinding{
 		device: .keyboard
-		code: int(k)
+		code:   int(k)
 	}
 }
 
 pub fn mouse_btn(b rl.MouseButton) InputBinding {
 	return InputBinding{
 		device: .keyboard
-		code: int(b)
+		code:   int(b)
 	}
 }
 
 pub struct InputMap {
 mut:
-	names &StringNameMap
-	actions map[voidptr][]InputBinding
-	pressed map[voidptr]bool
-	just_pressed map[voidptr]bool
+	names         &StringNameMap
+	actions       map[voidptr][]InputBinding
+	pressed       map[voidptr]bool
+	just_pressed  map[voidptr]bool
 	just_released map[voidptr]bool
 }
 
 pub fn InputMap.new(names &StringNameMap) &InputMap {
-	return &InputMap{ names: names }
+	return &InputMap{
+		names: names
+	}
 }
 
 fn (mut im InputMap) sn(val string) StringName {
@@ -66,7 +68,7 @@ pub fn (mut im InputMap) update() {
 		mut any_down := false
 		for b in bindings {
 			down := match b.device {
-				.keyboard     { rl.is_key_down(b.code) }
+				.keyboard { rl.is_key_down(b.code) }
 				.mouse_button { rl.is_mouse_button_down(b.code) }
 			}
 			if down {
@@ -76,9 +78,9 @@ pub fn (mut im InputMap) update() {
 		}
 
 		was := im.pressed[ptr] or { false }
-		im.just_pressed[ptr]  = any_down && !was
+		im.just_pressed[ptr] = any_down && !was
 		im.just_released[ptr] = !any_down && was
-		im.pressed[ptr]       = any_down
+		im.pressed[ptr] = any_down
 	}
 }
 

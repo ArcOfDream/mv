@@ -16,11 +16,11 @@ pub:
 pub mut:
 	dir CentralDir
 }
- 
+
 // opens file_path and loads its Central Directory.
 // returns none if the file has no Central Directory (count == 0).
 pub fn RresLoader.new(file_path string) ?RresLoader {
-	dir := rres.load_central_directory(file_path)
+	dir := load_central_directory(file_path)
 	if dir.count == 0 {
 		return none
 	}
@@ -29,7 +29,7 @@ pub fn RresLoader.new(file_path string) ?RresLoader {
 		dir:       dir
 	}
 }
- 
+
 // unload frees the Central Directory. Call after all loads are complete.
 pub fn (loader RresLoader) unload() {
 	loader.dir.unload()
@@ -44,7 +44,7 @@ pub fn (loader RresLoader) chunk_id(rres_name string) ?u32 {
 	}
 	return id
 }
- 
+
 // load_single loads a single chunk by rres_name and unpacks it in-place if
 // needed. The caller is responsible for calling chunk.unload().
 pub fn (loader RresLoader) load_single(rres_name string) ?ResourceChunk {
@@ -58,7 +58,7 @@ pub fn (loader RresLoader) load_single(rres_name string) ?ResourceChunk {
 	}
 	return chunk
 }
- 
+
 // load_multi loads all chunks for rres_name and unpacks each one in-place.
 // Unpacking is performed via a direct pointer into the C-owned chunk array —
 // working on copies would leave the original packed buffers untouched, so
@@ -71,7 +71,7 @@ pub fn (loader RresLoader) load_multi(rres_name string) ?ResourceMulti {
 		multi.unload()
 		return none
 	}
-	
+
 	mut chunks := multi.chunks_slice()
 	for mut c in chunks {
 		if c.is_compressed() || c.is_encrypted() {
@@ -81,6 +81,6 @@ pub fn (loader RresLoader) load_multi(rres_name string) ?ResourceMulti {
 			}
 		}
 	}
-	
+
 	return multi
 }

@@ -65,7 +65,7 @@ fn (mut g Game) init() {
 				Color{60, 80, 160, 255}, // mid blue
 				Color{10, 15, 40, 255}, // dark edge
 			])
-			sphere_grad.interpolation = .monotone_cubic
+			sphere_grad.interpolation = .cubic
 
 			sphere_tex := mv.Gradient2D{
 				gradient: sphere_grad
@@ -77,7 +77,7 @@ fn (mut g Game) init() {
 				height:   128
 			}.bake()
 			app.textures.add_texture('sphere', sphere_tex)
-			
+
 			mut sprite := mv.Sprite.new(app, 'gradient', 'sphere')
 			r.add_child(mut sprite)
 			sprite.set_pos(Vec2{100, 100})

@@ -36,13 +36,13 @@ pub fn from_memory(data []u8) !&Pxtone {
 pub fn from_file(path string) !&Pxtone {
 	fp := os.vfopen(path, 'rb')!
 	defer { C.fclose(fp) }
-	
+
 	mut err := 0
 	handle := C.mpxtn_fread(fp, &err)
 	if handle == unsafe { nil } {
 		return error('mpxtn_fread failed (err=${err})')
 	}
-	
+
 	return handle
 }
 

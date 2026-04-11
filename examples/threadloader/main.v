@@ -2,7 +2,7 @@ module main
 
 import raylib as rl
 import mv
-import mv.resourcemanager { ThreadLoader, LoadCommand, FileSource }
+import mv.resourcemanager { FileSource, LoadCommand, ThreadLoader }
 
 // this example shows working with threadloader to help load multiple files on a thread
 //
@@ -11,10 +11,10 @@ import mv.resourcemanager { ThreadLoader, LoadCommand, FileSource }
 @[heap]
 struct Game {
 mut:
-	app ?&mv.App
+	app     ?&mv.App
 	sprites []&mv.Sprite
 
-	tl &ThreadLoader = ThreadLoader.new(none)
+	tl         &ThreadLoader = ThreadLoader.new(none)
 	load_count int
 }
 
@@ -28,7 +28,7 @@ fn (mut g Game) setup() {
 
 fn (mut g Game) init() {
 	img_size := mv.Vec2{260, 190}
-	
+
 	if mut app := g.app {
 		app.set_window_title('Hello, mv!')
 		app.set_window_size(640, 480)
@@ -49,12 +49,9 @@ fn (mut g Game) init() {
 					path: 'tiles/${tile_num}.png'
 				}
 			})
-			
-			mut spr := app.new_node[mv.Sprite](
-				tile_num, 
-				20 + ((i-1) % 5) * 53,
-				20 + ((i-1) / 5) * 39
-			)
+
+			mut spr := app.new_node[mv.Sprite](tile_num, 20 + ((i - 1) % 5) * 53, 20 +
+				((i - 1) / 5) * 39)
 			spr.set_centered(false)
 			g.sprites << spr
 		}
@@ -76,30 +73,30 @@ fn (mut g Game) draw() {
 			}
 			match event.content {
 				// use match to get cases for Image, Wave, ShaderFile and []u8
-				rl.Image { 
+				rl.Image {
 					app.textures.load_from_image(event.name, event.content)
-				 	println('got ${event.name}')
+					println('got ${event.name}')
 					g.load_count++
 				}
 				else {} // do nothing
 			}
 		}
-		
+
 		if g.load_count >= 25 && !g.tl.is_closed() {
 			println('everything loaded... closing worker thread')
 			g.tl.shutdown()
-			
+
 			for i in 1 .. 26 {
 				mut tile_num := 'tile_${i:03}'
-				g.sprites[i-1].set_texture_id(tile_num)
+				g.sprites[i - 1].set_texture_id(tile_num)
 			}
 		}
 	}
-	
+
 	for mut spr in g.sprites {
 		mv.emit_notification(mut spr, .draw)
 	}
-	
+
 	rl.draw_text('threadloader sample', 2, 2, 4, rl.raywhite)
 }
 

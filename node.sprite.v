@@ -1,33 +1,33 @@
 module mv
 
 import raylib as rl
-import resourcemanager { Handle, TextureResource, ShaderResource }
+import resourcemanager { Handle, ShaderResource, TextureResource }
 
 pub struct Sprite {
 	Node
 mut:
-	centered   bool = true 
-	offset     Vec2 
-	texture_id string 
-	shader_id  string 
-	tint       rl.Color = rl.white 
+	centered   bool = true
+	offset     Vec2
+	texture_id string
+	shader_id  string
+	tint       rl.Color = rl.white
 	texture    Handle[TextureResource]
 	shader     Handle[ShaderResource]
 pub mut:
-	h_frames      int = 1 
-	v_frames      int = 1 
-	current_frame int 
+	h_frames      int = 1
+	v_frames      int = 1
+	current_frame int
 }
 
 pub fn Sprite.new(app &App, name string, texture_id ?string) &Sprite {
 	mut spr := &Sprite{
-		app: app
+		app:       app
 		node_name: name
 	}
 	if tex := texture_id {
 		spr.set_texture_id(tex)
 	}
-	
+
 	return spr
 }
 
@@ -81,13 +81,15 @@ pub fn (mut s Sprite) set_shader_id(val string) {
 	}
 }
 
-pub fn (s &Sprite) get_shader_id() string { return s.shader_id }
+pub fn (s &Sprite) get_shader_id() string {
+	return s.shader_id
+}
 
 @[inline]
 fn (s &Sprite) get_source_rect(res &TextureResource) rl.Rectangle {
 	frame_w := res.tex.width / s.h_frames
 	frame_h := res.tex.height / s.v_frames
-	
+
 	// vfmt off
 	return rl.Rectangle{
 		(s.current_frame % s.h_frames) * frame_w,

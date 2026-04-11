@@ -11,7 +11,7 @@ pub mut:
 
 pub fn CameraNode.new(app &App, name string) &CameraNode {
 	return &CameraNode{
-		app: app
+		app:       app
 		node_name: name
 	}
 }

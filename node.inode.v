@@ -1,6 +1,6 @@
 module mv
 
-import raylib as rl 
+import raylib as rl
 import raylib.raymath as rm
 import wren
 
@@ -45,10 +45,10 @@ mut:
 	parent         ?&INode
 	children       []&INode
 	wren_handle    ?&wren.Handle
-	
+
 	get_global_matrix() rl.Matrix
 	get_local_matrix() rl.Matrix
-	
+
 	get_global_pos() Vec2
 	get_global_scale() Vec2
 	get_global_angle_rad() f32
@@ -62,11 +62,11 @@ mut:
 	set_global_scale(val Vec2)
 	set_global_angle_deg(val f32)
 	set_global_angle_rad(val f32)
-	
+
 	rebuild_local_matrix()
 	push_mat_internal()
 	pop_mat_internal()
-	
+
 	get_children() []&INode
 	add_child(mut child INode)
 	remove_child(index int)
@@ -75,7 +75,7 @@ mut:
 	replace_by(mut node INode)
 	move_child(index int, to int)
 	swap_children(index_a int, index_b int)
-	
+
 	init_internal()
 	init()
 	ready_internal()

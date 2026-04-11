@@ -35,7 +35,7 @@ pub fn (sn StringName) str() string {
 
 pub fn (mut s StringNameMap) new(val string) StringName {
 	s.lock.rlock()
-	
+
 	if val in s.table {
 		if mut entry := s.table[val] {
 			entry.count++
@@ -43,7 +43,7 @@ pub fn (mut s StringNameMap) new(val string) StringName {
 			return StringName{entry}
 		}
 	}
-	
+
 	s.lock.runlock()
 
 	// doing a full lock if not found

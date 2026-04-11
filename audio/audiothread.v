@@ -109,20 +109,24 @@ fn audio_thread_loop(cmd_ch chan AudioMessage, event_ch chan AudioEvent, done_ch
 		}
 
 		// update all active streams; collect finished IDs
-        mut finished := []StreamID{}
-        for id, mut s in streams {
-            if !s.playing { continue }
-            if update_source(mut s.src) {
-                s.playing = false
-                finished << id
-            }
-        }
+		mut finished := []StreamID{}
+		for id, mut s in streams {
+			if !s.playing {
+				continue
+			}
+			if update_source(mut s.src) {
+				s.playing = false
+				finished << id
+			}
+		}
 
-        // fire finish events without holding the loop
-        for id in finished {
-            event_ch <- StreamFinishedEvent{ id: id }
-        }
+		// fire finish events without holding the loop
+		for id in finished {
+			event_ch <- StreamFinishedEvent{
+				id: id
+			}
+		}
 
-        time.sleep(2 * time.millisecond)
+		time.sleep(2 * time.millisecond)
 	}
 }

@@ -49,7 +49,7 @@ pub fn (mut n TestNode) ready() {
 
 pub fn TestNode.new(app &mv.App, name string) &TestNode {
 	return &TestNode{
-		app: app
+		app:       app
 		node_name: name
 	}
 }

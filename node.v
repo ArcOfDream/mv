@@ -32,7 +32,7 @@ pub mut:
 
 pub fn Node.new(app &App, name string) &Node {
 	return &Node{
-		app: app
+		app:       app
 		node_name: name
 	}
 }
@@ -386,7 +386,7 @@ pub fn emit_notification(mut node INode, notification Notification) {
 			node.dirty = false
 		}
 		else {
-    	for mut child in node.get_children() {
+			for mut child in node.get_children() {
 				emit_notification(mut child, notification)
 			}
 			notify(mut node, notification)

@@ -15,7 +15,7 @@ mut:
 }
 
 // from_layer constructs a TileMap from an LDtk layer instance, adds it as a child of parent
-// and returns a reference to TileMap 
+// and returns a reference to TileMap
 // ---
 // only Tiles and AutoLayer layer types are meaningful here - IntGrid layers should use IntGrid.from_layer
 pub fn TileMap.from_layer(layer &ldtk.LayerInstance, mut parent INode) &TileMap {
@@ -50,12 +50,11 @@ fn (mut t TileMap) draw_internal() {
 
 	for tile in t.tiles {
 		flags := tile.flip_flags()
-		src := rl.Rectangle{
-			f32(tile.src[0]),
-			f32(tile.src[1]),
-			if flags.has(.x) { -w } else { w },
-			if flags.has(.y) { -w } else { w },
-		}
+		src := rl.Rectangle{f32(tile.src[0]), f32(tile.src[1]), if flags.has(.x) { -w } else { w }, if flags.has(.y) {
+			-w
+		} else {
+			w
+		}}
 		dst := rl.Rectangle{f32(tile.px[0]), f32(tile.px[1]), w, w}
 		rl.draw_texture_pro(tex.tex, src, dst, rl.Vector2{0, 0}, 0, color)
 	}

@@ -26,11 +26,15 @@ pub fn (mut rm ResourceManager[SoundResource]) load(name string, path string) ?H
 }
 
 pub fn (mut rm ResourceManager[SoundResource]) load_from_wave(name string, wave rl.Wave) ?Handle[SoundResource] {
-    if h := rm.get_handle(name) { return h }
-    snd := rl.load_sound_from_wave(wave)
-    rl.unload_wave(wave)
-    if !rl.is_sound_valid(snd) { return none }
-    return rm.add(name, SoundResource{ snd: snd })
+	if h := rm.get_handle(name) {
+		return h
+	}
+	snd := rl.load_sound_from_wave(wave)
+	rl.unload_wave(wave)
+	if !rl.is_sound_valid(snd) {
+		return none
+	}
+	return rm.add(name, SoundResource{ snd: snd })
 }
 
 // load_from_rres loads a WAVE chunk named rres_name, converts it to a Sound
@@ -43,21 +47,21 @@ pub fn (mut rm ResourceManager[SoundResource]) load_from_rres(loader &rres.RresL
 	raw_chunk := loader.load_single(rres_name)
 	if chunk := raw_chunk {
 		defer { chunk.unload() }
-	
+
 		wave := rres.load_wave_from_resource(chunk)
 		if !rl.is_wave_valid(wave) {
 			return none
 		}
-	
+
 		snd := rl.load_sound_from_wave(wave)
 		rl.unload_wave(wave)
-	
+
 		if !rl.is_sound_valid(snd) {
 			return none
 		}
-	
+
 		return rm.add(name, SoundResource{ snd: snd })
 	}
-	
+
 	return none
 }

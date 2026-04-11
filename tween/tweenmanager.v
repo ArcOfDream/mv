@@ -25,11 +25,11 @@ pub fn (mut m TweenManager) tween[T](target &T, from T, to T, dur f32, ease Ease
 
 pub fn (mut m TweenManager) cb_tween[T](cb fn (T), from T, to T, dur f32, ease EaseFn, lerp fn (T, T, f32) T) {
 	m.tweeners << Tweener[T]{
-		from:     from
-		to:       to
-		duration: dur
-		ease:     ease
-		lerp_fn:  lerp
-		callback_fn : cb
+		from:        from
+		to:          to
+		duration:    dur
+		ease:        ease
+		lerp_fn:     lerp
+		callback_fn: cb
 	}
 }

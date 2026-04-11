@@ -8,16 +8,16 @@ mut:
 	render_texture rl.RenderTexture2D
 pub mut:
 	process_flags ProcessFlags = .draw
-	width int
-	height int
-	clear_color rl.Color = rl.Color{0, 0, 0, 255}
+	width         int
+	height        int
+	clear_color   rl.Color = rl.Color{0, 0, 0, 255}
 }
 
 pub fn Viewport.new(app &App, width int, height int) &Viewport {
 	return &Viewport{
-		app: app
-		width: width
-		height: height
+		app:            app
+		width:          width
+		height:         height
 		render_texture: rl.load_render_texture(width, height)
 	}
 }

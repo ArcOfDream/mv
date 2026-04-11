@@ -48,7 +48,7 @@ pub:
 // (e.g. a TTF font produces an image chunk + a glyph-info chunk.)
 pub struct C.rresResourceMulti {
 pub:
-	count  u32                  // Number of chunks in this multi-resource
+	count  u32            // Number of chunks in this multi-resource
 	chunks &ResourceChunk // Heap-allocated array of 'count' chunks
 }
 
@@ -64,7 +64,7 @@ pub:
 // rresCentralDir — the optional Central Directory appended to .rres files.
 pub struct C.rresCentralDir {
 pub:
-	count   u32             // Number of directory entries
+	count   u32       // Number of directory entries
 	entries &DirEntry // Heap-allocated array of 'count' entries
 }
 
@@ -232,13 +232,13 @@ pub fn (chunk &ResourceChunk) props() []u32 {
 // font_glyphs interprets the raw payload of a FNTG chunk as []FontGlyphInfo.
 // Returns an empty slice when the chunk is not of type font_glyphs.
 pub fn (chunk &ResourceChunk) font_glyphs() []FontGlyphInfo {
-    if chunk.data_type() != .font_glyphs {
-        return []
-    }
-    prop_bytes := u32(4) + chunk.data.propCount * u32(4)
-    raw_bytes  := chunk.info.baseSize - prop_bytes
-    count      := int(raw_bytes) / int(sizeof(FontGlyphInfo))
-    return unsafe { arr.carray_to_varray[FontGlyphInfo](chunk.data.raw, count) }
+	if chunk.data_type() != .font_glyphs {
+		return []
+	}
+	prop_bytes := u32(4) + chunk.data.propCount * u32(4)
+	raw_bytes := chunk.info.baseSize - prop_bytes
+	count := int(raw_bytes) / int(sizeof(FontGlyphInfo))
+	return unsafe { arr.carray_to_varray[FontGlyphInfo](chunk.data.raw, count) }
 }
 
 // ResourceMulti methods
@@ -295,7 +295,7 @@ pub fn (dir &CentralDir) entries_slice() []DirEntry {
 	if dir.count == 0 {
 		return []
 	}
-	return unsafe{ arr.carray_to_varray[DirEntry](dir.entries, int(dir.count)) }
+	return unsafe { arr.carray_to_varray[DirEntry](dir.entries, int(dir.count)) }
 }
 
 // DirEntry methods
@@ -311,21 +311,21 @@ pub fn (e &DirEntry) file_name() string {
 // If the resource has multiple linked chunks, only the first is returned;
 // use load_resource_multi to get all of them
 pub fn load_resource_chunk(file_name string, rres_id u32) ResourceChunk {
-    chunk := C.rresLoadResourceChunk(file_name.str, rres_id)
-    return ResourceChunk(chunk)
+	chunk := C.rresLoadResourceChunk(file_name.str, rres_id)
+	return ResourceChunk(chunk)
 }
 
 // load_resource_multi loads all chunks sharing rres_id from file_name
 pub fn load_resource_multi(file_name string, rres_id u32) ResourceMulti {
-    multi := C.rresLoadResourceMulti(file_name.str, rres_id)
-    return ResourceMulti(multi)
+	multi := C.rresLoadResourceMulti(file_name.str, rres_id)
+	return ResourceMulti(multi)
 }
 
 // load_central_directory loads the Central Directory from file_name
 // returns an empty CentralDir (count == 0) if the file has no directory
 pub fn load_central_directory(file_name string) CentralDir {
-    dir := C.rresLoadCentralDirectory(file_name.str)
-    return CentralDir(dir)
+	dir := C.rresLoadCentralDirectory(file_name.str)
+	return CentralDir(dir)
 }
 
 // utility functions

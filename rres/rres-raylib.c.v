@@ -33,18 +33,18 @@ pub fn (mut chunk ResourceChunk) unpack() bool {
 
 pub fn load_data_from_resource(chunk ResourceChunk) (voidptr, u32) {
 	mut bytesize := u32(0)
-	
+
 	return C.LoadDataFromResource(chunk, &bytesize), bytesize
 }
 
 pub fn load_text_from_resource(chunk ResourceChunk) string {
-    ptr := C.LoadTextFromResource(chunk)
-    if ptr == unsafe { nil } {
-        return ''
-    }
-    result := unsafe{ tos_clone(ptr) }
-    C.MemFree(ptr)
-    return result
+	ptr := C.LoadTextFromResource(chunk)
+	if ptr == unsafe { nil } {
+		return ''
+	}
+	result := unsafe { tos_clone(ptr) }
+	C.MemFree(ptr)
+	return result
 }
 
 pub fn load_image_from_resource(chunk ResourceChunk) rl.Image {

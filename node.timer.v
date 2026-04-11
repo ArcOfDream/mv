@@ -15,8 +15,8 @@ mut:
 
 pub fn Timer.new(app &App, name string, timeout_fn ?fn ()) &Timer {
 	return &Timer{
-		node_name: name
-		app: app
+		node_name:  name
+		app:        app
 		on_timeout: timeout_fn
 	}
 }

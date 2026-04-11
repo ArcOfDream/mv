@@ -1,4 +1,4 @@
-module rres 
+module rres
 
 #flag -I @VMODROOT/rres/c
 #define QOI_IMPLEMENTATION
