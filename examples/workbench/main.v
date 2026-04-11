@@ -65,7 +65,18 @@ fn (mut g Game) init() {
 				Color{60, 80, 160, 255}, // mid blue
 				Color{10, 15, 40, 255}, // dark edge
 			])
-			sphere_grad.interpolation = .cubic
+			sphere_grad.interpolation = .monotone_cubic
+			mut rainbow_grad := mv.Gradient.from_colors([
+				rl.red,
+				rl.orange,
+				rl.yellow,
+				rl.green,
+				rl.skyblue,
+				rl.darkblue,
+				rl.purple,
+				rl.violet,
+			])
+			rainbow_grad.interpolation = .constant
 
 			sphere_tex := mv.Gradient2D{
 				gradient: sphere_grad
@@ -73,14 +84,22 @@ fn (mut g Game) init() {
 				center:   Vec2{0.5, 0.5} // outer circle sits in the middle
 				radius:   0.5
 				focal:    Vec2{0.35, 0.3} // highlight pushed upper-left
-				width:    128
-				height:   128
+				width:    64
+				height:   64
 			}.bake()
 			app.textures.add_texture('sphere', sphere_tex)
 
 			mut sprite := mv.Sprite.new(app, 'gradient', 'sphere')
 			r.add_child(mut sprite)
-			sprite.set_pos(Vec2{100, 100})
+			sprite.set_centered(false)
+			sprite.set_pos(Vec2{0, 0})
+
+			mut img_xor := mv.gen_image_xor(64, 64, rainbow_grad)
+			app.textures.load_from_image('xor', img_xor)
+			mut sprite2 := mv.Sprite.new(app, 'xor', 'xor')
+			r.add_child(mut sprite2)
+			sprite2.set_centered(false)
+			sprite2.set_pos(Vec2{64, 0})
 
 			mv.emit_notification(mut r, .ready)
 		}

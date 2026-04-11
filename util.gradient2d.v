@@ -1,7 +1,7 @@
 module mv
 
 import raylib as rl { Color, PixelFormat }
-import math { atan2, floorf, sqrtf }
+import math { atan2, floorf, sqrtf, clamp }
 
 pub enum GradientFill {
 	linear
@@ -231,6 +231,73 @@ pub fn gen_image_grid(width int, height int, cols int, rows int, thickness int, 
 			on_col := (x * cols / width) != ((x + thickness - 1) * cols / width)
 			on_row := (y * rows / height) != ((y + thickness - 1) * rows / height)
 			write_pixel(mut pixels, y * width + x, if on_col || on_row { line } else { bg })
+		}
+	}
+	return image_from_pixels(width, height, pixels)
+}
+
+fn next_pow2(x int) int {
+	mut v := x - 1
+	v |= v >> 1
+	v |= v >> 2
+	v |= v >> 4
+	v |= v >> 8
+	v |= v >> 16
+	return v + 1
+}
+
+pub fn gen_image_xor(width int, height int, gradient &Gradient) rl.Image {
+	mut pixels := alloc_pixels(width, height)
+	max_xor := f32(next_pow2(math.max(width, height)) - 1)
+	for y in 0 .. height {
+		for x in 0 .. width {
+			t := f32((x ^ y) % int(max_xor + 1)) / max_xor
+			write_pixel(mut pixels, y * width + x, gradient.sample(t))
+		}
+	}
+	return image_from_pixels(width, height, pixels)
+}
+
+// distance from a circle edge, normalized by radius.
+// t = 0 at the focal point, t = 1 at the circle edge, t > 1 outside.
+pub fn gen_image_sdf_circle(width int, height int, center Vec2, radius f32, softness f32, gradient &Gradient) rl.Image {
+	mut pixels := alloc_pixels(width, height)
+	aspect := f32(width) / f32(height)
+	for y in 0 .. height {
+		for x in 0 .. width {
+			nx := (f32(x) / f32(width)  - center.x) * aspect
+			ny :=  f32(y) / f32(height) - center.y
+			dist := sqrtf(nx * nx + ny * ny)
+			// remap: 0 at center, 1 at edge, softness controls the aa band
+			t := f32(clamp((dist / radius - 1.0 + softness) / (softness + 1e-9), 0.0, 1.0))
+			write_pixel(mut pixels, y * width + x, gradient.sample(t))
+		}
+	}
+	return image_from_pixels(width, height, pixels)
+}
+
+pub fn gen_image_sdf_rect(width int, height int, rect rl.Rectangle, corner_radius f32, softness f32, gradient &Gradient) rl.Image {
+	mut pixels := alloc_pixels(width, height)
+	// half-extents of the inner box (after subtracting corner radius)
+	hx := rect.width  * 0.5 - corner_radius
+	hy := rect.height * 0.5 - corner_radius
+	cx := rect.x + rect.width  * 0.5
+	cy := rect.y + rect.height * 0.5
+	for y in 0 .. height {
+		for x in 0 .. width {
+			// vector from box center to pixel, folded into first quadrant
+			px := math.abs(f32(x) - cx) - hx
+			py := math.abs(f32(y) - cy) - hy
+			// SDF: outside corner = length of (px,py) clamped positive,
+			//      inside         = max of the two components (negative)
+			outside := sqrtf(
+				math.max(px, f32(0.0)) * math.max(px, f32(0.0)) +
+				math.max(py, f32(0.0)) * math.max(py, f32(0.0))
+			)
+			inside  := math.min(math.max(px, py), f32(0.0))
+			dist    := outside + inside - corner_radius
+			t := f32(clamp((dist + softness) / (softness * 2.0 + 1e-9), 0.0, 1.0))
+			write_pixel(mut pixels, y * width + x, gradient.sample(t))
 		}
 	}
 	return image_from_pixels(width, height, pixels)

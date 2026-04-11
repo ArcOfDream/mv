@@ -85,7 +85,7 @@ pub fn (mut rm ResourceManager[TextureResource]) load_from_image(name string, im
 		return h
 	}
 	tex := rl.load_texture_from_image(img)
-	rl.unload_image(img)
+	//rl.unload_image(img)
 	if tex.id <= 0 {
 		return none
 	}
