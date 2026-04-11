@@ -317,7 +317,7 @@ pub fn collided_smart(shape_a voidptr, x_a ?&XTransform, type_a CollisionType, s
 	mut ptr_a := unsafe { nil }
 	mut ptr_b := unsafe { nil }
 	if x := x_a { ptr_a = x }
-		if x := x_b { ptr_b = x }
+	if x := x_b { ptr_b = x }
 
 	return C.c2Collided(shape_a, ptr_a, int(type_a), shape_b, ptr_b, int(type_b)) != 0
 }
