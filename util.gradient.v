@@ -20,7 +20,7 @@ pub struct Gradient {
 pub mut:
 	stops               []GradientStop
 	interpolation       GradientInterpolation = .linear
-	interpolation_curve ?&Curve
+	interpolation_curve ?&BakedCurve
 }
 
 pub fn Gradient.new() Gradient {
