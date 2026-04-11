@@ -314,8 +314,10 @@ pub fn collided(shape_a voidptr, x_a &XTransform, type_a CollisionType, shape_b 
 @[inline]
 pub fn collided_smart(shape_a voidptr, x_a ?&XTransform, type_a CollisionType, shape_b voidptr, x_b ?&XTransform, type_b CollisionType) bool {
 	// if no transform is provided, we pass a null pointer to C
-	ptr_a := if x := x_a { x } else { unsafe { nil } }
-	ptr_b := if x := x_b { x } else { unsafe { nil } }
+	mut ptr_a := unsafe { nil }
+	mut ptr_b := unsafe { nil }
+	if x := x_a { ptr_a = x }
+		if x := x_b { ptr_b = x }
 
 	return C.c2Collided(shape_a, ptr_a, int(type_a), shape_b, ptr_b, int(type_b)) != 0
 }
