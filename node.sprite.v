@@ -19,6 +19,18 @@ pub mut:
 	current_frame int 
 }
 
+pub fn Sprite.new(app &App, name string, texture_id ?string) &Sprite {
+	mut spr := &Sprite{
+		app: app
+		node_name: name
+	}
+	if tex := texture_id {
+		spr.set_texture_id(tex)
+	}
+	
+	return spr
+}
+
 pub fn (s &Sprite) get_centered() bool {
 	return s.centered
 }

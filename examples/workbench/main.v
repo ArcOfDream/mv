@@ -1,7 +1,7 @@
 module main
 
-import raylib as rl
-import mv
+import raylib as rl { Color }
+import mv { Vec2 }
 import mv.rres
 import mv.ldtk as _
 
@@ -46,19 +46,41 @@ fn (mut g Game) init() {
 		g.root = app.new_node[mv.Node]('root', 0, 0)
 
 		if mut r := g.root {
-			mut test := r.create_and_add_child[TestNode]('child')
-			test.set_scale(mv.Vec2{0.4, 0.4})
+			mut child := TestNode.new(app, 'child')
+			child.set_scale(Vec2{0.4, 0.4})
+			r.add_child(mut child)
 
-			mut c := r.create_and_add_child[mv.CameraNode]('camera')
+			mut c := mv.CameraNode.new(app, 'camera')
+			r.add_child(mut c)
 			g.cam = c
-
 			c.register()
-			//c.set_pos(mv.Vec2{0, 0})
-			
-			mut player := r.create_and_add_child[mv.MusicPlayer]('player')
+
+			mut player := mv.MusicPlayer.new(app, 'player')
+			r.add_child(mut player)
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
 			player.loop(true)
-			//player.seek(30)
+
+			mut sphere_grad := mv.Gradient.from_colors([
+				Color{255, 255, 240, 255}, // near-white highlight
+				Color{60, 80, 160, 255}, // mid blue
+				Color{10, 15, 40, 255}, // dark edge
+			])
+			sphere_grad.interpolation = .monotone_cubic
+
+			sphere_tex := mv.Gradient2D{
+				gradient: sphere_grad
+				fill:     .radial_focal
+				center:   Vec2{0.5, 0.5} // outer circle sits in the middle
+				radius:   0.5
+				focal:    Vec2{0.35, 0.3} // highlight pushed upper-left
+				width:    128
+				height:   128
+			}.bake()
+			app.textures.add_texture('sphere', sphere_tex)
+			
+			mut sprite := mv.Sprite.new(app, 'gradient', 'sphere')
+			r.add_child(mut sprite)
+			sprite.set_pos(Vec2{100, 100})
 
 			mv.emit_notification(mut r, .ready)
 		}

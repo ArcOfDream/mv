@@ -8,6 +8,13 @@ pub struct DrawLayer {
     Node
 }
 
+pub fn DrawLayer.new(app &App, name string) &DrawLayer {
+	return &DrawLayer{
+		app: app
+		node_name: name
+	}
+}
+
 // get_global_matrix breaks the parent chain
 pub fn (mut dl DrawLayer) get_global_matrix() rl.Matrix {
     dl.global_matrix = dl.get_local_matrix()

@@ -11,6 +11,13 @@ mut:
     stream_id ?audio.StreamID
 }
 
+pub fn MusicPlayer.new(app &App, name string) &MusicPlayer {
+	return &MusicPlayer{
+		app: app
+		node_name: name
+	}
+}
+
 pub fn (mut p MusicPlayer) play_pxtone(data []u8) ! {
     p.stop()
     id := p.app.audio_server.play_pxtone(data, p.bus)!

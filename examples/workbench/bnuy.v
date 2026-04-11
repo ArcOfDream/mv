@@ -47,6 +47,13 @@ pub fn (mut n TestNode) ready() {
 	n.anim_player.play('loop')
 }
 
+pub fn TestNode.new(app &mv.App, name string) &TestNode {
+	return &TestNode{
+		app: app
+		node_name: name
+	}
+}
+
 pub fn (mut n TestNode) update(dt f32) {
 	n.anim_player.update(dt)
 }

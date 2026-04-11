@@ -9,6 +9,13 @@ pub mut:
 	camera rl.Camera2D
 }
 
+pub fn CameraNode.new(app &App, name string) &CameraNode {
+	return &CameraNode{
+		app: app
+		node_name: name
+	}
+}
+
 pub fn (mut cam CameraNode) register() {
 	cam.app.set_active_camera(cam)
 }

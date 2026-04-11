@@ -32,6 +32,7 @@ fn (mut rm ResourceManager[T]) add(name string, res T) Handle[T] {
 		idx = rm.free_indices.pop()
 		rm.slots[idx].resource = res
 		rm.slots[idx].is_active = true
+		rm.slots[idx].generation++
 	} else {
 		idx = rm.slots.len
 		rm.slots << Slot[T]{

@@ -30,6 +30,13 @@ pub mut:
 	}
 }
 
+pub fn Node.new(app &App, name string) &Node {
+	return &Node{
+		app: app
+		node_name: name
+	}
+}
+
 @[inline]
 pub fn (n &Node) name() string {
 	return n.node_name

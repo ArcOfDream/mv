@@ -70,12 +70,26 @@ pub fn (mut rm ResourceManager[TextureResource]) load(name string, path string) 
 	return rm.add(name, TextureResource{ tex: t })
 }
 
+pub fn (mut rm ResourceManager[TextureResource]) add_texture(name string, tex rl.Texture2D) ?Handle[TextureResource] {
+	if h := rm.get_handle(name) {
+		return h
+	}
+	if tex.id <= 0 {
+		return none
+	}
+	return rm.add(name, TextureResource{ tex: tex })
+}
+
 pub fn (mut rm ResourceManager[TextureResource]) load_from_image(name string, img rl.Image) ?Handle[TextureResource] {
-    if h := rm.get_handle(name) { return h }
-    tex := rl.load_texture_from_image(img)
-    rl.unload_image(img)
-    if tex.id <= 0 { return none }
-    return rm.add(name, TextureResource{ tex: tex })
+	if h := rm.get_handle(name) {
+		return h
+	}
+	tex := rl.load_texture_from_image(img)
+	rl.unload_image(img)
+	if tex.id <= 0 {
+		return none
+	}
+	return rm.add(name, TextureResource{ tex: tex })
 }
 
 // load_from_rres loads an IMGE chunk named rres_name, promotes it to a
@@ -85,21 +99,21 @@ pub fn (mut rm ResourceManager[TextureResource]) load_from_rres(loader &rres.Rre
 		return h
 	}
 
-	if chunk := loader.load_single(rres_name) {	
+	if chunk := loader.load_single(rres_name) {
 		defer { chunk.unload() }
-	
+
 		img := rres.load_image_from_resource(chunk)
 		if !rl.is_image_valid(img) {
 			return none
 		}
-	
+
 		tex := rl.load_texture_from_image(img)
 		rl.unload_image(img)
-	
+
 		if tex.id <= 0 {
 			return none
 		}
-	
+
 		return rm.add(name, TextureResource{ tex: tex })
 	}
 	return none

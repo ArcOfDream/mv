@@ -74,27 +74,23 @@ pub fn (mut c Curve) sort_points() {
 	c.points.sort(a.pos.x < b.pos.x)
 }
 
-// samples the curve's y value at position x, clamps to min and max values
-pub fn (c &Curve) sample(x f32) f32 {
+fn (c &Curve) sample_raw(x f32) f32 {
 	if c.points.len == 0 {
-		return 0
+		return 0.0
 	}
-
 	if c.points.len == 1 {
-		return f32(clamp(c.points[0].pos.y, c.min_value, c.max_value))
+		return c.points[0].pos.y
 	}
-
-	tx := f32(clamp(x, 0, 1))
-
-	// edge clamping
+	
+	// clamping to edges
+	tx := f32(clamp(x, 0.0, 1.0))
 	if tx <= c.points[0].pos.x {
-		return f32(clamp(c.points[0].pos.y, c.min_value, c.max_value))
+		return c.points[0].pos.y
 	}
-	last := c.points.last()
-	if tx >= last.pos.x {
-		return f32(clamp(last.pos.y, c.min_value, c.max_value))
+	if tx >= c.points.last().pos.x {
+		return c.points.last().pos.y
 	}
-
+	
 	// finding the bracketing segment
 	mut lo := 0
 	for i in 0 .. c.points.len - 1 {
@@ -103,40 +99,21 @@ pub fn (c &Curve) sample(x f32) f32 {
 			break
 		}
 	}
-
 	hi := lo + 1
+	
 	p0 := c.points[lo]
 	p1 := c.points[hi]
 	span := p1.pos.x - p0.pos.x
-	t := if !span.eq_epsilon(0) { (tx - p0.pos.x) / span } else { 0 }
-	y := hermite(p0.pos.y, p0.tangent_r * span, p1.pos.y, p1.tangent_l * span, t)
-	return f32( clamp(y, c.min_value, c.max_value) )
+	t := if !span.eq_epsilon(0) { (tx - p0.pos.x) / span } else { f32(0.0) }
+	return hermite(p0.pos.y, p0.tangent_r * span, p1.pos.y, p1.tangent_l * span, t)
 }
 
-// same sampling, but without clamping to bounds
+pub fn (c &Curve) sample(x f32) f32 {
+	return f32(clamp(c.sample_raw(x), c.min_value, c.max_value))
+}
+
 pub fn (c &Curve) sample_unbound(x f32) f32 {
-	if c.points.len == 0 { return 0.0 }
-	if c.points.len == 1 { return c.points[0].pos.y }
-
-	tx := f32( clamp(x, 0.0, 1.0) )
-
-	if tx <= c.points[0].pos.x { return c.points[0].pos.y }
-	last := c.points.last()
-	if tx >= last.pos.x { return last.pos.y }
-
-	mut lo := 0
-	for i in 0 .. c.points.len - 1 {
-		if tx >= c.points[i].pos.x && tx <= c.points[i + 1].pos.x {
-			lo = i
-			break
-		}
-	}
-	hi := lo + 1
-	p0 := c.points[lo]
-	p1 := c.points[hi]
-	span := p1.pos.x - p0.pos.x
-	t := if !span.eq_epsilon(0) { (tx - p0.pos.x) / span } else { 0 }
-	return hermite(p0.pos.y, p0.tangent_r * span, p1.pos.y, p1.tangent_l * span, t)
+	return c.sample_raw(x)
 }
 
 // cubic hermite basis
