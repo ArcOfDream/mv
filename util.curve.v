@@ -126,3 +126,49 @@ fn hermite(y0 f32, m0 f32, y1 f32, m1 f32, t f32) f32 {
 	h11 := t3 - t2
 	return h00 * y0 + h10 * m0 + h01 * y1 + h11 * m1
 }
+
+pub struct BakedCurve {
+pub:
+	samples   []f32
+	min_value f32
+	max_value f32
+}
+
+// bake samples the curve into `resolution` evenly spaced points across 0..1.
+// higher resolution = more accurate but more memory. 256 is a good default for
+// gradients; use 64 for things like camera easing, 1024+ for audio envelopes.
+pub fn (c &Curve) bake(resolution int) BakedCurve {
+	assert(resolution >= 2)
+	
+	mut samples := []f32{cap: resolution}
+	for i in 0 .. resolution {
+		t := f32(i) / f32(resolution - 1)
+		samples << c.sample(t)
+	}
+	return BakedCurve{
+		samples:   samples
+		min_value: c.min_value
+		max_value: c.max_value
+	}
+}
+
+// sample linearly interpolates between the two nearest baked samples.
+pub fn (bc &BakedCurve) sample(x f32) f32 {
+	tx := f32(clamp(x, 0.0, 1.0))
+	// Scale x into sample index space.
+	scaled := tx * f32(bc.samples.len - 1)
+	lo := int(scaled)
+	hi := math.min(lo + 1, bc.samples.len - 1)
+	frac := scaled - f32(lo)
+	return bc.samples[lo] + (bc.samples[hi] - bc.samples[lo]) * frac
+}
+
+// sample_unbound skips the min/max clamp, consistent with Curve.sample_unbound.
+pub fn (bc &BakedCurve) sample_unbound(x f32) f32 {
+	tx := f32(clamp(x, 0.0, 1.0))
+	scaled := tx * f32(bc.samples.len - 1)
+	lo := int(scaled)
+	hi := math.min(lo + 1, bc.samples.len - 1)
+	frac := scaled - f32(lo)
+	return bc.samples[lo] + (bc.samples[hi] - bc.samples[lo]) * frac
+}

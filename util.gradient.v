@@ -43,6 +43,16 @@ pub fn Gradient.from_colors(colors []Color) Gradient {
 	return g
 }
 
+// bakes the gradient to a n×1 Texture2D, sampling left to right across 0..1.
+// the returned texture must be unloaded with rl.unload_texture when done.
+pub fn (g &Gradient) bake(resolution int) rl.Texture2D {
+	assert resolution >= 2
+	img := gen_image_gradient_linear(resolution, 1, g, Vec2{0.0, 0.5}, Vec2{1.0, 0.5})
+	tex := rl.load_texture_from_image(img)
+	rl.unload_image(img)
+	return tex
+}
+
 pub fn (mut g Gradient) add_stop(offset f32, color Color) {
 	g.stops << GradientStop{
 		offset: f32(clamp(offset, 0.0, 1.0))
