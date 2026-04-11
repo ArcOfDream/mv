@@ -92,7 +92,7 @@ fn (mut g Game) init() {
 		// [1] checkerboard
 		app.textures.load_from_image('checker',
 			mv.gen_image_checker(img_size, img_size, 8, 8,
-				rl.Color{240, 240, 240, 255}, rl.Color{40, 40, 40, 255}))
+				rl.Color{240, 40, 240, 255}, rl.Color{40, 240, 40, 255}))
 
 		// [2] grid
 		app.textures.load_from_image('grid',
@@ -172,6 +172,8 @@ fn (mut g Game) draw() {
 	if mut r := g.root {
 		mv.emit_notification(mut r, .draw)
 	}
+	
+	rl.draw_text('image gen sample', 2, 2, 4, rl.raywhite)
 }
 
 fn main() {
