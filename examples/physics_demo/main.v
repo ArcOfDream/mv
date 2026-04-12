@@ -99,7 +99,7 @@ fn (mut g Game) draw() {
 	mv.emit_notification(mut g.ball, .draw)
 	mv.emit_notification(mut g.floor, .draw)
 
-	rl.draw_text('mv: bouncing ball sample', 2, 2, 4, rl.raywhite)
+	rl.draw_text('bouncing ball sample', 2, 2, 4, rl.raywhite)
 }
 
 fn main() {

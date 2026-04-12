@@ -92,7 +92,7 @@ fn (mut g Game) init() {
 		// [1] checkerboard
 		app.textures.load_from_image('checker',
 			mv.gen_image_checker(img_size, img_size, 8, 8,
-				rl.Color{240, 40, 240, 255}, rl.Color{40, 240, 40, 255}))
+				rl.Color{240, 40, 240, 255}, rl.Color{40, 40, 40, 255}))
 
 		// [2] grid
 		app.textures.load_from_image('grid',
