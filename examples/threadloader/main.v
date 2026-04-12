@@ -27,8 +27,6 @@ fn (mut g Game) setup() {
 }
 
 fn (mut g Game) init() {
-	img_size := mv.Vec2{260, 190}
-
 	if mut app := g.app {
 		app.set_window_title('Hello, mv!')
 		app.set_window_size(640, 480)

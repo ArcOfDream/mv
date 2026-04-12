@@ -4,7 +4,6 @@ import raylib as rl
 import arrays as arr
 import rres { RresLoader }
 import os
-import time
 
 pub struct RresSource {
 pub:
