@@ -19,13 +19,13 @@ pub:
 pub struct PhysicsBody {
 	Node
 pub mut:
-	body_type       BodyType      = .kinematic
-	shape           physics.Shape = physics.AABB{}
-	shape_offset    Vec2
-	collision_layer u32 = 1 // which layers this body occupies
-	collision_mask  u32 = 1 // which layers this body scans against
+	body_type        BodyType      = .kinematic
+	shape            physics.Shape = physics.AABB{}
+	shape_offset     Vec2
+	collision_layer  u32 = 1 // which layers this body occupies
+	collision_mask   u32 = 1 // which layers this body scans against
 	slide_collisions []CollisionResult
-	
+
 	// used by is_on_floor / is_on_wall / is_on_ceiling
 	up_direction    Vec2 = Vec2{0, -1}
 	floor_max_angle f32  = math.pi / 4.0 // 45 degrees
@@ -114,7 +114,9 @@ pub fn (b &PhysicsBody) world_shape() physics.Shape {
 			}
 		}
 		// polygon rotation is handled via XTransform through cute_c2
-		else { b.shape }
+		else {
+			b.shape
+		}
 	}
 }
 
@@ -145,7 +147,9 @@ fn (b &PhysicsBody) translated_shape(delta Vec2) physics.Shape {
 				r: ws.r
 			}
 		}
-		else { ws }
+		else {
+			ws
+		}
 	}
 }
 
@@ -158,7 +162,7 @@ pub fn (b &PhysicsBody) xtransform() physics.XTransform {
 pub fn (b &PhysicsBody) shape_xtransform() physics.XTransform {
 	return match b.shape {
 		physics.Polygon { b.xtransform() }
-		else            { physics.xtransform_identity }
+		else { physics.xtransform_identity }
 	}
 }
 
@@ -174,7 +178,9 @@ fn (b &PhysicsBody) translated_xtransform(delta Vec2) physics.XTransform {
 			wp := b.transform.translation + b.shape_offset + delta
 			physics.XTransform.from(physics.Vec{wp.x, wp.y}, b.transform.rotation)
 		}
-		else { physics.xtransform_identity }
+		else {
+			physics.xtransform_identity
+		}
 	}
 }
 
@@ -185,7 +191,7 @@ fn (b &PhysicsBody) translated_xtransform(delta Vec2) physics.XTransform {
 // it does NOT move the node -- the caller is responsible for applying position
 // changes based on the results.
 pub fn (b &PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
-	self_id  := int(voidptr(b))
+	self_id := int(voidptr(b))
 	proposed := b.translated_shape(velocity)
 	proposed_xf := b.translated_xtransform(velocity)
 	candidates := b.app.physics_world.hash.query_shape(proposed)
@@ -193,15 +199,18 @@ pub fn (b &PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
 	mut results := []CollisionResult{}
 
 	for id in candidates {
-		if id == self_id { continue }
+		if id == self_id {
+			continue
+		}
 		other := b.app.bodies[id] or { continue }
-		if !b.can_collide_with(other) { continue }
+		if !b.can_collide_with(other) {
+			continue
+		}
 
-		m := physics.manifold_between_xf(
-			proposed,          proposed_xf,
-			other.world_shape(), other.shape_xtransform()
-		)
-		if m.count == 0 { continue }
+		m := physics.manifold_between_xf(proposed, proposed_xf, other.world_shape(), other.shape_xtransform())
+		if m.count == 0 {
+			continue
+		}
 
 		results << CollisionResult{
 			manifold: m

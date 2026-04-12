@@ -8,9 +8,9 @@ struct Ball {
 	mv.PhysicsBody
 mut:
 	velocity    mv.Vec2
-	radius      f32  = 20.0
-	restitution f32  = 0.8  // bounciness
-	gravity     f32  = 1000.0
+	radius      f32 = 20.0
+	restitution f32 = 0.8 // bounciness
+	gravity     f32 = 1000.0
 }
 
 fn (mut b Ball) update(dt f32) {

@@ -1,7 +1,7 @@
 module mv
 
 import raylib as rl { Color, PixelFormat }
-import math { atan2, floorf, sqrtf, clamp }
+import math { atan2, clamp, floorf, sqrtf }
 
 pub enum GradientFill {
 	linear
@@ -265,11 +265,12 @@ pub fn gen_image_sdf_circle(width int, height int, center Vec2, radius f32, soft
 	aspect := f32(width) / f32(height)
 	for y in 0 .. height {
 		for x in 0 .. width {
-			nx := (f32(x) / f32(width)  - center.x) * aspect
-			ny :=  f32(y) / f32(height) - center.y
+			nx := (f32(x) / f32(width) - center.x) * aspect
+			ny := f32(y) / f32(height) - center.y
 			dist := sqrtf(nx * nx + ny * ny)
 			// remap: 0 at center, 1 at edge, softness controls the aa band
-			t := f32(clamp((dist / radius - 1.0 + softness) / (softness + 1e-9), 0.0, 1.0))
+			t := f32(clamp((dist / radius - 1.0 + softness) / (softness + 1e-9), 0.0,
+				1.0))
 			write_pixel(mut pixels, y * width + x, gradient.sample(t))
 		}
 	}
@@ -279,9 +280,9 @@ pub fn gen_image_sdf_circle(width int, height int, center Vec2, radius f32, soft
 pub fn gen_image_sdf_rect(width int, height int, rect rl.Rectangle, corner_radius f32, softness f32, gradient &Gradient) rl.Image {
 	mut pixels := alloc_pixels(width, height)
 	// half-extents of the inner box (after subtracting corner radius)
-	hx := rect.width  * 0.5 - corner_radius
+	hx := rect.width * 0.5 - corner_radius
 	hy := rect.height * 0.5 - corner_radius
-	cx := rect.x + rect.width  * 0.5
+	cx := rect.x + rect.width * 0.5
 	cy := rect.y + rect.height * 0.5
 	for y in 0 .. height {
 		for x in 0 .. width {
@@ -290,12 +291,10 @@ pub fn gen_image_sdf_rect(width int, height int, rect rl.Rectangle, corner_radiu
 			py := math.abs(f32(y) - cy) - hy
 			// SDF: outside corner = length of (px,py) clamped positive,
 			//      inside         = max of the two components (negative)
-			outside := sqrtf(
-				math.max(px, f32(0.0)) * math.max(px, f32(0.0)) +
-				math.max(py, f32(0.0)) * math.max(py, f32(0.0))
-			)
-			inside  := math.min(math.max(px, py), f32(0.0))
-			dist    := outside + inside - corner_radius
+			outside := sqrtf(math.max(px, f32(0.0)) * math.max(px, f32(0.0)) +
+				math.max(py, f32(0.0)) * math.max(py, f32(0.0)))
+			inside := math.min(math.max(px, py), f32(0.0))
+			dist := outside + inside - corner_radius
 			t := f32(clamp((dist + softness) / (softness * 2.0 + 1e-9), 0.0, 1.0))
 			write_pixel(mut pixels, y * width + x, gradient.sample(t))
 		}

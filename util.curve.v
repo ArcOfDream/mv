@@ -138,8 +138,8 @@ pub:
 // higher resolution = more accurate but more memory. 256 is a good default for
 // gradients; use 64 for things like camera easing, 1024+ for audio envelopes.
 pub fn (c &Curve) bake(resolution int) BakedCurve {
-	assert(resolution >= 2)
-	
+	assert resolution >= 2
+
 	mut samples := []f32{cap: resolution}
 	for i in 0 .. resolution {
 		t := f32(i) / f32(resolution - 1)
