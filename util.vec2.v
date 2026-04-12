@@ -55,6 +55,91 @@ pub fn (v Vec2) normalize() Vec2 {
 	return Vec2{result.x, result.y}
 }
 
+pub fn (v Vec2) lerp(v2 Vec2, t f32) Vec2 {
+	result := rm.vector2_lerp(v, v2, t)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) reflect(normal Vec2) Vec2 {
+	result := rm.vector2_reflect(v, normal)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) rotate(angle f32) Vec2 {
+	result := rm.vector2_rotate(v, angle)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) move_towards(target Vec2, max_dist f32) Vec2 {
+	result := rm.vector2_move_towards(v, target, max_dist)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) clamp(min Vec2, max Vec2) Vec2 {
+	result := rm.vector2_clamp(v, min, max)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) clamp_value(min f32, max f32) Vec2 {
+	result := rm.vector2_clamp_value(v, min, max)
+	return Vec2{result.x, result.y}
+}
+
+pub fn (v Vec2) invert() Vec2 {
+	result := rm.vector2_invert(v)
+	return Vec2{result.x, result.y}
+}
+
+@[inline]
+pub fn (v Vec2) add_value(f f32) Vec2 {
+	return Vec2{v.x + f, v.y + f}
+}
+
+@[inline]
+pub fn (v Vec2) subtract_value(f f32) Vec2 {
+	return Vec2{v.x - f, v.y - f}
+}
+
+@[inline]
+pub fn (v Vec2) negate() Vec2 {
+	return Vec2{-v.x, -v.y}
+}
+
+@[inline]
+pub fn (v Vec2) perpendicular() Vec2 {
+	return Vec2{-v.y, v.x}
+}
+
+@[inline]
+pub fn (v Vec2) abs() Vec2 {
+	return Vec2{math.abs(v.x), math.abs(v.y)}
+}
+
+@[inline]
+pub fn (v Vec2) floor() Vec2 {
+	return Vec2{math.floorf(v.x), math.floorf(v.y)}
+}
+
+@[inline]
+pub fn (v Vec2) ceil() Vec2 {
+	return Vec2{f32(math.ceil(v.x)), f32(math.ceil(v.y))}
+}
+
+@[inline]
+pub fn (v Vec2) round() Vec2 {
+	return Vec2{f32(math.round(v.x)), f32(math.round(v.y))}
+}
+
+@[inline]
+pub fn (v Vec2) min(v2 Vec2) Vec2 {
+	return Vec2{f32(math.min(v.x, v2.x)), f32(math.min(v.y, v2.y))}
+}
+
+@[inline]
+pub fn (v Vec2) max(v2 Vec2) Vec2 {
+	return Vec2{f32(math.max(v.x, v2.x)), f32(math.max(v.y, v2.y))}
+}
+
 pub fn (a Vec2) + (b Vec2) Vec2 {
 	return Vec2{a.x + b.x, a.y + b.y}
 }
