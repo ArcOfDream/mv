@@ -23,6 +23,7 @@ pub mut:
 	shape_offset    Vec2
 	collision_layer u32 = 1 // which layers this body occupies
 	collision_mask  u32 = 1 // which layers this body scans against
+	slide_collisions []CollisionResult
 }
 
 // layer funcs
@@ -175,4 +176,44 @@ fn (b &PhysicsBody) translated_shape(delta Vec2) physics.Shape {
 			ws
 		}
 	}
+}
+
+// move_and_slide iteratively moves the body, sliding along surfaces on collision.
+// returns the remaining velocity after all slides are resolved.
+// collisions encountered are stored in slide_collisions.
+pub fn (mut b PhysicsBody) move_and_slide(velocity Vec2, max_slides int) Vec2 {
+	b.slide_collisions.clear()
+	mut remaining := velocity
+
+	for _ in 0 .. max_slides {
+		if remaining.length() < 0.001 {
+			break
+		}
+
+		hits := b.move_and_collide(remaining)
+		if hits.len == 0 {
+			b.set_global_pos(b.transform.translation + remaining)
+			remaining = Vec2{}
+			break
+		}
+
+		// resolve the deepest penetration first for stability
+		mut deepest := hits[0]
+		for hit in hits[1..] {
+			if hit.depth > deepest.depth {
+				deepest = hit
+			}
+		}
+
+		b.slide_collisions << deepest
+
+		// push out of the surface by the penetration depth
+		b.set_global_pos(b.transform.translation + deepest.normal * Vec2.f32(deepest.depth))
+
+		// remove the component of remaining velocity pointing into the surface
+		dot := remaining.dot(deepest.normal)
+		remaining = remaining - deepest.normal * Vec2.f32(dot)
+	}
+
+	return remaining
 }
