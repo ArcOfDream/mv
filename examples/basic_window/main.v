@@ -21,7 +21,7 @@ fn (mut g Game) setup() {
 
 fn (mut g Game) init() {
 	if mut app := g.app {
-		app.set_window_title('Hello, mv!')
+		app.set_window_title('mv: basic window')
 		app.set_window_size(640, 480)
 		app.set_viewport_size(320, 240)
 		app.set_target_fps(60)

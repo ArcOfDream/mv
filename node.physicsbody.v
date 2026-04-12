@@ -205,7 +205,7 @@ pub fn (b &PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
 
 		results << CollisionResult{
 			manifold: m
-			normal:   Vec2{m.n.x, m.n.y}
+			normal:   Vec2{-m.n.x, -m.n.y}
 			depth:    m.depths[0]
 			other:    other
 		}
