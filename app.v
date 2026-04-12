@@ -44,6 +44,7 @@ pub mut:
 	active_camera ?&CameraNode
 	audio_server  audio.AudioServer
 	physics_world phys.PhysicsWorld
+	bodies        map[int]&PhysicsBody
 	input_map     &input.InputMap
 
 	init_func          ?fn ()
