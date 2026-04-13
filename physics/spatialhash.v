@@ -3,7 +3,7 @@ module physics
 import math as m
 
 pub struct SpatialHash {
-pub mut:
+mut:
 	cell_size    int = 64
 	cells        map[u64][]int // dynamic bodies, cleared each frame
 	static_cells map[u64][]int // static bodies, never cleared

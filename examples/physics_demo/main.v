@@ -14,25 +14,25 @@ mut:
 }
 
 fn (mut b Ball) update(dt f32) {
-    b.velocity.y += b.gravity * dt
+	b.velocity.y += b.gravity * dt
 
 	// move_and_collide returns hits from the physics world
 	delta := b.velocity * mv.Vec2.f32(dt)
-  hits := b.move_and_collide(delta)
+	hits := b.move_and_collide(delta)
 
-    if hits.len > 0 {
-        hit := hits[0]
+	if hits.len > 0 {
+		hit := hits[0]
 
-        // advance to proposed position, then resolve overlap
-        b.set_pos(b.get_pos() + delta + hit.normal * mv.Vec2.f32(hit.depth))
+		// advance to proposed position, then resolve overlap
+		b.set_pos(b.get_pos() + delta + hit.normal * mv.Vec2.f32(hit.depth))
 
-        // bounce logic
-        dot := b.velocity.dot(hit.normal)
-        normal_component := hit.normal * mv.Vec2.f32(dot)
-        b.velocity = b.velocity - normal_component * mv.Vec2.f32(1.0 + b.restitution)
-    } else {
-        b.set_pos(b.get_pos() + delta)
-    }
+		// bounce logic
+		dot := b.velocity.dot(hit.normal)
+		normal_component := hit.normal * mv.Vec2.f32(dot)
+		b.velocity = b.velocity - normal_component * mv.Vec2.f32(1.0 + b.restitution)
+	} else {
+		b.set_pos(b.get_pos() + delta)
+	}
 }
 
 fn (mut b Ball) draw() {
@@ -53,8 +53,8 @@ fn (mut f Floor) draw() {
 struct Game {
 mut:
 	app   &mv.App = unsafe { nil }
-	balls  []&Ball
-	floor &Floor  = unsafe { nil }
+	balls []&Ball
+	floor &Floor = unsafe { nil }
 }
 
 fn (mut g Game) setup() {
@@ -69,8 +69,8 @@ fn (mut g Game) setup() {
 }
 
 fn (mut g Game) init() {
-	for i in 0..1 {
-		mut ball := g.app.new_node[Ball]('Ball_${i}', 200+10*i, 100)
+	for i in 0 .. 1 {
+		mut ball := g.app.new_node[Ball]('Ball_${i}', 200 + 10 * i, 100)
 		ball.body_type = .kinematic
 		ball.shape = physics.Circle{
 			r: 10.0
@@ -81,9 +81,8 @@ fn (mut g Game) init() {
 		g.balls << ball
 	}
 
-
 	mut floor := g.app.new_node[Floor]('Floor', 100, 500)
-	//floor.set_pos(mv.Vec2{100, 500})
+	// floor.set_pos(mv.Vec2{100, 500})
 	g.floor = floor
 	floor.body_type = .static_body
 	floor.size = mv.Vec2{600, 40}
