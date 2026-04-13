@@ -3,18 +3,17 @@ module physics
 import math as m
 
 pub struct SpatialHash {
-mut:
-	cell_size    int
+pub mut:
+	cell_size    int = 64
 	cells        map[u64][]int // dynamic bodies, cleared each frame
 	static_cells map[u64][]int // static bodies, never cleared
 	seen         map[int]bool  // reused scratch — cleared per query
 }
 
-// hashing coordinates to a single u64 so that the final value
-// looks like this: 0bXXXXXXXXYYYYYYYY
+// widely-used prime pair from Teschner et al.
 @[inline]
 fn hash_key(x int, y int) u64 {
-	return (u64(x) << 32) | (u64(y) & 0xFFFFFFFF)
+	return u64(x) * 0x8da6b343 ^ u64(y) * 0xd8163841
 }
 
 @[inline]

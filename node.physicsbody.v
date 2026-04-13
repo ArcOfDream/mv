@@ -92,9 +92,9 @@ fn (mut b PhysicsBody) update_internal(_dt f32) {
 // world_shape returns the shape translated into world space using the node's
 // current global position.
 // polygon shapes use the node's XTransform instead.
-pub fn (b &PhysicsBody) world_shape() physics.Shape {
-	wp := b.transform.translation + b.shape_offset
-	return match b.shape {
+pub fn (mut b PhysicsBody) world_shape() physics.Shape {
+	mut wp := b.get_global_pos() + b.shape_offset
+	return match mut b.shape {
 		physics.Circle {
 			physics.Circle{
 				p: physics.Vec{b.shape.p.x + wp.x, b.shape.p.y + wp.y}
@@ -114,7 +114,6 @@ pub fn (b &PhysicsBody) world_shape() physics.Shape {
 				r: b.shape.r
 			}
 		}
-		// polygon rotation is handled via XTransform through cute_c2
 		else {
 			b.shape
 		}
@@ -126,9 +125,9 @@ pub fn (b &PhysicsBody) world_shape() physics.Shape {
 // for polygons the vertices stay in local space -- use translated_xtransform
 // to get the corresponding shifted transform.
 @[inline]
-fn (b &PhysicsBody) translated_shape(delta Vec2) physics.Shape {
-	ws := b.world_shape()
-	return match ws {
+fn (mut b PhysicsBody) translated_shape(delta Vec2) physics.Shape {
+	mut ws := b.world_shape()
+	return match mut ws {
 		physics.Circle {
 			physics.Circle{
 				p: physics.Vec{ws.p.x + delta.x, ws.p.y + delta.y}
@@ -203,7 +202,7 @@ pub fn (mut b PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
 		if id == self_id {
 			continue
 		}
-		other := b.app.bodies[id] or { continue }
+		mut other := b.app.bodies[id] or { continue }
 		if !b.can_collide_with(other) {
 			continue
 		}
