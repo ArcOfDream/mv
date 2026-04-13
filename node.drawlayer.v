@@ -4,6 +4,7 @@ import raylib as rl
 
 // DrawLayer renders its children in a fixed coordinate space that is
 // independent of the parent transform chain — exactly like Godot's DrawLayer.
+@[heap]
 pub struct DrawLayer {
 	Node
 }

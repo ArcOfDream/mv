@@ -1,5 +1,6 @@
 module mv
 
+@[heap]
 pub struct Timer {
 	Node
 pub mut:

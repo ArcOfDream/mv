@@ -21,6 +21,7 @@ pub enum ProcessFlags {
 	draw
 }
 
+@[heap]
 pub interface INode {
 	name() string
 	app() &App

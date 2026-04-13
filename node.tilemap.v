@@ -4,6 +4,7 @@ import raylib as rl
 import resourcemanager { Handle, TextureResource }
 import ldtk
 
+@[heap]
 pub struct TileMap {
 	Node
 mut:

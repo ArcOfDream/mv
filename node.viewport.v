@@ -2,6 +2,7 @@ module mv
 
 import raylib as rl
 
+@[heap]
 pub struct Viewport {
 	Node
 mut:

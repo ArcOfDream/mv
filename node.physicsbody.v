@@ -16,6 +16,7 @@ pub:
 	other    &PhysicsBody
 }
 
+@[heap]
 pub struct PhysicsBody {
 	Node
 pub mut:
@@ -190,7 +191,7 @@ fn (b &PhysicsBody) translated_xtransform(delta Vec2) physics.XTransform {
 // all hits.
 // it does NOT move the node -- the caller is responsible for applying position
 // changes based on the results.
-pub fn (b &PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
+pub fn (mut b PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
 	self_id := int(voidptr(b))
 	proposed := b.translated_shape(velocity)
 	proposed_xf := b.translated_xtransform(velocity)

@@ -2,6 +2,7 @@ module mv
 
 import audio
 
+@[heap]
 pub struct MusicPlayer {
 	Node
 pub mut:

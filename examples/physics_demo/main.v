@@ -8,8 +8,8 @@ struct Ball {
 	mv.PhysicsBody
 mut:
 	velocity    mv.Vec2
-	radius      f32 = 20.0
-	restitution f32 = 0.8 // bounciness
+	radius      f32 = 10.0
+	restitution f32 = 0.3 // bounciness
 	gravity     f32 = 1000.0
 }
 
@@ -54,7 +54,7 @@ fn (mut f Floor) draw() {
 struct Game {
 mut:
 	app   &mv.App = unsafe { nil }
-	ball  &Ball   = unsafe { nil }
+	balls  []&Ball
 	floor &Floor  = unsafe { nil }
 }
 
@@ -70,14 +70,18 @@ fn (mut g Game) setup() {
 }
 
 fn (mut g Game) init() {
-	g.ball = g.app.new_node[Ball]('Ball', 400, 100)
-	g.ball.body_type = .kinematic
-	g.ball.shape = physics.Circle{
-		r: 20.0
-	}
-	g.ball.velocity = mv.Vec2{10, 0}
+	for i in 0..50 {
+		mut ball := g.app.new_node[Ball]('Ball_${i}', 50+10*i, 100)
+		ball.body_type = .kinematic
+		ball.shape = physics.Circle{
+			r: 10.0
+		}
+		ball.velocity = mv.Vec2{10, 0}
+		mv.emit_notification(mut ball, .ready)
 
-	mv.emit_notification(mut g.ball, .ready)
+		g.balls << ball
+	}
+
 
 	mut floor := g.app.new_node[Floor]('Floor', 100, 500)
 	g.floor = floor
@@ -91,12 +95,16 @@ fn (mut g Game) init() {
 }
 
 fn (mut g Game) update(dt f32) {
-	mv.emit_notification(mut g.ball, .update)
+	for mut b in g.balls {
+		mv.emit_notification(mut b, .update)
+	}
 	mv.emit_notification(mut g.floor, .update)
 }
 
 fn (mut g Game) draw() {
-	mv.emit_notification(mut g.ball, .draw)
+	for mut b in g.balls {
+		mv.emit_notification(mut b, .draw)
+	}
 	mv.emit_notification(mut g.floor, .draw)
 
 	rl.draw_text('bouncing ball sample', 2, 2, 4, rl.raywhite)

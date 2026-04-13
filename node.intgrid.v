@@ -4,6 +4,7 @@ import ldtk
 
 // IntGrid stores the raw integer grid data from an LDtk IntGrid layer
 // TODO: finish collision integration
+@[heap]
 pub struct IntGrid {
 	Node
 pub:

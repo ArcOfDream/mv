@@ -3,6 +3,7 @@ module mv
 import raylib as rl
 import resourcemanager { Handle, ShaderResource, TextureResource }
 
+@[heap]
 pub struct Sprite {
 	Node
 mut:

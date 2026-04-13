@@ -175,6 +175,7 @@ pub fn (mut app App) set_active_camera(cam &CameraNode) {
 
 fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
 	for app.is_running {
+		app.physics_world.hash.clear()
 		app.audio_server.process()
 
 		if update := app.update_func {

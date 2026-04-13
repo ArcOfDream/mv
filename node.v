@@ -5,6 +5,7 @@ import raylib.raymath as rm
 import math
 import wren
 
+@[heap]
 pub struct Node {
 mut:
 	dirty          bool = true
