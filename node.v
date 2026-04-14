@@ -46,6 +46,14 @@ fn (mut n Node) init_from_wren(vm &wren.VM) {
 	n.app = unsafe { &App(vm.get_user_data()) }
 	n.wren_handle = vm.get_slot_handle(0)
 	n.wren_owned = true
+	n.process_flags = .transform | .draw
+	n.dirty = true
+	n.transform = Transform2D{
+		dirty: true
+	}
+	n.scale = Vec2{1, 1}
+	n.parent = ?&INode(none)
+	n.children = []
 }
 
 @[inline]

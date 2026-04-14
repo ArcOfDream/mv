@@ -8,6 +8,7 @@ import resourcemanager { ResourceManager, ShaderResource, SoundResource, Texture
 import input
 import stringname { StringNameMap }
 import audio
+import os
 
 // import sync
 
@@ -38,6 +39,9 @@ mut:
 	names    &StringNameMap
 pub mut:
 	pending_free []&INode
+
+	wren       ?WrenSetup
+	scene_root ?&Node
 
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
@@ -175,29 +179,35 @@ pub fn (mut app App) set_active_camera(cam &CameraNode) {
 	app.active_camera = cam
 }
 
-fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
-	for app.is_running {
-		app.physics_world.hash.clear()
-		app.audio_server.process()
-
-		if update := app.update_func {
-			update(app.state.dt)
-		}
-		
-		// clean up pending nodes for removal
-		for mut node in app.pending_free {
-			if mut p := node.parent {
-				idx := p.find_child(node)
-				if idx != -1 {
-					p.remove_child(idx)
+$if !single_thread ? {
+	fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
+		for app.is_running {
+			app.physics_world.hash.clear()
+			app.audio_server.process()
+	
+			if update := app.update_func {
+				update(app.state.dt)
+			}
+	
+			if mut root := app.scene_root {
+				emit_notification(mut root, .update)
+			}
+	
+			// clean up pending nodes for removal
+			for mut node in app.pending_free {
+				if mut p := node.parent {
+					idx := p.find_child(node)
+					if idx != -1 {
+						p.remove_child(idx)
+					}
 				}
 			}
+			app.pending_free.clear()
+	
+			update_done <- true
+	
+			_ := <-render_done
 		}
-		app.pending_free.clear()
-
-		update_done <- true
-
-		_ := <-render_done
 	}
 }
 
@@ -207,33 +217,32 @@ pub fn (mut app App) run() {
 	// making sure to init audio here!
 	rl.init_audio_device()
 
-	// sync channels
-	render_done := chan bool{}
-	update_done := chan bool{}
+	// set up the wren subsystem only if there's a WrenSetup present
+	if mut setup := app.wren {
+		wren.init_configuration(&app.wren_cfg)
+		app.wren_cfg.bindForeignMethodFn = wren_bind_method
+		app.wren_cfg.bindForeignClassFn = wren_bind_class
+		app.wren_cfg.writeFn = wren_write
+		app.wren_cfg.errorFn = wren_error
 
-	// init wren
-	wren.init_configuration(&app.wren_cfg)
+		mut vm := wren.new_vm(&app.wren_cfg)
+		app.wren_vm = vm
+		vm.set_user_data(&app)
 
-	// register our Node bindings
-	// TODO: make a proxy for class and method binds on App to allow an optional call for user binds
-	app.wren_cfg.bindForeignMethodFn = wren_bind_method
-	app.wren_cfg.bindForeignClassFn = wren_bind_class
-	app.wren_cfg.writeFn = wren_write
-	app.wren_cfg.errorFn = wren_error
+		app.wren_update_handle = vm.make_call_handle('update(_)')
+		app.wren_draw_handle = vm.make_call_handle('draw()')
 
-	mut vm := wren.new_vm(&app.wren_cfg)
-	app.wren_vm = vm
+		vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
+		vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
 
-	// store app pointer so allocators and methods can reach it
-	vm.set_user_data(&app)
-
-	// cache once; reused for every Wren-managed node every frame.
-	app.wren_update_handle = vm.make_call_handle('update(_)')
-	app.wren_draw_handle = vm.make_call_handle('draw()')
-
-	// load your Wren script (from file or embedded string)
-	vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
-	vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
+		if setup.entry != '' {
+			src := os.read_file(setup.entry) or {
+				eprintln('wren: entry script not found: ${setup.entry}')
+				return
+			}
+			vm.interpret('main', src)
+		}
+	}
 
 	rl.set_config_flags(.flag_window_resizable)
 	rl.init_window(int(app.window_size.x), int(app.window_size.y), app.window_title)
@@ -245,11 +254,19 @@ pub fn (mut app App) run() {
 	}
 
 	app.viewport = rl.load_render_texture(int(app.viewport_size.x), int(app.viewport_size.y))
-
-	spawn app.update_loop(update_done, render_done)
+	
+	// sync channels
+	render_done := chan bool{}
+	update_done := chan bool{}
+	
+	$if !single_thread ? {
+		spawn app.update_loop(update_done, render_done)
+	}
 
 	for !rl.window_should_close() {
-		_ := <-update_done
+		$if !single_thread ? {
+			_ := <- update_done
+		}
 
 		mut scale := m.min(f64(rl.get_screen_width()) / app.viewport_size.x, f64(rl.get_screen_height()) / app.viewport_size.y)
 		app.state.dt = rl.get_frame_time()
@@ -268,10 +285,30 @@ pub fn (mut app App) run() {
 		}
 		// vfmt on
 
-		//// run app.update()
-		// if update := app.update_func {
-		//	update(app.state.dt)
-		//}
+		// run app.update()
+		$if single_thread ? {
+			app.physics_world.hash.clear()
+			app.audio_server.process()
+	
+			if update := app.update_func {
+				update(app.state.dt)
+			}
+			
+			if mut root := app.scene_root {
+				emit_notification(mut root, .update)
+			}
+	
+			// clean up pending nodes for removal
+			for mut node in app.pending_free {
+				if mut p := node.parent {
+					idx := p.find_child(node)
+					if idx != -1 {
+						p.remove_child(idx)
+					}
+				}
+			}
+			app.pending_free.clear()
+		}
 
 		//
 		// internal game view portion
@@ -285,6 +322,10 @@ pub fn (mut app App) run() {
 		// run app.draw()
 		if draw := app.draw_func {
 			draw()
+		}
+
+		if mut root := app.scene_root {
+			emit_notification(mut root, .draw)
 		}
 
 		if _ := app.active_camera {
@@ -305,8 +346,10 @@ pub fn (mut app App) run() {
 
 		rl.draw_texture_pro(app.viewport.texture, vp_source, vp_dest, Vec2{}, 0, rl.white)
 		rl.end_drawing()
-
-		render_done <- true
+		
+		$if !single_thread ? {
+			render_done <- true
+		}
 	}
 
 	rl.close_window()
