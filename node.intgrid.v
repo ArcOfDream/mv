@@ -28,6 +28,10 @@ pub fn IntGrid.from_layer(layer &ldtk.LayerInstance, mut parent INode) &IntGrid 
 	return ig
 }
 
+fn (n &IntGrid) wren_class_name() string {
+	return 'IntGrid'
+}
+
 // cell returns the IntGrid value at (col, row), or 0 if out of bounds
 @[inline]
 pub fn (ig &IntGrid) cell(col int, row int) int {

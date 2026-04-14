@@ -32,6 +32,10 @@ pub fn Sprite.new(app &App, name string, texture_id ?string) &Sprite {
 	return spr
 }
 
+fn (n &Sprite) wren_class_name() string {
+	return 'Sprite'
+}
+
 pub fn (s &Sprite) get_centered() bool {
 	return s.centered
 }

@@ -23,6 +23,10 @@ pub fn Viewport.new(app &App, width int, height int) &Viewport {
 	}
 }
 
+fn (n &Viewport) wren_class_name() string {
+	return 'Viewport'
+}
+
 pub fn (mut v Viewport) free() {
 	rl.unload_render_texture(v.render_texture)
 }

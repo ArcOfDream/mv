@@ -19,6 +19,10 @@ pub fn MusicPlayer.new(app &App, name string) &MusicPlayer {
 	}
 }
 
+fn (n &MusicPlayer) wren_class_name() string {
+	return 'MusicPlayer'
+}
+
 pub fn (mut p MusicPlayer) play_pxtone(data []u8) ! {
 	p.stop()
 	id := p.app.audio_server.play_pxtone(data, p.bus)!

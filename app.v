@@ -37,6 +37,8 @@ mut:
 	wren_cfg wren.Configuration
 	names    &StringNameMap
 pub mut:
+	pending_free []&INode
+
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
 	sounds   ResourceManager[SoundResource]
@@ -181,6 +183,18 @@ fn (mut app App) update_loop(update_done chan bool, render_done chan bool) {
 		if update := app.update_func {
 			update(app.state.dt)
 		}
+		
+		// clean up pending nodes for removal
+		for mut node in app.pending_free {
+			if mut p := node.parent {
+				idx := p.find_child(node)
+				if idx != -1 {
+					p.remove_child(idx)
+				}
+			}
+		}
+		app.pending_free.clear()
+
 		update_done <- true
 
 		_ := <-render_done

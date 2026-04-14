@@ -25,6 +25,7 @@ pub enum ProcessFlags {
 pub interface INode {
 	name() string
 	app() &App
+	wren_class_name() string
 	get_child_count() int
 	find_child(child &INode) int
 	get_pos() Vec2
@@ -34,6 +35,7 @@ pub interface INode {
 mut:
 	process_flags  ProcessFlags
 	dirty          bool
+	wren_owned     bool
 	app            &App
 	angle_deg      f32
 	angle_rad      f32
@@ -87,4 +89,6 @@ mut:
 	update(dt f32)
 	draw_internal()
 	draw()
+
+	queue_free()
 }

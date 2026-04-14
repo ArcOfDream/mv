@@ -16,6 +16,10 @@ pub fn DrawLayer.new(app &App, name string) &DrawLayer {
 	}
 }
 
+fn (n &DrawLayer) wren_class_name() string {
+	return 'DrawLayer'
+}
+
 // get_global_matrix breaks the parent chain
 pub fn (mut dl DrawLayer) get_global_matrix() rl.Matrix {
 	dl.global_matrix = dl.get_local_matrix()

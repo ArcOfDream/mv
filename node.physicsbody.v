@@ -32,6 +32,19 @@ pub mut:
 	floor_max_angle f32  = math.pi / 4.0 // 45 degrees
 }
 
+pub fn PhysicsBody.new(app &App, name string, body_type BodyType, shape physics.Shape) &PhysicsBody {
+	return &PhysicsBody{
+		app: app
+		node_name: name
+		body_type: body_type
+		shape: shape
+	}
+}
+
+fn (n &PhysicsBody) wren_class_name() string {
+	return 'PhysicsBody'
+}
+
 // layer funcs
 
 // sets a single layer bit (1-indexed, 1–32)

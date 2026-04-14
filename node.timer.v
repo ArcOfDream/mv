@@ -22,6 +22,10 @@ pub fn Timer.new(app &App, name string, timeout_fn ?fn ()) &Timer {
 	}
 }
 
+fn (n &Timer) wren_class_name() string {
+	return 'Timer'
+}
+
 pub fn (mut t Timer) ready_internal() {
 	if t.autostart {
 		t.start()

@@ -8,6 +8,7 @@ import wren
 @[heap]
 pub struct Node {
 mut:
+	queued_free    bool
 	dirty          bool = true
 	node_name      string
 	app            &App
@@ -17,9 +18,11 @@ mut:
 	global_matrix  rl.Matrix
 	local_matrix_f rm.Float16
 
-	// Set by the Wren allocator; its presence means "call back into Wren
-	// for update/draw". Doubles as the persistent Wren object handle.
+	// set by the Wren allocator; its presence means
+	// "call back into Wren for update/draw"
+	// doubles as the persistent Wren object handle
 	wren_handle ?&wren.Handle
+	wren_owned  bool
 pub mut:
 	process_flags ProcessFlags = .transform | .draw
 	angle_deg     f32
@@ -38,14 +41,25 @@ pub fn Node.new(app &App, name string) &Node {
 	}
 }
 
-@[inline]
-pub fn (n &Node) name() string {
-	return n.node_name
+fn (mut n Node) init_from_wren(vm &wren.VM) {
+	n.node_name = vm.get_slot_string(1)
+	n.app = unsafe { &App(vm.get_user_data()) }
+	n.wren_handle = vm.get_slot_handle(0)
+	n.wren_owned = true
 }
 
 @[inline]
 pub fn (n &Node) app() &App {
 	return n.app
+}
+
+@[inline]
+pub fn (n &Node) name() string {
+	return n.node_name
+}
+
+fn (n &Node) wren_class_name() string {
+	return 'Node'
 }
 
 // --- local getters and setters ---
@@ -339,6 +353,13 @@ pub fn (mut n Node) swap_children(index_a int, index_b int) {
 	n.children[index_a], n.children[index_b] = n.children[index_b], n.children[index_a]
 }
 
+pub fn (mut n Node) queue_free() {
+	if !n.queued_free {
+		n.queued_free = true
+		n.app.pending_free << n
+	}
+}
+
 // --- notifications ---
 
 @[direct_array_access]
@@ -404,12 +425,14 @@ pub fn notify(mut node INode, notification Notification) {
 			node.draw_internal()
 			node.draw()
 
-			if handle := node.wren_handle {
-				if mut vm := node.app.wren_vm {
-					if draw_h := node.app.wren_draw_handle {
-						vm.ensure_slots(1)
-						vm.set_slot_handle(0, handle)
-						vm.call(draw_h)
+			if node.wren_owned {
+				if handle := node.wren_handle {
+					if mut vm := node.app.wren_vm {
+						if draw_h := node.app.wren_draw_handle {
+							vm.ensure_slots(1)
+							vm.set_slot_handle(0, handle)
+							vm.call(draw_h)
+						}
 					}
 				}
 			}
@@ -433,13 +456,15 @@ pub fn notify(mut node INode, notification Notification) {
 			node.update_internal(node.app.state.dt)
 			node.update(node.app.state.dt)
 
-			if handle := node.wren_handle {
-				if mut vm := node.app.wren_vm {
-					if update_h := node.app.wren_update_handle {
-						vm.ensure_slots(2)
-						vm.set_slot_handle(0, handle)
-						vm.set_slot_double(1, node.app.state.dt)
-						vm.call(update_h)
+			if node.wren_owned {
+				if handle := node.wren_handle {
+					if mut vm := node.app.wren_vm {
+						if update_h := node.app.wren_update_handle {
+							vm.ensure_slots(2)
+							vm.set_slot_handle(0, handle)
+							vm.set_slot_double(1, node.app.state.dt)
+							vm.call(update_h)
+						}
 					}
 				}
 			}

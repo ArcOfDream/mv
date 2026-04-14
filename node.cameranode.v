@@ -16,6 +16,10 @@ pub fn CameraNode.new(app &App, name string) &CameraNode {
 	}
 }
 
+fn (n &CameraNode) wren_class_name() string {
+	return 'CameraNode'
+}
+
 pub fn (mut cam CameraNode) register() {
 	cam.app.set_active_camera(cam)
 }

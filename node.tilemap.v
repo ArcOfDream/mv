@@ -39,6 +39,10 @@ pub fn (mut t TileMap) set_tileset_id(val string) {
 	}
 }
 
+fn (n &TileMap) wren_class_name() string {
+	return 'TileMap'
+}
+
 @[inline]
 pub fn (t &TileMap) get_tileset() ?TextureResource {
 	return t.app.textures.get(t.tileset)
