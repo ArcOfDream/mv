@@ -22,7 +22,6 @@ A lightweight 2D game engine written in [V](https://vlang.io), built as a projec
 | Library | Purpose |
 |---|---|
 | [vlang/raylib](https://github.com/vlang/raylib) | bindings for Raylib |
-| [larpon/wren](https://github.com/larpon/wren) | bindings for the Wren scripting language |
 
 ---
 
@@ -32,7 +31,7 @@ A lightweight 2D game engine written in [V](https://vlang.io), built as a projec
 |---|---|
 | [V](https://vlang.io) | Implementation language |
 | [Raylib](https://www.raylib.com) | Core framework |
-| [Wren](https://wren.io) | Embedded scripting language (with bindings by Larpon) |
+| [Wren](https://wren.io) | Embedded scripting language (with bindings by [larpon](https://github.com/larpon/wren)) |
 | [rres](https://github.com/raysan5/rres) | Resource packaging format |
 | [libmpxtn](https://github.com/stkchp/libmpxtn) | PXTone file playback |
 | [cute_c2](https://github.com/RandyGaul/cute_headers/blob/master/cute_c2.h) | Collision detection routines |
