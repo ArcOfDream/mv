@@ -1,6 +1,9 @@
 // a node that uses a Timer to pulse a rectangle between two sizes
 // demonstrates using a plain foreign type (Timer) alongside Node
 
+import "mv/node" for Vec2, NativeNode, Node, NativeApp
+import "mv/raylib" for Color, Colors, RL
+
 foreign class Timer {
     construct new(duration, looping) {}
 

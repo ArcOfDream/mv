@@ -1,6 +1,7 @@
 module mv
 
 import wren
+import os
 
 type WrenBindFn = fn (string) wren.ForeignMethodFn
 
@@ -132,6 +133,35 @@ fn wren_error(_vm &wren.VM, typ wren.ErrorType, mod_ &char, line int, msg &char)
 
 // top-level dispatchers
 
+fn wren_load_module(vm &wren.VM, name &char) wren.LoadModuleResult {
+    module_name := unsafe { cstring_to_vstring(name) }
+    mut app := unsafe { &App(vm.get_user_data()) }
+
+    src := match module_name {
+        'mv/node'   { $embed_file('wren_src/node.wren').to_string() }
+        'mv/raylib' { $embed_file('wren_src/raylib.wren').to_string() }
+        else        { '' }
+    }
+
+    if src != '' {
+        app.wren_module_sources << src
+        return wren.LoadModuleResult{ source: app.wren_module_sources.last().str }
+    }
+
+    if setup := app.wren {
+        if path := setup.modules[module_name] {
+            file_src := os.read_file(path) or {
+                eprintln('[wren] module not found: ${module_name} (${path})')
+                return wren.LoadModuleResult{}
+            }
+            app.wren_module_sources << file_src
+            return wren.LoadModuleResult{ source: app.wren_module_sources.last().str }
+        }
+    }
+
+    return wren.LoadModuleResult{}
+}
+
 pub fn wren_bind_method(vm &wren.VM, mod_ &char, cls_ &char, is_static bool, sig_ &char) wren.ForeignMethodFn {
 	class_name := unsafe { cstring_to_vstring(cls_) }
 	signature := unsafe { cstring_to_vstring(sig_) }
@@ -155,23 +185,26 @@ pub fn wren_bind_method(vm &wren.VM, mod_ &char, cls_ &char, is_static bool, sig
 }
 
 pub fn wren_bind_class(vm &wren.VM, mod_ &char, cls_ &char) wren.ForeignClassMethods {
-	if unsafe { cstring_to_vstring(mod_) } != 'main' {
-		return wren.ForeignClassMethods{}
-	}
-	class_name := unsafe { cstring_to_vstring(cls_) }
-	app := unsafe { &App(vm.get_user_data()) }
+    module_name := unsafe { cstring_to_vstring(mod_) }
+    class_name  := unsafe { cstring_to_vstring(cls_) }
+    app         := unsafe { &App(vm.get_user_data()) }
 
-	mut all_defs := wren_class_defs.clone()
-	if setup := app.wren {
-		all_defs << setup.class_defs
-	}
+    // only handle modules we know about — 'main' plus any user-registered ones
+    mut known_modules := ['main', 'mv/node', 'mv/raylib']
+    if setup := app.wren {
+        known_modules << setup.modules.keys()
+    }
+    if module_name !in known_modules { return wren.ForeignClassMethods{} }
 
-	for def in all_defs {
-		if def.name == class_name {
-			if cls := def.class {
-				return cls()
-			}
-		}
-	}
-	return wren.ForeignClassMethods{}
+    mut all_defs := wren_class_defs.clone()
+    if setup := app.wren {
+        all_defs << setup.class_defs
+    }
+
+    for def in all_defs {
+        if def.name == class_name {
+            if cls := def.class { return cls() }
+        }
+    }
+    return wren.ForeignClassMethods{}
 }

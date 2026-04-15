@@ -1,3 +1,6 @@
+import "mv/node" for Vec2, NativeNode, Node, NativeApp
+import "mv/raylib" for Color, Colors, RL
+
 class RectNode is Node {
     construct new(name) {
         super(name)

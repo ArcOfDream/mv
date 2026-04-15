@@ -41,6 +41,7 @@ pub mut:
 	pending_free []&INode
 
 	wren       ?WrenSetup
+	wren_module_sources []string
 	scene_root ?&Node
 
 	textures ResourceManager[TextureResource]
@@ -184,15 +185,15 @@ $if !single_thread ? {
 		for app.is_running {
 			app.physics_world.hash.clear()
 			app.audio_server.process()
-	
+
 			if update := app.update_func {
 				update(app.state.dt)
 			}
-	
+
 			if mut root := app.scene_root {
 				emit_notification(mut root, .update)
 			}
-	
+
 			// clean up pending nodes for removal
 			for mut node in app.pending_free {
 				if mut p := node.parent {
@@ -203,9 +204,9 @@ $if !single_thread ? {
 				}
 			}
 			app.pending_free.clear()
-	
+
 			update_done <- true
-	
+
 			_ := <-render_done
 		}
 	}
@@ -222,6 +223,7 @@ pub fn (mut app App) run() {
 		wren.init_configuration(&app.wren_cfg)
 		app.wren_cfg.bindForeignMethodFn = wren_bind_method
 		app.wren_cfg.bindForeignClassFn = wren_bind_class
+		app.wren_cfg.loadModuleFn = wren_load_module
 		app.wren_cfg.writeFn = wren_write
 		app.wren_cfg.errorFn = wren_error
 
@@ -232,8 +234,8 @@ pub fn (mut app App) run() {
 		app.wren_update_handle = vm.make_call_handle('update(_)')
 		app.wren_draw_handle = vm.make_call_handle('draw()')
 
-		vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
-		vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
+		//vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
+		//vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
 
 		if setup.entry != '' {
 			src := os.read_file(setup.entry) or {
@@ -254,11 +256,11 @@ pub fn (mut app App) run() {
 	}
 
 	app.viewport = rl.load_render_texture(int(app.viewport_size.x), int(app.viewport_size.y))
-	
+
 	// sync channels
 	render_done := chan bool{}
 	update_done := chan bool{}
-	
+
 	$if !single_thread ? {
 		spawn app.update_loop(update_done, render_done)
 	}
@@ -289,15 +291,15 @@ pub fn (mut app App) run() {
 		$if single_thread ? {
 			app.physics_world.hash.clear()
 			app.audio_server.process()
-	
+
 			if update := app.update_func {
 				update(app.state.dt)
 			}
-			
+
 			if mut root := app.scene_root {
 				emit_notification(mut root, .update)
 			}
-	
+
 			// clean up pending nodes for removal
 			for mut node in app.pending_free {
 				if mut p := node.parent {
@@ -346,7 +348,7 @@ pub fn (mut app App) run() {
 
 		rl.draw_texture_pro(app.viewport.texture, vp_source, vp_dest, Vec2{}, 0, rl.white)
 		rl.end_drawing()
-		
+
 		$if !single_thread ? {
 			render_done <- true
 		}

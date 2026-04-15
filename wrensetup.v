@@ -8,4 +8,6 @@ pub mut:
     // application-defined foreign classes, checked after the engine's own
     // class def table in wren_bind_method / wren_bind_class.
     class_defs []WrenClassDef
+    // module name -> file path, resolved when Wren hits an import statement
+    modules    map[string]string
 }
