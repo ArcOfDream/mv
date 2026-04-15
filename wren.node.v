@@ -21,8 +21,8 @@ fn wren_ensure_node_handle(vm &wren.VM, slot int, class_slot int, mut node INode
 }
 
 fn node_wren_allocate(vm &wren.VM) {
-    mut n := wren_alloc[Node](vm)
-    n.init_from_wren(vm)
+	mut n := wren_alloc[Node](vm)
+	n.init_from_wren(vm)
 }
 
 pub fn node_wren_class_methods() wren.ForeignClassMethods {
@@ -32,11 +32,11 @@ pub fn node_wren_class_methods() wren.ForeignClassMethods {
 // wrapper
 
 fn node_wren_set_wrapper(vm &wren.VM) {
-    mut n := wren_get_object[Node](vm, 0)
-    if old_h := n.wren_handle {
-        vm.release_handle(old_h)
-    }
-    n.wren_handle = vm.get_slot_handle(1)
+	mut n := wren_get_object[Node](vm, 0)
+	if old_h := n.wren_handle {
+		vm.release_handle(old_h)
+	}
+	n.wren_handle = vm.get_slot_handle(1)
 }
 
 // identity
@@ -215,6 +215,25 @@ fn node_wren_queue_free(vm &wren.VM) {
 	node.queue_free()
 }
 
+// signals
+
+fn node_wren_connect(vm &wren.VM) {
+	mut n := wren_get_object[Node](vm, 0)
+	signal := vm.get_slot_string(1)
+	handle := vm.get_slot_handle(2)
+	n.connect(signal, WrenSignalHandler{ handle: handle })
+}
+
+fn node_wren_disconnect_all(vm &wren.VM) {
+	mut n := wren_get_object[Node](vm, 0)
+	n.disconnect_all(vm.get_slot_string(1))
+}
+
+fn node_wren_emit(vm &wren.VM) {
+	mut n := wren_get_object[Node](vm, 0)
+	n.emit_signal(vm.get_slot_string(1))
+}
+
 // dispatch
 
 pub fn node_wren_bind_method(signature string) wren.ForeignMethodFn {
@@ -247,6 +266,9 @@ pub fn node_wren_bind_method(signature string) wren.ForeignMethodFn {
 		'reparent(_)' { node_wren_reparent }
 		'moveChild(_,_)' { node_wren_move_child }
 		'swapChildren(_,_)' { node_wren_swap_children }
+		'connect(_,_)' { node_wren_connect }
+		'disconnectAll(_)' { node_wren_disconnect_all }
+		'emit(_)' { node_wren_emit }
 		'queueFree()' { node_wren_queue_free }
 		else { unsafe { nil } }
 	}

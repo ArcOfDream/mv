@@ -29,9 +29,10 @@ mut:
 	clear_color    rl.Color
 	backdrop_color rl.Color
 
-	wren_vm            ?&wren.VM
-	wren_update_handle ?&wren.Handle
-	wren_draw_handle   ?&wren.Handle
+	wren_vm                  ?&wren.VM
+	wren_update_handle       ?&wren.Handle
+	wren_draw_handle         ?&wren.Handle
+	wren_signal_call_handles []?&wren.Handle
 
 	viewport rl.RenderTexture2D
 	state    GameState = GameState{}
@@ -40,9 +41,9 @@ mut:
 pub mut:
 	pending_free []&INode
 
-	wren       ?WrenSetup
+	wren                ?WrenSetup
 	wren_module_sources []string
-	scene_root ?&Node
+	scene_root          ?&Node
 
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
@@ -233,9 +234,16 @@ pub fn (mut app App) run() {
 
 		app.wren_update_handle = vm.make_call_handle('update(_)')
 		app.wren_draw_handle = vm.make_call_handle('draw()')
+		app.wren_signal_call_handles = [
+			?&wren.Handle(vm.make_call_handle('call()')),
+			?&wren.Handle(vm.make_call_handle('call(_)')),
+			?&wren.Handle(vm.make_call_handle('call(_,_)')),
+			?&wren.Handle(vm.make_call_handle('call(_,_,_)')),
+			?&wren.Handle(vm.make_call_handle('call(_,_,_,_)')),
+		]
 
-		//vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
-		//vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
+		// vm.interpret('main', $embed_file('wren_src/raylib.wren').to_string())
+		// vm.interpret('main', $embed_file('wren_src/node.wren').to_string())
 
 		if setup.entry != '' {
 			src := os.read_file(setup.entry) or {
@@ -267,10 +275,11 @@ pub fn (mut app App) run() {
 
 	for !rl.window_should_close() {
 		$if !single_thread ? {
-			_ := <- update_done
+			_ := <-update_done
 		}
 
-		mut scale := m.min(f64(rl.get_screen_width()) / app.viewport_size.x, f64(rl.get_screen_height()) / app.viewport_size.y)
+		mut scale := m.min(f64(rl.get_screen_width()) / app.viewport_size.x,
+			f64(rl.get_screen_height()) / app.viewport_size.y)
 		app.state.dt = rl.get_frame_time()
 
 		if app.integer_scale {

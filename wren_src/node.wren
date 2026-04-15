@@ -84,6 +84,10 @@ foreign class NativeNode {
     foreign reparent(newParent)
     foreign moveChild(from, to)
     foreign swapChildren(a, b)
+    
+    foreign connect(signal, callable)
+    foreign disconnectAll(signal)
+    foreign emit(signal)
 
     foreign queueFree()
 }
@@ -148,7 +152,7 @@ foreign class NativeApp {
 }
 
 // Subclassable Wren wrappers
-// rxtend these in user scripts. setWrapper stores the outer object's handle on
+// extend these in user scripts. setWrapper stores the outer object's handle on
 // the native so notify() dispatches update/draw to the correct Wren class
 
 class Node {
@@ -196,6 +200,10 @@ class Node {
     getChildAt(index)    { _inner.getChildAt(index) }
     moveChild(from, to)  { _inner.moveChild(from, to) }
     swapChildren(a, b)   { _inner.swapChildren(a, b) }
+    
+    connect(signal, callable) { _inner.connect(signal, callable) }
+    disconnectAll(signal)     { _inner.disconnectAll(signal) }
+    emit(signal)              { _inner.emit(signal) }
 
     queueFree()     { _inner.queueFree() }
 

@@ -16,7 +16,6 @@ const cols = 4
 struct Game {
 mut:
 	app  ?&mv.App
-	root ?&mv.Node
 }
 
 fn (mut g Game) setup() {
@@ -35,7 +34,7 @@ fn (mut g Game) init() {
 		app.set_clear_color(rl.Color{20, 20, 20, 255})
 
 		mut r := mv.Node.new(app, 'root')
-		g.root = r
+		app.scene_root = r
 
 		// gradients
 
@@ -162,17 +161,9 @@ fn (mut g Game) init() {
 	}
 }
 
-fn (g &Game) update(_ f32) {
-	if mut r := g.root {
-		mv.emit_notification(mut r, .update)
-	}
-}
+fn (g &Game) update(_ f32) {}
 
 fn (mut g Game) draw() {
-	if mut r := g.root {
-		mv.emit_notification(mut r, .draw)
-	}
-
 	rl.draw_text('image gen sample', 2, 2, 4, rl.raywhite)
 }
 

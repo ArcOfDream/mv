@@ -17,6 +17,7 @@ mut:
 	local_matrix   rl.Matrix
 	global_matrix  rl.Matrix
 	local_matrix_f rm.Float16
+	signals        SignalTable
 
 	// set by the Wren allocator; its presence means
 	// "call back into Wren for update/draw"
@@ -54,6 +55,7 @@ fn (mut n Node) init_from_wren(vm &wren.VM) {
 	n.scale = Vec2{1, 1}
 	n.parent = ?&INode(none)
 	n.children = []
+	n.signals = SignalTable{}
 }
 
 @[inline]
@@ -366,6 +368,20 @@ pub fn (mut n Node) queue_free() {
 		n.queued_free = true
 		n.app.pending_free << n
 	}
+}
+
+// --- signals ---
+
+pub fn (mut n Node) connect(signal string, handler SignalHandler) {
+    n.signals.connect(signal, handler)
+}
+
+pub fn (mut n Node) disconnect_all(signal string) {
+    n.signals.disconnect_all(signal)
+}
+
+pub fn (mut n Node) emit_signal(signal string, args ...SignalArg) {
+    n.signals.emit(signal, &n, args, n.app.wren_vm, n.app.wren_signal_call_handles)
 }
 
 // --- notifications ---
