@@ -1,7 +1,8 @@
 module main
 
 import raylib as rl
-import mv { Vec2 }
+import mv
+import mv.core { Gradient, Vec2 }
 
 // Image generation workbench: 4×3 grid of 64×64 generated textures
 //
@@ -15,7 +16,7 @@ const cols = 4
 @[heap]
 struct Game {
 mut:
-	app  ?&mv.App
+	app ?&mv.App
 }
 
 fn (mut g Game) setup() {
@@ -38,7 +39,7 @@ fn (mut g Game) init() {
 
 		// gradients
 
-		mut sunset := mv.Gradient.from_colors([
+		mut sunset := Gradient.from_colors([
 			rl.Color{10, 10, 40, 255},
 			rl.Color{120, 60, 180, 255},
 			rl.Color{240, 100, 40, 255},
@@ -46,14 +47,14 @@ fn (mut g Game) init() {
 		])
 		sunset.interpolation = .monotone_cubic
 
-		mut sky := mv.Gradient.from_colors([
+		mut sky := Gradient.from_colors([
 			rl.Color{10, 30, 80, 255},
 			rl.Color{80, 160, 220, 255},
 			rl.Color{200, 230, 255, 255},
 		])
 		sky.interpolation = .monotone_cubic
 
-		mut rainbow := mv.Gradient.from_colors([
+		mut rainbow := Gradient.from_colors([
 			rl.red,
 			rl.orange,
 			rl.yellow,
@@ -63,26 +64,26 @@ fn (mut g Game) init() {
 			rl.violet,
 		])
 
-		mut sphere_grad := mv.Gradient.from_colors([
+		mut sphere_grad := Gradient.from_colors([
 			rl.Color{255, 255, 240, 255},
 			rl.Color{60, 80, 160, 255},
 			rl.Color{10, 15, 40, 255},
 		])
 		sphere_grad.interpolation = .cubic
 
-		mut vignette := mv.Gradient.from_colors([
+		mut vignette := Gradient.from_colors([
 			rl.Color{255, 255, 255, 255},
 			rl.Color{0, 0, 0, 255},
 		])
 
-		mut glow := mv.Gradient.from_colors([
+		mut glow := Gradient.from_colors([
 			rl.Color{255, 220, 80, 255},
 			rl.Color{255, 120, 20, 180},
 			rl.Color{200, 40, 10, 0},
 		])
 		glow.interpolation = .monotone_cubic
 
-		mut two_tone := mv.Gradient.from_colors([
+		mut two_tone := Gradient.from_colors([
 			rl.Color{20, 20, 60, 255},
 			rl.Color{0, 200, 180, 255},
 		])
@@ -90,50 +91,51 @@ fn (mut g Game) init() {
 		// generate & register images
 
 		// [0] solid fill
-		app.textures.load_from_image('fill', mv.gen_image_fill(img_size, img_size, rl.Color{30, 160, 180, 255}))
+		app.textures.load_from_image('fill',
+			core.gen_image_fill(img_size, img_size, rl.Color{30, 160, 180, 255}))
 
 		// [1] checkerboard
-		app.textures.load_from_image('checker', mv.gen_image_checker(img_size, img_size,
-			8, 8, rl.Color{240, 40, 240, 255}, rl.Color{40, 40, 40, 255}))
+		app.textures.load_from_image('checker',
+			core.gen_image_checker(img_size, img_size, 8, 8, rl.Color{240, 40, 240, 255}, rl.Color{40, 40, 40, 255}))
 
 		// [2] grid
-		app.textures.load_from_image('grid', mv.gen_image_grid(img_size, img_size, 4,
-			4, 2, rl.Color{30, 30, 30, 255}, rl.Color{100, 200, 120, 255}))
+		app.textures.load_from_image('grid',
+			core.gen_image_grid(img_size, img_size, 4, 4, 2, rl.Color{30, 30, 30, 255}, rl.Color{100, 200, 120, 255}))
 
 		// [3] linear horizontal: sunset
-		app.textures.load_from_image('linear_h', mv.gen_image_gradient_linear(img_size,
-			img_size, &sunset, Vec2{0.0, 0.5}, Vec2{1.0, 0.5}))
+		app.textures.load_from_image('linear_h', core.gen_image_gradient_linear(img_size, img_size,
+			&sunset, Vec2{0.0, 0.5}, Vec2{1.0, 0.5}))
 
 		// [4] linear vertical: sky
-		app.textures.load_from_image('linear_v', mv.gen_image_gradient_linear(img_size,
-			img_size, &sky, Vec2{0.5, 0.0}, Vec2{0.5, 1.0}))
+		app.textures.load_from_image('linear_v', core.gen_image_gradient_linear(img_size, img_size,
+			&sky, Vec2{0.5, 0.0}, Vec2{0.5, 1.0}))
 
 		// [5] linear diagonal
-		app.textures.load_from_image('linear_diag', mv.gen_image_gradient_linear(img_size,
+		app.textures.load_from_image('linear_diag', core.gen_image_gradient_linear(img_size,
 			img_size, &rainbow, Vec2{0.0, 0.0}, Vec2{1.0, 1.0}))
 
 		// [6] radial vignette
-		app.textures.load_from_image('radial', mv.gen_image_gradient_radial(img_size,
-			img_size, &vignette, Vec2{0.5, 0.5}, 0.5))
+		app.textures.load_from_image('radial', core.gen_image_gradient_radial(img_size, img_size,
+			&vignette, Vec2{0.5, 0.5}, 0.5))
 
 		// [7] radial focal: sphere shading
-		app.textures.load_from_image('radial_focal', mv.gen_image_gradient_radial_focal(img_size,
+		app.textures.load_from_image('radial_focal', core.gen_image_gradient_radial_focal(img_size,
 			img_size, &sphere_grad, Vec2{0.5, 0.5}, 0.5, Vec2{0.35, 0.3}))
 
 		// [8] conic: rainbow sweep
-		app.textures.load_from_image('conic', mv.gen_image_gradient_conic(img_size, img_size,
+		app.textures.load_from_image('conic', core.gen_image_gradient_conic(img_size, img_size,
 			&rainbow, Vec2{0.5, 0.5}, 0.0))
 
 		// [9] xor: rainbow
-		app.textures.load_from_image('xor_rainbow', mv.gen_image_xor(img_size, img_size,
-			&rainbow))
+		app.textures.load_from_image('xor_rainbow',
+			core.gen_image_xor(img_size, img_size, &rainbow))
 
 		// [10] xor: two-tone
-		app.textures.load_from_image('xor_two', mv.gen_image_xor(img_size, img_size, &two_tone))
+		app.textures.load_from_image('xor_two', core.gen_image_xor(img_size, img_size, &two_tone))
 
 		// [11] sdf circle: soft glow
-		app.textures.load_from_image('sdf_glow', mv.gen_image_sdf_circle(img_size, img_size,
-			Vec2{0.5, 0.5}, 0.35, 0.15, &glow))
+		app.textures.load_from_image('sdf_glow', core.gen_image_sdf_circle(img_size, img_size, Vec2{0.5, 0.5},
+			0.35, 0.15, &glow))
 
 		// lay out sprites in a 4×3 grid
 

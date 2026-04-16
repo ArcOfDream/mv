@@ -1,4 +1,4 @@
-module stringname
+module core
 
 import sync
 
@@ -19,6 +19,7 @@ pub fn (sn &StringName) free() {
 	e.count--
 }
 
+@[heap]
 pub struct StringNameMap {
 mut:
 	table map[string]&StringEntry

@@ -152,6 +152,11 @@ fn C.c2PolytoPolyManifold(const_a &Polygon, const_ax &XTransform, const_b &Polyg
 
 fn C.c2Collided(shape_a voidptr, x_a &XTransform, type_a int, shape_b voidptr, x_b &XTransform, type_b int) int
 
+// c2MakePoly computes outward face normals from the polygon's vertices.
+// Must be called once after setting up verts and count, before using
+// the polygon in any collision query.
+fn C.c2MakePoly(p &Polygon)
+
 // adaptation of c2Impact macro
 // impact point: p = ray.p + ray.d * t
 pub fn (ray Ray) impact(t f32) Vec {
@@ -324,4 +329,8 @@ pub fn collided_smart(shape_a voidptr, x_a ?&XTransform, type_a CollisionType, s
 	}
 
 	return C.c2Collided(shape_a, ptr_a, int(type_a), shape_b, ptr_b, int(type_b)) != 0
+}
+
+pub fn make_poly(mut p Polygon) {
+	C.c2MakePoly(&p)
 }

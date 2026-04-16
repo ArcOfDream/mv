@@ -1,4 +1,4 @@
-module mv
+module core
 
 import math { clamp, max }
 import raylib as rl { Color }

@@ -1,5 +1,6 @@
 module mv
 
+import core { Vec2 }
 import wren
 
 fn vec2_wren_allocate(vm &wren.VM) {

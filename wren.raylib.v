@@ -1,5 +1,6 @@
 module mv
 
+import core { Vec2 }
 import raylib as rl
 import wren
 
@@ -263,11 +264,11 @@ fn rl_wren_get_gamepad_axis_count(vm &wren.VM) {
 
 // RL cursor
 
-fn rl_wren_show_cursor(vm &wren.VM) {
+fn rl_wren_show_cursor(_ &wren.VM) {
 	rl.show_cursor()
 }
 
-fn rl_wren_hide_cursor(vm &wren.VM) {
+fn rl_wren_hide_cursor(_ &wren.VM) {
 	rl.hide_cursor()
 }
 
@@ -275,11 +276,11 @@ fn rl_wren_is_cursor_hidden(vm &wren.VM) {
 	vm.set_slot_bool(0, rl.is_cursor_hidden())
 }
 
-fn rl_wren_enable_cursor(vm &wren.VM) {
+fn rl_wren_enable_cursor(_ &wren.VM) {
 	rl.enable_cursor()
 }
 
-fn rl_wren_disable_cursor(vm &wren.VM) {
+fn rl_wren_disable_cursor(_ &wren.VM) {
 	rl.disable_cursor()
 }
 

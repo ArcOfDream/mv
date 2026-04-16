@@ -16,6 +16,46 @@ fn (s Shape) c2_type() CollisionType {
 	}
 }
 
+// Polygon.from_rect builds a rectangle polygon centred at the origin
+// with the given width and height. Vertices are wound counter-clockwise.
+// Rotate at collision time via XTransform — do not bake rotation into vertices.
+pub fn Polygon.from_rect(w f32, h f32) Polygon {
+	hw := w * 0.5
+	hh := h * 0.5
+	mut p := Polygon{
+		count: 4
+	}
+	p.verts[0] = Vec{-hw, -hh} // top-left
+	p.verts[1] = Vec{ hw, -hh} // top-right
+	p.verts[2] = Vec{ hw,  hh} // bottom-right
+	p.verts[3] = Vec{-hw,  hh} // bottom-left
+	make_poly(mut p)
+	return p
+}
+
+// Polygon.from_aabb converts an existing AABB into an equivalent polygon.
+// Useful when you need to rotate geometry that was originally defined as an AABB.
+pub fn Polygon.from_aabb(aabb AABB) Polygon {
+	w := aabb.max.x - aabb.min.x
+	h := aabb.max.y - aabb.min.y
+	mut p := Polygon{
+		count: 4
+	}
+	p.verts[0] = Vec{aabb.min.x, aabb.min.y}
+	p.verts[1] = Vec{aabb.max.x, aabb.min.y}
+	p.verts[2] = Vec{aabb.max.x, aabb.max.y}
+	p.verts[3] = Vec{aabb.min.x, aabb.max.y}
+	// re-centre so rotation is around the shape's own centre,
+	// consistent with from_rect behaviour
+	cx := aabb.min.x + w * 0.5
+	cy := aabb.min.y + h * 0.5
+	for i in 0 .. p.count {
+		p.verts[i] = Vec{p.verts[i].x - cx, p.verts[i].y - cy}
+	}
+	make_poly(mut p)
+	return p
+}
+
 @[inline]
 pub fn check_collision(s1 Shape, s2 Shape) bool {
 	// identity transform for primitives (c2 ignores these for non-polygons)

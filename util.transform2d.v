@@ -2,6 +2,7 @@ module mv
 
 import raylib as rl
 import math
+import core { Vec2 }
 
 pub struct Transform2D {
 pub mut:

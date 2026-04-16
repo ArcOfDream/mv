@@ -6,7 +6,7 @@ import mv.resourcemanager { FileSource, LoadCommand, ThreadLoader }
 
 // this example shows working with threadloader to help load multiple files on a thread
 //
-// loading from an rres file is also supported this way!
+// loading from an rres file is also supported this way.
 
 @[heap]
 struct Game {

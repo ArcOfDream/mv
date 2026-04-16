@@ -1,4 +1,4 @@
-module mv
+module core
 
 import math { clamp }
 

@@ -4,6 +4,7 @@ import raylib as rl
 import raylib.raymath as rm
 import math
 import wren
+import core { Vec2 }
 
 @[heap]
 pub struct Node {
@@ -373,15 +374,15 @@ pub fn (mut n Node) queue_free() {
 // --- signals ---
 
 pub fn (mut n Node) connect(signal string, handler SignalHandler) {
-    n.signals.connect(signal, handler)
+	n.signals.connect(signal, handler)
 }
 
 pub fn (mut n Node) disconnect_all(signal string) {
-    n.signals.disconnect_all(signal)
+	n.signals.disconnect_all(signal)
 }
 
 pub fn (mut n Node) emit_signal(signal string, args ...SignalArg) {
-    n.signals.emit(signal, &n, args, n.app.wren_vm, n.app.wren_signal_call_handles)
+	n.signals.emit(signal, &n, args, n.app.wren_vm, n.app.wren_signal_call_handles)
 }
 
 // --- notifications ---

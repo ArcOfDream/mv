@@ -94,3 +94,12 @@ pub fn (mut sh SpatialHash) query_shape(shape Shape) []int {
 	x, y, w, h := shape.bounds()
 	return sh.query(x, y, w, h)
 }
+
+pub fn (mut sh SpatialHash) query_swept(cur Shape, proposed Shape) []int {
+    cx, cy, cw, ch := cur.bounds()
+    px, py, pw, ph := proposed.bounds()
+    // union of both bounds
+    ux := m.min(cx, px)
+    uy := m.min(cy, py)
+    return sh.query(ux, uy, m.max(cx+cw, px+pw) - ux, m.max(cy+ch, py+ph) - uy)
+}

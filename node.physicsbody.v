@@ -1,5 +1,6 @@
 module mv
 
+import core { Vec2 }
 import physics
 import math
 
@@ -13,6 +14,7 @@ pub:
 	manifold physics.Manifold
 	normal   Vec2
 	depth    f32
+	ti       f32 = f32(1.0)    // time of impact 0..1; 0 = overlap, 1 = manifold default
 	other    &PhysicsBody
 }
 
@@ -204,76 +206,99 @@ fn (b &PhysicsBody) translated_xtransform(delta Vec2) physics.XTransform {
 // it does NOT move the node -- the caller is responsible for applying position
 // changes based on the results.
 pub fn (mut b PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
-	self_id := int(voidptr(b))
-	proposed := b.translated_shape(velocity)
-	proposed_xf := b.translated_xtransform(velocity)
-	candidates := b.app.physics_world.hash.query_shape(proposed)
+    self_id    := int(voidptr(b))
+    cur_shape  := b.world_shape()
+    proposed   := b.translated_shape(velocity)
+    proposed_xf := b.translated_xtransform(velocity)
 
-	mut results := []CollisionResult{}
+    // broad phase: query at endpoint (conservative; catches all candidates)
+    candidates := b.app.physics_world.hash.query_shape(proposed)
+    mut results := []CollisionResult{}
 
-	for id in candidates {
-		if id == self_id {
-			continue
-		}
-		mut other := b.app.bodies[id] or { continue }
-		if !b.can_collide_with(other) {
-			continue
-		}
+    for id in candidates {
+        if id == self_id { continue }
+        mut other := b.app.bodies[id] or { continue }
+        if !b.can_collide_with(other) { continue }
 
-		m := physics.manifold_between_xf(proposed, proposed_xf, other.world_shape(), other.shape_xtransform())
-		if m.count == 0 {
-			continue
-		}
+        other_shape := other.world_shape()
 
-		results << CollisionResult{
-			manifold: m
-			normal:   Vec2{-m.n.x, -m.n.y}
-			depth:    m.depths[0]
-			other:    other
-		}
-	}
+        // AABB vs AABB: Liang-Barsky sweep for accurate time-of-impact
+        if cur_shape is physics.AABB && other_shape is physics.AABB {
+            sr := physics.sweep_aabb(cur_shape, other_shape, velocity.x, velocity.y)
+            if !sr.hit { continue }
+            results << CollisionResult{
+                normal: Vec2{sr.normal_x, sr.normal_y}
+                ti:     sr.ti
+                other:  other
+            }
+            continue
+        }
 
-	return results
+        // All other pairs: cute_c2 manifold (overlap test at endpoint)
+        mf := physics.manifold_between_xf(proposed, proposed_xf, other_shape, other.shape_xtransform())
+        if mf.count == 0 { continue }
+        results << CollisionResult{
+            manifold: mf
+            normal:   Vec2{-mf.n.x, -mf.n.y}
+            depth:    mf.depths[0]
+            ti:       f32(1.0)  // manifold = already at overlap depth
+            other:    other
+        }
+    }
+
+    return results
 }
 
 // move_and_slide iteratively moves the body, sliding along surfaces on collision.
 // returns the remaining velocity after all slides are resolved.
 // collisions encountered are stored in slide_collisions.
 pub fn (mut b PhysicsBody) move_and_slide(velocity Vec2, max_slides int) Vec2 {
-	b.slide_collisions.clear()
-	mut remaining := velocity
+    b.slide_collisions.clear()
+    mut remaining := velocity
+    mut pos := b.transform.translation
 
-	for _ in 0 .. max_slides {
-		if remaining.length() < 0.001 {
-			break
-		}
+    for _ in 0 .. max_slides {
+        if remaining.length() < 0.001 {
+            break
+        }
 
-		hits := b.move_and_collide(remaining)
-		if hits.len == 0 {
-			b.set_global_pos(b.transform.translation + remaining)
-			remaining = Vec2{}
-			break
-		}
+        hits := b.move_and_collide(remaining)
+        if hits.len == 0 {
+            pos += remaining
+            remaining = Vec2{}
+            break
+        }
 
-		// resolve the deepest penetration first for stability
-		mut deepest := hits[0]
-		for hit in hits[1..] {
-			if hit.depth > deepest.depth {
-				deepest = hit
-			}
-		}
+        // pick the earliest contact this iteration
+        mut earliest := hits[0]
+        for hit in hits[1..] {
+            if hit.ti < earliest.ti {
+                earliest = hit
+            }
+        }
 
-		b.slide_collisions << deepest
+        b.slide_collisions << earliest
 
-		// push out of the surface by the penetration depth
-		b.set_global_pos(b.transform.translation + deepest.normal * Vec2.f32(deepest.depth))
+        if earliest.ti == 0 {
+            // static overlap: push out by penetration (manifold path or resting contact)
+            // use depth for manifold hits; for sweep overlaps the normal is already computed
+            push := if earliest.depth > 0 { earliest.depth } else { f32(0.5) }
+            pos += earliest.normal * Vec2.f32(push)
+        } else {
+            // sweep contact: move forward to the touch point
+            pos += remaining * Vec2.f32(earliest.ti)
+        }
 
-		// remove the component of remaining velocity pointing into the surface
-		dot := remaining.dot(deepest.normal)
-		remaining = remaining - deepest.normal * Vec2.f32(dot)
-	}
+        b.set_global_pos(pos)
 
-	return remaining
+        // project the unspent velocity along the surface
+        leftover := remaining * Vec2.f32(1.0 - earliest.ti)
+        dot := leftover.dot(earliest.normal)
+        remaining = leftover - earliest.normal * Vec2.f32(dot)
+    }
+
+    b.set_global_pos(pos)
+    return remaining
 }
 
 // surface queries

@@ -1,8 +1,8 @@
-module timeline
+module core
 
 pub struct TimelineEvent {
 	frame    int
-	callback fn ()
+	callback fn () @[required]
 }
 
 pub struct Timeline {

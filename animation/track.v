@@ -1,7 +1,5 @@
 module animation
 
-import tween { EaseFn }
-
 pub struct Keyframe[T] {
 pub:
 	time f32

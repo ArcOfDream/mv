@@ -1,4 +1,4 @@
-module mv
+module core
 
 import raylib as rl { Color, PixelFormat }
 import math { atan2, clamp, floorf, sqrtf }

@@ -1,6 +1,7 @@
 module mv
 
 import raylib as rl
+import core { Vec2 }
 import resourcemanager { Handle, ShaderResource, TextureResource }
 
 @[heap]

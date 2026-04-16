@@ -1,14 +1,13 @@
 module mv
 
 import raylib as rl
-import wren
 import math as m
+import os
+import core { Vec2, StringNameMap }
 import physics as phys
 import resourcemanager { ResourceManager, ShaderResource, SoundResource, TextureResource }
-import input
-import stringname { StringNameMap }
 import audio
-import os
+import wren
 
 // import sync
 
@@ -53,7 +52,7 @@ pub mut:
 	audio_server  audio.AudioServer
 	physics_world phys.PhysicsWorld
 	bodies        map[int]&PhysicsBody
-	input_map     &input.InputMap
+	input_map     &core.InputMap
 
 	init_func          ?fn ()
 	update_func        ?fn (f32)
@@ -64,7 +63,7 @@ pub mut:
 
 pub fn App.new(init ?fn (), update ?fn (f32), draw ?fn (), backdrop ?fn (), input_fn ?fn ()) &App {
 	mut n := &StringNameMap{}
-	mut imap := input.InputMap.new(n)
+	mut imap := core.InputMap.new(n)
 
 	return &App{
 		names:     n

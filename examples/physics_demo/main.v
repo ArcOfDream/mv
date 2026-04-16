@@ -1,35 +1,44 @@
 module main
 
 import mv
+import mv.core { Vec2 }
 import raylib as rl
 import mv.physics
 
 struct Ball {
 	mv.PhysicsBody
 mut:
-	velocity    mv.Vec2
+	velocity    Vec2
 	radius      f32 = 10.0
 	restitution f32 = 0.8 // bounciness
 	gravity     f32 = 1000.0
+}
+
+fn Ball.new(app &mv.App, name string, pos Vec2) &Ball {
+	return &Ball{
+		app: app
+		node_name: name
+		pos : pos
+	}
 }
 
 fn (mut b Ball) update(dt f32) {
 	b.velocity.y += b.gravity * dt
 
 	// move_and_collide returns hits from the physics world
-	delta := b.velocity * mv.Vec2.f32(dt)
+	delta := b.velocity * Vec2.f32(dt)
 	hits := b.move_and_collide(delta)
 
 	if hits.len > 0 {
 		hit := hits[0]
 
 		// advance to proposed position, then resolve overlap
-		b.set_pos(b.get_pos() + delta + hit.normal * mv.Vec2.f32(hit.depth))
+		b.set_pos(b.get_pos() + delta + hit.normal * Vec2.f32(hit.depth))
 
 		// bounce logic
 		dot := b.velocity.dot(hit.normal)
-		normal_component := hit.normal * mv.Vec2.f32(dot)
-		b.velocity = b.velocity - normal_component * mv.Vec2.f32(1.0 + b.restitution)
+		normal_component := hit.normal * Vec2.f32(dot)
+		b.velocity = b.velocity - normal_component * Vec2.f32(1.0 + b.restitution)
 	} else {
 		b.set_pos(b.get_pos() + delta)
 	}
@@ -42,7 +51,15 @@ fn (mut b Ball) draw() {
 struct Floor {
 	mv.PhysicsBody
 mut:
-	size mv.Vec2
+	size Vec2
+}
+
+fn Floor.new(app &mv.App, name string, pos Vec2) &Floor {
+	return &Floor{
+		app: app
+		node_name: name
+		pos : pos
+	}
 }
 
 fn (mut f Floor) draw() {
@@ -70,22 +87,21 @@ fn (mut g Game) setup() {
 
 fn (mut g Game) init() {
 	for i in 0 .. 1 {
-		mut ball := g.app.new_node[Ball]('Ball_${i}', 200 + 10 * i, 100)
+		mut ball := Ball.new(g.app, 'Ball_${i}', Vec2{200 + 10 * i, 100})
 		ball.body_type = .kinematic
 		ball.shape = physics.Circle{
 			r: 10.0
 		}
-		ball.velocity = mv.Vec2{10, 0}
+		ball.velocity = Vec2{10, 0}
 		mv.emit_notification(mut ball, .ready)
 
 		g.balls << ball
 	}
 
-	mut floor := g.app.new_node[Floor]('Floor', 100, 500)
-	// floor.set_pos(mv.Vec2{100, 500})
+	mut floor := Floor.new(g.app, 'Floor', Vec2{100, 500})
 	g.floor = floor
 	floor.body_type = .static_body
-	floor.size = mv.Vec2{600, 40}
+	floor.size = Vec2{600, 40}
 	floor.shape = physics.AABB{
 		min: physics.Vec{0, 0}
 		max: physics.Vec{600, 40}

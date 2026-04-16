@@ -1,5 +1,6 @@
 module mv
 
+import core { Vec2 }
 import raylib as rl
 import raylib.raymath as rm
 import wren
