@@ -1,4 +1,4 @@
-module tween
+module animation
 
 pub struct TweenManager {
 mut:

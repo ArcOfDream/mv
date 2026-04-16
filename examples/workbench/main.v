@@ -1,7 +1,8 @@
 module main
 
 import raylib as rl { Color }
-import mv { Vec2 }
+import mv
+import mv.core { Vec2 }
 import mv.rres
 import mv.ldtk as _
 
@@ -60,13 +61,13 @@ fn (mut g Game) init() {
 			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
 			player.loop(true)
 
-			mut sphere_grad := mv.Gradient.from_colors([
+			mut sphere_grad := core.Gradient.from_colors([
 				Color{255, 255, 240, 255}, // near-white highlight
 				Color{60, 80, 160, 255}, // mid blue
 				Color{10, 15, 40, 255}, // dark edge
 			])
 			sphere_grad.interpolation = .monotone_cubic
-			mut rainbow_grad := mv.Gradient.from_colors([
+			mut rainbow_grad := core.Gradient.from_colors([
 				rl.red,
 				rl.orange,
 				rl.yellow,
@@ -78,7 +79,7 @@ fn (mut g Game) init() {
 			])
 			rainbow_grad.interpolation = .constant
 
-			sphere_tex := mv.Gradient2D{
+			sphere_tex := core.Gradient2D{
 				gradient: sphere_grad
 				fill:     .radial_focal
 				center:   Vec2{0.5, 0.5} // outer circle sits in the middle
@@ -94,7 +95,7 @@ fn (mut g Game) init() {
 			sprite.set_centered(false)
 			sprite.set_pos(Vec2{0, 0})
 
-			mut img_xor := mv.gen_image_xor(64, 64, rainbow_grad)
+			mut img_xor := core.gen_image_xor(64, 64, rainbow_grad)
 			app.textures.load_from_image('xor', img_xor)
 			mut sprite2 := mv.Sprite.new(app, 'xor', 'xor')
 			r.add_child(mut sprite2)

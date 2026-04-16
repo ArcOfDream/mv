@@ -1,4 +1,4 @@
-module tween
+module animation
 
 import math { min }
 
