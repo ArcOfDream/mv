@@ -3,11 +3,11 @@ module physics
 import math as m
 
 pub struct SpatialHash {
-mut:
+pub mut:
 	cell_size    int = 64
 	cells        map[u64][]int // dynamic bodies, cleared each frame
 	static_cells map[u64][]int // static bodies, never cleared
-	seen         map[int]bool  // reused scratch — cleared per query
+	seen         map[int]bool  // reused scratch: cleared per query
 }
 
 // widely-used prime pair from Teschner et al.
@@ -96,10 +96,10 @@ pub fn (mut sh SpatialHash) query_shape(shape Shape) []int {
 }
 
 pub fn (mut sh SpatialHash) query_swept(cur Shape, proposed Shape) []int {
-    cx, cy, cw, ch := cur.bounds()
-    px, py, pw, ph := proposed.bounds()
-    // union of both bounds
-    ux := m.min(cx, px)
-    uy := m.min(cy, py)
-    return sh.query(ux, uy, m.max(cx+cw, px+pw) - ux, m.max(cy+ch, py+ph) - uy)
+	cx, cy, cw, ch := cur.bounds()
+	px, py, pw, ph := proposed.bounds()
+	// union of both bounds
+	ux := m.min(cx, px)
+	uy := m.min(cy, py)
+	return sh.query(ux, uy, m.max(cx + cw, px + pw) - ux, m.max(cy + ch, py + ph) - uy)
 }

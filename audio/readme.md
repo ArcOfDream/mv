@@ -17,7 +17,7 @@ All playback runs on a dedicated background thread, keeping the audio update loo
 - `process()`: drains the event channel; call once per frame to collect `StreamFinishedEvent`s and clean up completed stream entries.
 - `shutdown()`: sends a quit command and blocks until the audio thread confirms a clean exit.
 
-The server starts with three buses: `master` (the root), `music` → `master`, and `sfx` → `master`, mirroring Godot's default layout.
+The server starts with three buses: `master` (the root), `music` -> `master`, and `sfx` -> `master`, mirroring Godot's default layout.
 
 **`AudioBus`**: a named node in the send graph. Stores `volume_db` (in decibels, converted to linear gain via `db_to_linear`) and a `mute` flag. Volume is resolved by walking the send chain from a stream's assigned bus up to the root, multiplying linear gains; any muted bus in the chain silences all streams below it.
 
@@ -26,6 +26,6 @@ The server starts with three buses: `master` (the root), `music` → `master`, a
 - `RaylibMusic` wraps `rl.Music` and delegates entirely to Raylib's streaming API.
 - `PxtoneMusic` wraps a `pxtn.Pxtone` decoder handle alongside a Raylib `AudioStream` and a PCM fill buffer. Each tick it calls `gen_buffer` to fill the next `buffer_frames` (4096 frames, ~93ms at 44100 Hz) of 16-bit stereo PCM and pushes it to the stream. Loop point is handled via the decoder's `repeat_sample` position rather than restarting from zero.
 
-**`AudioThread`**: manages the spawned goroutine and its three channels: `cmd_ch` (main → thread, buffered to 16), `event_ch` (thread → main, buffered to 16), and `done_ch` (shutdown handshake). The thread loop drains all pending commands first, then ticks every active stream, then sleeps for 2ms to yield the CPU. Finished streams are reported back as `StreamFinishedEvent`s on `event_ch`.
+**`AudioThread`**: manages the spawned goroutine and its three channels: `cmd_ch` (main -> thread, buffered to 16), `event_ch` (thread -> main, buffered to 16), and `done_ch` (shutdown handshake). The thread loop drains all pending commands first, then ticks every active stream, then sleeps for 2ms to yield the CPU. Finished streams are reported back as `StreamFinishedEvent`s on `event_ch`.
 
 **`AudioMessage` / `AudioEvent`**: typed channel sum types. Commands are `LoadMsg`, `StopMsg`, `PauseMsg`, `ResumeMsg`, `UnloadMsg`, `SeekMsg`, `VolumeMsg`, `LoopMsg`, and the `GlobalCmd.quit` sentinel. Events are currently `StreamFinishedEvent` only, with the type left as a sum type for future expansion.

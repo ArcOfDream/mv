@@ -30,7 +30,7 @@ pub struct FieldInstance {
 pub:
 	identifier string @[json: '__identifier']
 	typ        string @[json: '__type']
-	value      string @[json: '__value'] // raw JSON — decode per typ
+	value      string @[json: '__value'] // raw JSON: decode per typ
 	def_uid    int    @[json: 'defUid']
 }
 
@@ -133,7 +133,7 @@ pub:
 
 	// An array containing all Layer instances. IMPORTANT: if the project option "Save levels separately" is enabled, this field will be null.
 	// This array is sorted in display order: the 1st layer is the top-most and the last is behind.
-	// null when using external level files — call load_external_level() to fill it
+	// null when using external level files: call load_external_level() to fill it
 	layer_instances ?[]LayerInstance @[json: 'layerInstances']
 
 	// This value is not null if the project option "Save levels separately" is enabled. In this case, this relative path points to the level Json file.

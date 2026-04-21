@@ -1,7 +1,7 @@
 module main
 
 import raylib as rl
-import mv
+import mv.engine { App, Sprite }
 import mv.resourcemanager { FileSource, LoadCommand, ThreadLoader }
 
 // this example shows working with threadloader to help load multiple files on a thread
@@ -11,15 +11,15 @@ import mv.resourcemanager { FileSource, LoadCommand, ThreadLoader }
 @[heap]
 struct Game {
 mut:
-	app     ?&mv.App
-	sprites []&mv.Sprite
+	app     ?&App
+	sprites []&Sprite
 
 	tl         &ThreadLoader = ThreadLoader.new(none)
 	load_count int
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none, none)
 
 	if mut app := g.app {
 		app.run()
@@ -48,7 +48,7 @@ fn (mut g Game) init() {
 				}
 			})
 
-			mut spr := app.new_node[mv.Sprite](tile_num, 20 + ((i - 1) % 5) * 53, 20 +
+			mut spr := app.new_node[Sprite](tile_num, 20 + ((i - 1) % 5) * 53, 20 +
 				((i - 1) / 5) * 39)
 			spr.set_centered(false)
 			g.sprites << spr
@@ -58,7 +58,7 @@ fn (mut g Game) init() {
 
 fn (mut g Game) update(_ f32) {
 	for mut spr in g.sprites {
-		mv.emit_notification(mut spr, .update)
+		engine.emit_notification(mut spr, .update)
 	}
 }
 
@@ -86,13 +86,13 @@ fn (mut g Game) draw() {
 
 			for i in 1 .. 26 {
 				mut tile_num := 'tile_${i:03}'
-				g.sprites[i - 1].set_texture_id(tile_num)
+				g.sprites[i - 1].set_texture_id(tile_num) or {}
 			}
 		}
 	}
 
 	for mut spr in g.sprites {
-		mv.emit_notification(mut spr, .draw)
+		engine.emit_notification(mut spr, .draw)
 	}
 
 	rl.draw_text('threadloader sample', 2, 2, 4, rl.raywhite)

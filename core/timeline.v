@@ -38,19 +38,17 @@ pub fn (mut tl Timeline) reset() {
 
 pub fn (mut tl Timeline) seek(frame int) {
 	tl.current = frame
-	// reposition cursor to the first event at or after this frame
-	tl.cursor = 0
+	tl.cursor = tl.events.len // default case
 	for i, e in tl.events {
 		if e.frame >= frame {
 			tl.cursor = i
 			break
 		}
-		tl.cursor = tl.events.len // seeked past everything
 	}
 }
 
-// call once per game frame — fires all events that land on the current frame,
-// then advances. Handles multiple events on the same frame naturally.
+// call once per game frame: fires all events that land on the current frame,
+// then advances. handles multiple events on the same frame naturally.
 pub fn (mut tl Timeline) step() {
 	if !tl.playing {
 		return

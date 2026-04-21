@@ -23,7 +23,7 @@ pub fn key(k rl.KeyboardKey) InputBinding {
 
 pub fn mouse_btn(b rl.MouseButton) InputBinding {
 	return InputBinding{
-		device: .keyboard
+		device: .mouse_button
 		code:   int(b)
 	}
 }

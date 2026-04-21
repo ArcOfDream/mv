@@ -14,13 +14,13 @@ fn C.LoadWaveFromResource(chunk ResourceChunk) rl.Wave
 fn C.LoadFontFromResource(multi ResourceMulti) rl.Font
 fn C.LoadMeshFromResource(multi ResourceMulti) rl.Mesh
 
-// Decompression / decryption — mutates the chunk in-place
+// Decompression / decryption: mutates the chunk in-place
 fn C.UnpackResourceChunk(chunk &ResourceChunk) int
 
 // Base directory for LINK chunk resolution
 fn C.SetBaseDirectory(baseDir &u8)
 
-// raylib allocator — rres-raylib.h allocates with RL_MALLOC, so we must
+// raylib allocator: rres-raylib.h allocates with RL_MALLOC, so we must
 // pair every LoadData/LoadText call with RL_FREE (= raylib's MemFree).
 fn C.MemFree(ptr voidptr)
 

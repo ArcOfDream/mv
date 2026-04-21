@@ -13,9 +13,9 @@ pub enum Edge {
 @[inline]
 pub fn (e Edge) opposing() Edge {
 	return match e {
-		.right  { Edge.left }
-		.left   { Edge.right }
-		.top    { Edge.bottom }
+		.right { Edge.left }
+		.left { Edge.right }
+		.top { Edge.bottom }
 		.bottom { Edge.top }
 	}
 }
@@ -33,7 +33,7 @@ pub fn (e Edge) is_vertical() bool {
 }
 
 // is_max returns true for edges at the positive end of their axis
-// (right and bottom). Useful when computing edge coordinates generically.
+// (right and bottom). useful when computing edge coordinates generically.
 @[inline]
 pub fn (e Edge) is_max() bool {
 	return e == .right || e == .bottom

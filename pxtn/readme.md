@@ -23,7 +23,7 @@ buffer := []u8{len: 4096 * 4}
 written := handle.gen_buffer(buffer.data, 4096)
 // written < 4096 means the track has ended
 
-// implement the intro → loop structure common in .ptcop files
+// implement the intro -> loop structure common in .ptcop files
 if written < count {
     if handle.get_loop() {
         handle.seek(handle.repeat_sample())

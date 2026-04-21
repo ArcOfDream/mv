@@ -30,7 +30,7 @@ pub fn Curve.flat(y f32) Curve {
 	return c
 }
 
-// straight diagonal — identity remap, same as no curve at all
+// straight diagonal: identity remap, same as no curve at all
 pub fn Curve.linear() Curve {
 	mut c := Curve{}
 	c.add_point(Vec2{0.0, 0.0}, 1.0, 1.0)

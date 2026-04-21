@@ -2,7 +2,7 @@ module rres
 
 import arrays as arr
 
-// rresFileHeader — the 16-byte file header at the start of every .rres file.
+// rresFileHeader: the 16-byte file header at the start of every .rres file.
 pub struct C.rresFileHeader {
 pub:
 	id         [4]u8 // Magic bytes: 'r','r','e','s'
@@ -12,12 +12,12 @@ pub:
 	reserved   u32
 }
 
-// rresResourceChunkInfo — 32-byte per-chunk header describing one resource.
+// rresResourceChunkInfo: 32-byte per-chunk header describing one resource.
 pub struct C.rresResourceChunkInfo {
 pub:
 	// Note: 'type' is a V keyword, accessed as @type or via the wrapper struct.
 	@type      [4]u8 // FourCC data-type code, e.g. "IMGE", "TEXT", "WAVE" …
-	id         u32   // CRC32 of the original filename → unique resource id
+	id         u32   // CRC32 of the original filename -> unique resource id
 	compType   u8    // Compression algorithm (see CompressionType)
 	cipherType u8    // Encryption algorithm  (see CipherType)
 	flags      u16   // Reserved flags
@@ -29,7 +29,7 @@ pub:
 	crc32      u32 // CRC32 over (propCount + props[] + raw)
 }
 
-// rresResourceChunkData — the actual payload following a chunk info header.
+// rresResourceChunkData: the actual payload following a chunk info header.
 pub struct C.rresResourceChunkData {
 pub:
 	propCount u32     // Mirror of info.propCount after loading
@@ -37,14 +37,14 @@ pub:
 	raw       voidptr // Raw byte payload (heap-allocated, size = info.baseSize – props)
 }
 
-// rresResourceChunk — a complete loaded resource chunk (info + data).
+// rresResourceChunk: a complete loaded resource chunk (info + data).
 pub struct C.rresResourceChunk {
 pub:
 	info ChunkInfo
 	data ChunkData
 }
 
-// rresResourceMulti — a set of chunks that all share the same resource id.
+// rresResourceMulti: a set of chunks that all share the same resource id.
 // (e.g. a TTF font produces an image chunk + a glyph-info chunk.)
 pub struct C.rresResourceMulti {
 pub:
@@ -52,7 +52,7 @@ pub:
 	chunks &ResourceChunk // Heap-allocated array of 'count' chunks
 }
 
-// rresDirEntry — one record inside the Central Directory.
+// rresDirEntry: one record inside the Central Directory.
 pub struct C.rresDirEntry {
 pub:
 	id       u32 // Resource id (same CRC32 as in chunk info)
@@ -61,14 +61,14 @@ pub:
 	fileName [256]u8 // Null-terminated original filename (max 255 chars)
 }
 
-// rresCentralDir — the optional Central Directory appended to .rres files.
+// rresCentralDir: the optional Central Directory appended to .rres files.
 pub struct C.rresCentralDir {
 pub:
 	count   u32       // Number of directory entries
 	entries &DirEntry // Heap-allocated array of 'count' entries
 }
 
-// rresFontGlyphInfo — per-glyph metrics stored in a FNTG chunk.
+// rresFontGlyphInfo: per-glyph metrics stored in a FNTG chunk.
 pub struct C.rresFontGlyphInfo {
 pub:
 	x        int // Glyph rectangle x in the atlas

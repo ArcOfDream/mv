@@ -73,7 +73,7 @@ pub fn (p &Pxtone) current_sample() usize {
 }
 
 // repeat_sample returns the sample frame the track loops back to.
-// Use this with seek() to implement the intro→loop structure
+// Use this with seek() to implement the intro->loop structure
 // common in .ptcop files.
 pub fn (p &Pxtone) repeat_sample() usize {
 	return C.mpxtn_get_repeat_sample(p)

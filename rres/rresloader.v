@@ -60,7 +60,7 @@ pub fn (loader RresLoader) load_single(rres_name string) ?ResourceChunk {
 }
 
 // load_multi loads all chunks for rres_name and unpacks each one in-place.
-// Unpacking is performed via a direct pointer into the C-owned chunk array —
+// Unpacking is performed via a direct pointer into the C-owned chunk array:
 // working on copies would leave the original packed buffers untouched, so
 // LoadFontFromResource / LoadMeshFromResource would receive stale data.
 // The caller is responsible for calling multi.unload().

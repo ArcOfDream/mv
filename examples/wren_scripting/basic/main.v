@@ -1,19 +1,19 @@
 module main
 
-import mv
+import mv.engine { App }
 import raylib as rl
 
 @[heap]
 struct Game {
 mut:
-	app ?&mv.App
+	app ?&App
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, none, none, none, none)
+	g.app = App.new(g.init, none, none, none, none)
 
 	if mut app := g.app {
-		app.wren = mv.WrenSetup{
+		app.wren = engine.WrenSetup{
 			entry: 'main.wren'
 		}
 		app.run()

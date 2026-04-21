@@ -25,9 +25,9 @@ pub fn (v Vec2) dot(v2 Vec2) f32 {
 	return rm.vector_2dot_product(v, v2)
 }
 
-pub fn (v Vec2) cross(v2 Vec2) f32 {
-	return rm.vector2_cross_product(v, v2)
-}
+//pub fn (v Vec2) cross(v2 Vec2) f32 {
+//	return rm.vector2_cross_product(v, v2)
+//}
 
 pub fn (v Vec2) distance(v2 Vec2) f32 {
 	return rm.vector_2distance(v, v2)

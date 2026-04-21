@@ -1,12 +1,12 @@
 module main
 
-import mv
 import mv.core { Vec2 }
+import mv.engine { App, PhysicsBody }
 import raylib as rl
 import mv.physics
 
 struct Ball {
-	mv.PhysicsBody
+	PhysicsBody
 mut:
 	velocity    Vec2
 	radius      f32 = 10.0
@@ -14,11 +14,11 @@ mut:
 	gravity     f32 = 1000.0
 }
 
-fn Ball.new(app &mv.App, name string, pos Vec2) &Ball {
+fn Ball.new(app &App, name string, pos Vec2) &Ball {
 	return &Ball{
-		app: app
+		app:       app
 		node_name: name
-		pos : pos
+		pos:       pos
 	}
 }
 
@@ -49,16 +49,16 @@ fn (mut b Ball) draw() {
 }
 
 struct Floor {
-	mv.PhysicsBody
+	PhysicsBody
 mut:
 	size Vec2
 }
 
-fn Floor.new(app &mv.App, name string, pos Vec2) &Floor {
+fn Floor.new(app &App, name string, pos Vec2) &Floor {
 	return &Floor{
-		app: app
+		app:       app
 		node_name: name
-		pos : pos
+		pos:       pos
 	}
 }
 
@@ -69,18 +69,19 @@ fn (mut f Floor) draw() {
 @[heap]
 struct Game {
 mut:
-	app   &mv.App = unsafe { nil }
+	app   &App = unsafe { nil }
 	balls []&Ball
 	floor &Floor = unsafe { nil }
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none, none)
 
 	g.app.set_window_title('mv: physics demo')
 	g.app.set_window_size(800, 600)
 	g.app.set_viewport_size(800, 600)
 	g.app.set_clear_color(rl.blue)
+	g.app.set_target_fps(120)
 
 	g.app.run()
 }
@@ -93,7 +94,7 @@ fn (mut g Game) init() {
 			r: 10.0
 		}
 		ball.velocity = Vec2{10, 0}
-		mv.emit_notification(mut ball, .ready)
+		engine.emit_notification(mut ball, .ready)
 
 		g.balls << ball
 	}
@@ -106,21 +107,21 @@ fn (mut g Game) init() {
 		min: physics.Vec{0, 0}
 		max: physics.Vec{600, 40}
 	}
-	mv.emit_notification(mut floor, .ready)
+	engine.emit_notification(mut floor, .ready)
 }
 
 fn (mut g Game) update(dt f32) {
 	for mut b in g.balls {
-		mv.emit_notification(mut b, .update)
+		engine.emit_notification(mut b, .update)
 	}
-	mv.emit_notification(mut g.floor, .update)
+	engine.emit_notification(mut g.floor, .update)
 }
 
 fn (mut g Game) draw() {
 	for mut b in g.balls {
-		mv.emit_notification(mut b, .draw)
+		engine.emit_notification(mut b, .draw)
 	}
-	mv.emit_notification(mut g.floor, .draw)
+	engine.emit_notification(mut g.floor, .draw)
 
 	rl.draw_text('bouncing ball sample', 2, 2, 4, rl.raywhite)
 }

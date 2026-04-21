@@ -43,14 +43,33 @@ pub fn Gradient.from_colors(colors []Color) Gradient {
 	return g
 }
 
-// bakes the gradient to a n×1 Texture2D, sampling left to right across 0..1.
+// bakes the gradient to a nx1 Texture2D, sampling left to right across 0..1.
 // the returned texture must be unloaded with rl.unload_texture when done.
 pub fn (g &Gradient) bake(resolution int) rl.Texture2D {
 	assert resolution >= 2
 	img := gen_image_gradient_linear(resolution, 1, g, Vec2{0.0, 0.5}, Vec2{1.0, 0.5})
 	tex := rl.load_texture_from_image(img)
-	rl.unload_image(img)
+	// rl.unload_image(img)
 	return tex
+}
+
+// to_lut bakes the gradient into a flat []Color lookup table of `resolution`
+// evenly-spaced entries across 0..1.
+//
+// prefer this over calling sample() per-vertex in hot paths - sample_monotone
+// in particular rebuilds all tangent slices on every call, so a trail with N
+// points would do Nx(5+4) allocations per frame just for gradient evaluation.
+// with a LUT that cost is paid once and lookup becomes a single array index.
+//
+// 256 entries is enough for smooth gradients at any typical trail length.
+// use a higher value if you have very sharp stops close together.
+pub fn (g &Gradient) to_lut(resolution int) []Color {
+	assert resolution >= 2
+	mut lut := []Color{len: resolution}
+	for i in 0 .. resolution {
+		lut[i] = g.sample(f32(i) / f32(resolution - 1))
+	}
+	return lut
 }
 
 pub fn (mut g Gradient) add_stop(offset f32, color Color) {

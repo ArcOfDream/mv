@@ -1,18 +1,18 @@
 module main
 
 import raylib as rl
-import mv
+import mv.engine { App }
 
 // a minimal example for setting up a window
 
 @[heap]
 struct Game {
 mut:
-	app ?&mv.App
+	app ?&App
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none, none)
 
 	if mut app := g.app {
 		app.run()
