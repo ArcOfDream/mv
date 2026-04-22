@@ -34,7 +34,7 @@ TODO Function: #define WREN_VERSION_NUMBER (WREN_VERSION_MAJOR * 1000000 +      
 @[typedef]
 pub struct C.WrenVM {}
 
-pub type VM = C.WrenVM
+pub type VM = &C.WrenVM
 
 // A handle to a Wren object.
 //
@@ -44,7 +44,7 @@ pub type VM = C.WrenVM
 @[typedef]
 pub struct C.WrenHandle {}
 
-pub type Handle = C.WrenHandle
+pub type Handle = &C.WrenHandle
 
 // ReallocateFn A generic allocation function that handles all explicit memory management
 // ReallocateFn used by Wren. It's used like so:

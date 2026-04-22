@@ -4,21 +4,21 @@ import raylib as rl
 
 // Raw / text
 fn C.LoadDataFromResource(chunk ResourceChunk, size &u32) voidptr
-fn C.LoadTextFromResource(chunk ResourceChunk) &u8
+fn C.LoadTextFromResource(chunk ResourceChunk) charptr
 
 // Single-chunk raylib types
-fn C.LoadImageFromResource(chunk ResourceChunk) rl.Image
-fn C.LoadWaveFromResource(chunk ResourceChunk) rl.Wave
+fn C.LoadImageFromResource(chunk ResourceChunk) C.Image
+fn C.LoadWaveFromResource(chunk ResourceChunk) C.Wave
 
 // Multi-chunk raylib types
-fn C.LoadFontFromResource(multi ResourceMulti) rl.Font
-fn C.LoadMeshFromResource(multi ResourceMulti) rl.Mesh
+fn C.LoadFontFromResource(multi ResourceMulti) C.Font
+fn C.LoadMeshFromResource(multi ResourceMulti) C.Mesh
 
 // Decompression / decryption: mutates the chunk in-place
 fn C.UnpackResourceChunk(chunk &ResourceChunk) int
 
 // Base directory for LINK chunk resolution
-fn C.SetBaseDirectory(baseDir &u8)
+fn C.SetBaseDirectory(baseDir charptr)
 
 // raylib allocator: rres-raylib.h allocates with RL_MALLOC, so we must
 // pair every LoadData/LoadText call with RL_FREE (= raylib's MemFree).

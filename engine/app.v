@@ -5,7 +5,7 @@ import math as m
 import os
 import core { GameState, StringNameMap, Vec2 }
 import physics as phys
-import resourcemanager { ResourceManager, ShaderResource, SoundResource, TextureResource }
+import resourcemanager { ResourceManager, Handle, ShaderResource, SoundResource, TextureResource, FontResource }
 import audio
 import wren
 
@@ -14,6 +14,7 @@ import wren
 // Target 60 updates per second
 const tick_rate = 60
 const dt = 1.0 / f64(tick_rate)
+const plex_font = $embed_file('res/plex_mono.ttf')
 
 pub struct App {
 mut:
@@ -48,6 +49,7 @@ pub mut:
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
 	sounds   ResourceManager[SoundResource]
+	fonts ResourceManager[FontResource]
 
 	active_camera ?&CameraNode
 	audio_server  audio.AudioServer
@@ -133,8 +135,8 @@ pub fn (app &App) get_window_min_size() Vec2 {
 }
 
 pub fn (mut app App) set_viewport_size(x int, y int) {
-	app.viewport_size.x = x
-	app.viewport_size.y = y
+	app.viewport_size.x = f32(x)
+	app.viewport_size.y = f32(y)
 
 	if app.is_running {
 		app.viewport = rl.load_render_texture(x, y)
@@ -262,7 +264,8 @@ pub fn (mut app App) run() {
 	if init := app.init_func {
 		init()
 	}
-
+	
+	app.debug.debug_font = app.fonts.load_from_memory('debug', 16, plex_font.to_bytes()) or { Handle[FontResource]{} }
 	app.viewport = rl.load_render_texture(int(app.viewport_size.x), int(app.viewport_size.y))
 
 	// sync channels
@@ -337,7 +340,7 @@ pub fn (mut app App) run() {
 		if mut root := app.scene_root {
 			emit_notification(mut root, .draw)
 		}
-		
+
 		if app.debug.section_enabled('physics') {
 			app.draw_physics_overlay()
 		}

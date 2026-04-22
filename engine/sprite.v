@@ -17,6 +17,8 @@ pub mut:
 	tint          rl.Color = rl.white
 	h_frames      int      = 1
 	v_frames      int      = 1
+	flip_h        bool
+	flip_v        bool
 	current_frame int
 }
 
@@ -136,14 +138,18 @@ pub fn (s &Sprite) get_shader_id() ?string {
 
 @[inline]
 fn (s &Sprite) get_source_rect(res &TextureResource) rl.Rectangle {
-	frame_w := res.tex.width / s.h_frames * math.sign
+	frame_w := res.tex.width / s.h_frames
 	frame_h := res.tex.height / s.v_frames
+
+	fx := (s.current_frame % s.h_frames) * frame_w
+	fy := (s.current_frame / s.v_frames) * frame_h
 
 	// vfmt off
     return rl.Rectangle{
-        (s.current_frame % s.h_frames) * frame_w,
-        (s.current_frame / s.v_frames) * frame_h,
-        frame_w, frame_h
+        if s.flip_h { fx + frame_w } else { fx },
+        if s.flip_v { fy + frame_h } else { fy },
+        if s.flip_h { -frame_w } else { frame_w },
+        if s.flip_v { -frame_h } else { frame_h },
     }
 	// vfmt on
 }
@@ -157,7 +163,7 @@ fn (s &Sprite) draw_sprite_internal(t &TextureResource) {
 		origin += Vec2{src.width * 0.5, src.height * 0.5}
 	}
 
-	dst := rl.Rectangle{0, 0, src.width, src.height}
+	dst := rl.Rectangle{0, 0, math.abs(src.width), math.abs(src.height)}
 	rl.draw_texture_pro(t.tex, src, dst, origin, 0, s.tint)
 }
 

@@ -4,6 +4,7 @@ import raylib as rl
 import raylib.raygui as gui
 import physics as phys
 import math
+import mv.resourcemanager { Handle, FontResource }
 
 // DebugPanel - screen-space raygui overlay.
 //
@@ -66,6 +67,8 @@ pub mut:
 	node_scroll rl.Vector2
 	// outer panel scissor rect, saved each frame so the nodes branch can restore it
 	scissor_rect rl.Rectangle
+	
+	debug_font Handle[FontResource]
 }
 
 pub fn DebugPanel.new() &DebugPanel {
@@ -194,7 +197,10 @@ pub fn (mut app App) draw_debug_panel() {
 		width:  dbg_w
 		height: panel_h
 	}
-
+	
+	if font := app.debug.debug_font.get() {
+		gui.gui_set_font(font.fnt)
+	}
 	saved := dbg_push_dark_style()
 	defer { dbg_pop_style(saved) }
 
@@ -594,7 +600,7 @@ fn dbg_push_dark_style() DbgSavedStyle {
 	// apply dark theme
 	gui.gui_set_style(d, pbg, 0x1e1e30ff) // panel body fill
 	gui.gui_set_style(d, pli, 0x3c3c58ff) // title bar separator line
-	gui.gui_set_style(d, pts, 10) // text size
+	gui.gui_set_style(d, pts, 16) // text size
 	gui.gui_set_style(d, ptn, 0x7a7a8aff) // default text (approx 0xd4d4d4, R capped)
 	gui.gui_set_style(d, pan, 0x242432ff) // default control base
 	gui.gui_set_style(d, pbn, 0x3c3c58ff) // default border
@@ -708,7 +714,7 @@ fn dbg_label_row(text string, px f32, py f32) {
 
 // ---- App str() --------------------------------------------------------------
 // Explicit str() prevents V from auto-generating one that traverses into
-// rl.Sound (via App.sounds → SoundResource), where the V binding uses
+// rl.Sound (via App.sounds -> SoundResource), where the V binding uses
 // snake_case field names that don't match the C struct (e.g. frame_count vs
 // frameCount), causing a C compile error.
 pub fn (a &App) str() string {

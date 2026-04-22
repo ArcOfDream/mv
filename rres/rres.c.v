@@ -90,15 +90,15 @@ pub type DirEntry = C.rresDirEntry
 pub type CentralDir = C.rresCentralDir
 pub type FontGlyphInfo = C.rresFontGlyphInfo
 
-fn C.rresLoadResourceChunk(fileName &u8, rresId u32) ResourceChunk
-fn C.rresLoadResourceMulti(fileName &u8, rresId u32) ResourceMulti
-fn C.rresLoadCentralDirectory(fileName &u8) CentralDir
+fn C.rresLoadResourceChunk(fileName charptr, rresId u32) ResourceChunk
+fn C.rresLoadResourceMulti(fileName charptr, rresId u32) ResourceMulti
+fn C.rresLoadCentralDirectory(fileName charptr) CentralDir
 
 fn C.rresUnloadResourceChunk(chunk ResourceChunk)
 fn C.rresUnloadResourceMulti(multi ResourceMulti)
 fn C.rresUnloadCentralDirectory(dir CentralDir)
 
-fn C.rresGetResourceId(dir CentralDir, fileName &u8) u32
+fn C.rresGetResourceId(dir CentralDir, fileName charptr) u32
 
 fn C.rresComputeCRC32(data &u8, len int) u32
 fn C.rresSetCipherPassword(pass &u8)
