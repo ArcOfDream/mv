@@ -218,9 +218,6 @@ $if !single_thread ? {
 pub fn (mut app App) run() {
 	app.is_running = true
 
-	// making sure to init audio here!
-	rl.init_audio_device()
-
 	// set up the wren subsystem only if there's a WrenSetup present
 	if mut setup := app.wren {
 		wren.init_configuration(&app.wren_cfg)
@@ -258,6 +255,7 @@ pub fn (mut app App) run() {
 
 	rl.set_config_flags(.flag_window_resizable)
 	rl.init_window(int(app.window_size.x), int(app.window_size.y), app.window_title)
+	rl.init_audio_device()
 	app.set_target_fps(app.target_fps)
 
 	// run app.init()

@@ -28,3 +28,4 @@ examples/workbench/workbench
 # Bug related reproduction code
 *_bug.v
 examples/image_gen/image_gen
+examples/serde_workbench/serde_workbench

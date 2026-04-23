@@ -552,3 +552,60 @@ MPXTN_API void mpxtn_set_loop(MPXTN *mp, bool loop)
 
 	mp->loop = loop;
 }
+
+/* --- metadata / note extraction ----------------------------------------- */
+
+MPXTN_API uint32_t mpxtn_get_beat_num(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.master.beat_num;
+}
+
+MPXTN_API float mpxtn_get_beat_tempo(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0.0f;
+	return mp->srv.master.beat_tempo;
+}
+
+MPXTN_API uint32_t mpxtn_get_beat_clock(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.master.beat_clock;
+}
+
+MPXTN_API uint32_t mpxtn_get_meas_num(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.master.meas_num;
+}
+
+MPXTN_API uint32_t mpxtn_get_meas_repeat(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.master.meas_repeat;
+}
+
+MPXTN_API uint32_t mpxtn_get_unit_num(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.unit_num;
+}
+
+MPXTN_API uint32_t mpxtn_get_event_num(const MPXTN *mp)
+{
+	if(!mp || !mp->srv.valid) return 0;
+	return mp->srv.event_num;
+}
+
+MPXTN_API bool mpxtn_copy_events(const MPXTN *mp, MPXTN_EVENTREC *buf, uint32_t count)
+{
+	if(!mp || !mp->srv.valid || !buf) return false;
+	const EVERECORD *p = evelist_get_records((EVELIST *)&mp->srv.evels);
+	for(uint32_t i = 0; i < count && p; ++i, p = p->next) {
+		buf[i].clock   = p->clock;
+		buf[i].value   = p->value;
+		buf[i].kind    = p->kind;
+		buf[i].unit_no = p->unit_no;
+	}
+	return true;
+}

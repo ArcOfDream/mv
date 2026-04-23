@@ -90,9 +90,9 @@ pub type DirEntry = C.rresDirEntry
 pub type CentralDir = C.rresCentralDir
 pub type FontGlyphInfo = C.rresFontGlyphInfo
 
-fn C.rresLoadResourceChunk(fileName charptr, rresId u32) ResourceChunk
-fn C.rresLoadResourceMulti(fileName charptr, rresId u32) ResourceMulti
-fn C.rresLoadCentralDirectory(fileName charptr) CentralDir
+fn C.rresLoadResourceChunk(fileName &char, rresId u32) ResourceChunk
+fn C.rresLoadResourceMulti(fileName &char, rresId u32) ResourceMulti
+fn C.rresLoadCentralDirectory(fileName &char) CentralDir
 
 fn C.rresUnloadResourceChunk(chunk ResourceChunk)
 fn C.rresUnloadResourceMulti(multi ResourceMulti)
@@ -100,9 +100,9 @@ fn C.rresUnloadCentralDirectory(dir CentralDir)
 
 fn C.rresGetResourceId(dir CentralDir, fileName charptr) u32
 
-fn C.rresComputeCRC32(data &u8, len int) u32
-fn C.rresSetCipherPassword(pass &u8)
-fn C.rresGetCipherPassword() &u8
+fn C.rresComputeCRC32(data &char, len int) u32
+fn C.rresSetCipherPassword(pass &char)
+fn C.rresGetCipherPassword() &char
 
 pub enum ResourceDataType {
 	null
@@ -356,7 +356,7 @@ pub fn get_cipher_password() string {
 	if ptr == unsafe { nil } {
 		return ''
 	}
-	return unsafe { tos_clone(ptr) }
+	return unsafe { tos_clone(&u8(ptr)) }
 }
 
 // fourcc_str returns a FourCC byte array as a printable 4-character string

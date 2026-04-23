@@ -29,6 +29,7 @@
 #define MPXTNLIB_MPXTN_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -79,6 +80,49 @@ MPXTN_API void mpxtn_set_loop(MPXTN *mp, bool loop);
 MPXTN_API bool mpxtn_get_loop(const MPXTN *mp);
 
 MPXTN_API void mpxtn_close(MPXTN *mp);
+
+/* --- metadata / note extraction --- */
+
+/* Flat event record for bulk copy; fields ordered to avoid struct padding.
+ * clock and value come first (4-byte aligned), then the two byte fields. */
+typedef struct {
+	int32_t  clock;
+	int32_t  value;
+	uint8_t  kind;
+	uint8_t  unit_no;
+	uint8_t  _pad[2];
+} MPXTN_EVENTREC;
+
+/* Event kind constants (mirrors internal EVENTKIND enum). */
+#define MPXTN_EK_ON          1
+#define MPXTN_EK_KEY         2
+#define MPXTN_EK_PAN_VOLUME  3
+#define MPXTN_EK_VELOCITY    4
+#define MPXTN_EK_VOLUME      5
+#define MPXTN_EK_PORTAMENT   6
+#define MPXTN_EK_VOICENO    12
+#define MPXTN_EK_GROUPNO    13
+#define MPXTN_EK_TUNING     14
+#define MPXTN_EK_PAN_TIME   15
+
+/* Key value corresponding to A4 (440 Hz); use as reference for pitch math. */
+#define MPXTN_BASICKEY 0x4500
+
+/* Master / tempo info. */
+MPXTN_API uint32_t mpxtn_get_beat_num(const MPXTN *mp);
+MPXTN_API float    mpxtn_get_beat_tempo(const MPXTN *mp);
+MPXTN_API uint32_t mpxtn_get_beat_clock(const MPXTN *mp);
+MPXTN_API uint32_t mpxtn_get_meas_num(const MPXTN *mp);
+MPXTN_API uint32_t mpxtn_get_meas_repeat(const MPXTN *mp);
+
+/* Number of units (tracks). */
+MPXTN_API uint32_t mpxtn_get_unit_num(const MPXTN *mp);
+
+/* Raw event access.
+ * mpxtn_copy_events writes at most `count` records into buf (caller-allocated).
+ * Returns false if mp or buf is null. */
+MPXTN_API uint32_t mpxtn_get_event_num(const MPXTN *mp);
+MPXTN_API bool     mpxtn_copy_events(const MPXTN *mp, MPXTN_EVENTREC *buf, uint32_t count);
 
 #ifdef __cplusplus
 }

@@ -1,24 +1,24 @@
 module rres
 
-import raylib as rl
+import raylib { Image, Wave, Font, Mesh}
 
 // Raw / text
 fn C.LoadDataFromResource(chunk ResourceChunk, size &u32) voidptr
 fn C.LoadTextFromResource(chunk ResourceChunk) charptr
 
 // Single-chunk raylib types
-fn C.LoadImageFromResource(chunk ResourceChunk) C.Image
-fn C.LoadWaveFromResource(chunk ResourceChunk) C.Wave
+fn C.LoadImageFromResource(chunk ResourceChunk) Image
+fn C.LoadWaveFromResource(chunk ResourceChunk) Wave
 
 // Multi-chunk raylib types
-fn C.LoadFontFromResource(multi ResourceMulti) C.Font
-fn C.LoadMeshFromResource(multi ResourceMulti) C.Mesh
+fn C.LoadFontFromResource(multi ResourceMulti) Font
+fn C.LoadMeshFromResource(multi ResourceMulti) Mesh
 
 // Decompression / decryption: mutates the chunk in-place
 fn C.UnpackResourceChunk(chunk &ResourceChunk) int
 
 // Base directory for LINK chunk resolution
-fn C.SetBaseDirectory(baseDir charptr)
+fn C.SetBaseDirectory(baseDir &char)
 
 // raylib allocator: rres-raylib.h allocates with RL_MALLOC, so we must
 // pair every LoadData/LoadText call with RL_FREE (= raylib's MemFree).
@@ -42,24 +42,24 @@ pub fn load_text_from_resource(chunk ResourceChunk) string {
 	if ptr == unsafe { nil } {
 		return ''
 	}
-	result := unsafe { tos_clone(ptr) }
+	result := unsafe { tos_clone(charptr(ptr)) }
 	C.MemFree(ptr)
 	return result
 }
 
-pub fn load_image_from_resource(chunk ResourceChunk) rl.Image {
+pub fn load_image_from_resource(chunk ResourceChunk) Image {
 	return C.LoadImageFromResource(chunk)
 }
 
-pub fn load_wave_from_resource(chunk ResourceChunk) rl.Wave {
+pub fn load_wave_from_resource(chunk ResourceChunk) Wave {
 	return C.LoadWaveFromResource(chunk)
 }
 
-pub fn load_font_from_resource(multi ResourceMulti) rl.Font {
+pub fn load_font_from_resource(multi ResourceMulti) Font {
 	return C.LoadFontFromResource(multi)
 }
 
-pub fn load_mesh_from_resource(multi ResourceMulti) rl.Mesh {
+pub fn load_mesh_from_resource(multi ResourceMulti) Mesh {
 	return C.LoadMeshFromResource(multi)
 }
 
