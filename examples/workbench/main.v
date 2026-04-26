@@ -1,7 +1,7 @@
 module main
 
 import raylib as rl { Color }
-import mv.engine { App, CameraNode, MusicPlayer, Node, Sprite }
+import mv.engine { App, CameraNode, MusicPlayer, Node, Polygon, Sprite }
 import mv.core { Vec2 }
 import mv.pxtn
 import mv.rres
@@ -22,7 +22,7 @@ mut:
 }
 
 fn (mut g Game) setup() {
-	g.app = App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none)
 
 	if mut app := g.app {
 		app.run()
@@ -79,7 +79,7 @@ fn (mut g Game) init() {
 			Color{10, 15, 40, 255}, // dark edge
 		])
 		sphere_grad.interpolation = .cubic
-		
+
 		mut rainbow_grad := core.Gradient.from_colors([
 			rl.red,
 			rl.orange,
@@ -115,12 +115,22 @@ fn (mut g Game) init() {
 		sprite2.set_centered(false)
 		sprite2.set_pos(Vec2{64, 0})
 
+		mut poly := Polygon.new(app, 'poly')
+		root.add_child(mut poly)
+		poly.set_texture_id('bnuy') or {}
+		poly.set_pos(Vec2{220, 60})
+		poly.add_point(Vec2{0, -40}) // top
+		poly.add_point(Vec2{35, -10}) // upper-right
+		poly.add_point(Vec2{22, 32}) // lower-right
+		poly.add_point(Vec2{-22, 32}) // lower-left
+		poly.add_point(Vec2{-35, -10}) // upper-left
+
 		mut c := CameraNode.new(app, 'camera')
 		root.add_child(mut c)
-		c.set_pos(Vec2{-100, 0})
+		// c.set_pos(Vec2{-100, 0})
 		g.cam = c
 		c.register()
-		
+
 		engine.emit_notification(mut root, .ready)
 	}
 }

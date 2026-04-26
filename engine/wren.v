@@ -17,9 +17,17 @@ pub fn wren_get_object[T](vm &wren.VM, slot int) &T {
 	return unsafe { &T(vm.get_slot_foreign(slot)) }
 }
 
+// wren_get_node dereferences the pointer stored in a node foreign slot.
+// Node and Sprite foreign objects store sizeof(voidptr) containing the
+// address of the V-heap struct; this helper performs that dereference.
+pub fn wren_get_node[T](vm &wren.VM, slot int) &T {
+	raw := vm.get_slot_foreign(slot)
+	return unsafe { &T(*(&voidptr(raw))) }
+}
+
 pub fn wren_push_foreign[T](vm &wren.VM, slot int, class_slot int, class_name string, val T) {
 	vm.ensure_slots(class_slot + 1)
-	vm.get_variable('main', class_name, class_slot)
+	vm.get_variable('mv/node', class_name, class_slot)
 	raw := vm.set_slot_new_foreign(slot, class_slot, sizeof(T))
 	unsafe {
 		// mut ptr := &T(raw) // getting unused variable here
@@ -64,7 +72,7 @@ pub fn wren_get_u8(vm &wren.VM, slot int) u8 {
 
 fn native_app_wren_set_root(vm &wren.VM) {
 	mut app := unsafe { &App(vm.get_user_data()) }
-	app.scene_root = wren_get_object[Node](vm, 1)
+	app.scene_root = wren_get_node[Node](vm, 1)
 }
 
 fn native_app_wren_bind_method(signature string) wren.ForeignMethodFn {

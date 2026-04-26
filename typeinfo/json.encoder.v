@@ -98,7 +98,7 @@ fn (mut e JsonEncoder) push_value(v json2.Any) ! {
 			return error('JsonEncoder: stack top is not a container')
 		}
 	}
+
 	frame.container = container
 	e.stack[e.stack.len - 1] = frame
 }
-

@@ -39,7 +39,7 @@ pub fn (mut t Timer) ready_internal() {
 	}
 }
 
-pub fn (mut t Timer) process_internal(dt f32) {
+pub fn (mut t Timer) update_internal(dt f32) {
 	if !t.running {
 		return
 	}

@@ -14,12 +14,12 @@ Subsystems held by `App`:
 - `input_map`: the `InputMap` action table, polled each frame
 - `state`: a `GameState` carrying `dt` and the optional typed `user_data` pointer
 - `names`: the shared `StringNameMap` for `StringName` interning
-- `bodies`: the flat map of live `PhysicsBody` references keyed by pointer-as-int, used by physics queries
+- `bodies`: the flat map of live `PhysicsBody` references keyed by a monotonic `bodies_next_id` counter, used by physics queries
 - `active_camera`: the currently registered `CameraNode`; if set, its `rl.Camera2D` wraps the scene draw
 
 `App.run()` opens the Raylib window, starts the Wren VM if configured, and enters the main loop. The loop has two compilation modes selected by the `-d single_thread` flag: in the default multi-threaded mode, update and physics run on a background goroutine synchronised with the render thread via two channels; in single-threaded mode everything runs sequentially. The viewport is rendered to an `rl.RenderTexture2D` and then scaled to the window with optional integer scaling, letterboxed or pillarboxed to fit.
 
-User callbacks (`init_func`, `update_func`, `draw_func`, `backdrop_draw_func`, `input_func`) are optional function references set at construction. They run alongside the scene tree's notification passes, not instead of them.
+User callbacks (`init_func`, `update_func`, `draw_func`, `backdrop_draw_func`) are optional function references set at construction. They run alongside the scene tree's notification passes, not instead of them.
 
 `App.new_node[T]` is the generic factory for creating any node type: it allocates, sets `app` and initial position, then fires `.init` before returning.
 
@@ -45,7 +45,7 @@ Nodes can be Wren-owned (`wren_owned = true`), in which case `notify` calls back
 
 ## Node types
 
-**`Sprite`**: renders a `TextureResource` with optional frame grid (h_frames × v_frames), centering, offset, tint, and an optional `ShaderResource`. `set_texture_id` and `set_shader_id` look up handles from the app's resource managers by name.
+**`Sprite`**: renders a `TextureResource` with optional frame grid (h_frames x v_frames), centering, offset, tint, and an optional `ShaderResource`. `set_texture_id` and `set_shader_id` look up handles from the app's resource managers by name.
 
 **`CameraNode`**: wraps `rl.Camera2D`. `register()` sets this node as `App.active_camera`, causing the scene draw to be wrapped in `begin_mode_2d` / `end_mode_2d`.
 
@@ -68,6 +68,50 @@ Nodes can be Wren-owned (`wren_owned = true`), in which case `notify` calls back
 **`BurstEmitter`**: a curve-driven particle system adapted from BurstParticles2D by Ian Sly (MIT). Particles have no velocity or forces; position is computed each frame as a pure function of normalised lifetime `t` via authored curves (`distance_curve`, `rotation_curve`, `offset_curve`, `angle_curve`, `scale_curve`, `x_scale_curve`, `y_scale_curve`). Supports `center_concentration` for exponential spread distribution, `distance_falloff_curve` for angular distance attenuation, `start_radius`, and a gradient map shader path (`gradient_map.glsl` / `gradient_map_add.glsl`) for luminance-based color remapping. Emits `sig_burst_finished` when all particles from the last `burst()` call have expired.
 
 **`BurstGroup`**: coordinates multiple `BurstEmitter` children, firing them all simultaneously via `burst()` and emitting `sig_group_finished` only after every child's particles have expired. Supports `repeat` for looping composite effects.
+
+**`AnimatedSprite`**: extends `Sprite` with a named animation library. Animations are defined as `SpriteFrames` objects containing named `SpriteAnimation` entries, each holding a list of frame indices into the spritesheet grid and a `fps` rate. Playback is controlled with `play(name)`, `stop()`, and `pause()`. Emits `sig_animation_finished` when a non-looping animation ends.
+
+**`Line`**: draws a 2D polyline from a `[]Vec2` point list using Raylib's `draw_line_strip`. Supports configurable `color` and `width`. Points are in local space and transformed by the node's matrix.
+
+**`Area2D`**: a trigger volume with a `physics.Shape` and collision layer/mask. Does not move or block; instead it detects overlapping `PhysicsBody` nodes each frame and emits `sig_body_entered` and `sig_body_exited` signals. Useful for pickups, zones, and proximity detection.
+
+**`StateMachine`**: a simple named-state dispatcher. States are registered as string keys with optional `enter`, `exit`, and `update` function callbacks. `transition(name)` switches the active state, calling `exit` on the old state and `enter` on the new one. The active state's `update` is called each frame.
+
+**`Control`**: base node for screen-space UI elements. Holds a `RectF` layout rect and routes input events to children. Concrete UI widgets subclass `Control` and override `draw_internal`.
+
+**`Polygon`**: draws a filled or outlined convex polygon from a `[]Vec2` vertex list. Supports `color`, `outline_color`, and an `outline` toggle. Vertices are in local space.
+
+## Scene registry, save, and load
+
+`SceneRegistry` maps node type names to three closures per type: `construct` (allocate a fresh node by name), `write` (serialise type-specific fields into an already-open JSON object), and `read` (read type-specific fields back out after `rewind_object`). Every closure receives `app &App` so it can resolve resource handles, access managers, and call emit_notification.
+
+```v
+pub type SceneWriteFn     = fn (src voidptr, app &App, mut enc typeinfo.JsonEncoder) !
+pub type SceneReadFn      = fn (mut dec typeinfo.JsonDecoder, dst voidptr, app &App) !
+pub type SceneConstructFn = fn (name string, app &App) INode
+```
+
+`register_builtin_nodes` populates the registry for all built-in types: `Node`, `DrawLayer`, `Sprite`, `Timer`, `CameraNode`, `PhysicsBody`, `Line`, `Area2D`, `StateMachine`, `ParticleEmitter`, and `BurstEmitter`. Custom node types can be registered with `app.scene_registry.register(type_name, reg)` before calling `run`.
+
+Scene files are JSON. Each node is a self-contained object with `type`, `name`, `pos`, `scale`, `angle_deg`, type-specific fields, and a `children` array that nests child nodes inline. The format is human-readable and hand-editable.
+
+**Scene instancing**: a node with a non-empty `scene_file` field is a scene instance. `save_node` writes a compact reference object instead of the full subtree:
+
+```json
+{ "scene": "player.json", "name": "Player", "pos": {"x": 100, "y": 0}, "scale": {"x": 1, "y": 1}, "angle_deg": 0 }
+```
+
+`load_node` detects the `"scene"` key, loads the referenced file recursively (resolving relative paths from the parent scene's directory), then applies the per-instance overrides. This mirrors Godot's PackedScene instancing.
+
+```v
+// save the live scene tree to a file
+app.save_scene('level_01.json')!
+
+// replace the current scene root from a file
+app.load_scene('level_01.json')!
+```
+
+`save_scene` traverses the tree using `INode` dynamic dispatch so that `wren_class_name()` and `get_children()` resolve to the concrete type at every node. `load_scene` frees the old root (via `queue_free`) before constructing the new one. Children are buffered into a `[]INode` slice before `add_child` is called; this avoids a loop-variable aliasing hazard that arises when storing `&INode` pointers inside the loop.
 
 ## Wren integration
 

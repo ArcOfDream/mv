@@ -10,7 +10,7 @@ mut:
 }
 
 fn (mut g Game) setup() {
-	g.app = App.new(g.init, none, none, none, none)
+	g.app = App.new(g.init, none, none, none)
 
 	if mut app := g.app {
 		app.wren = engine.WrenSetup{

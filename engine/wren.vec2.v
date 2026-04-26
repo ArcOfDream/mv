@@ -48,7 +48,7 @@ fn vec2_wren_dot(vm &wren.VM) {
 		1)))
 }
 
-//fn vec2_wren_cross(vm &wren.VM) {
+// fn vec2_wren_cross(vm &wren.VM) {
 //	vm.set_slot_double(0, wren_get_object[Vec2](vm, 0).cross(*wren_get_object[Vec2](vm,
 //		1)))
 //}

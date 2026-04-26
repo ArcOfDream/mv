@@ -5,7 +5,13 @@ import wren
 import raylib as rl
 
 fn sprite_wren_allocate(vm &wren.VM) {
-	mut s := wren_alloc[Sprite](vm)
+	raw := vm.set_slot_new_foreign(0, 0, sizeof(voidptr))
+	mut s := &Sprite{
+		app: unsafe { nil }
+	}
+	unsafe {
+		*(&voidptr(raw)) = voidptr(s)
+	}
 	s.init_from_wren(vm)
 }
 
@@ -16,86 +22,86 @@ pub fn sprite_wren_class_methods() wren.ForeignClassMethods {
 // centered
 
 fn sprite_wren_get_centered(vm &wren.VM) {
-	vm.set_slot_bool(0, wren_get_object[Sprite](vm, 0).get_centered())
+	vm.set_slot_bool(0, wren_get_node[Sprite](vm, 0).get_centered())
 }
 
 fn sprite_wren_set_centered(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.set_centered(vm.get_slot_bool(1))
 }
 
 // offset
 
 fn sprite_wren_get_offset(vm &wren.VM) {
-	offset := wren_get_object[Sprite](vm, 0).get_offset()
+	offset := wren_get_node[Sprite](vm, 0).get_offset()
 	wren_push_foreign[Vec2](vm, 0, 1, 'Vec2', offset)
 }
 
 fn sprite_wren_set_offset(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.set_offset(*wren_get_object[Vec2](vm, 1))
 }
 
 // texture
 
 fn sprite_wren_get_texture_id(vm &wren.VM) {
-	vm.set_slot_string(0, wren_get_object[Sprite](vm, 0).get_texture_id() or { '' })
+	vm.set_slot_string(0, wren_get_node[Sprite](vm, 0).get_texture_id() or { '' })
 }
 
 fn sprite_wren_set_texture_id(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.set_texture_id(vm.get_slot_string(1)) or {}
 }
 
 // shader
 
 fn sprite_wren_get_shader_id(vm &wren.VM) {
-	vm.set_slot_string(0, wren_get_object[Sprite](vm, 0).get_shader_id() or { '' })
+	vm.set_slot_string(0, wren_get_node[Sprite](vm, 0).get_shader_id() or { '' })
 }
 
 fn sprite_wren_set_shader_id(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.set_shader_id(vm.get_slot_string(1)) or {}
 }
 
 // tint
 
 fn sprite_wren_get_tint(vm &wren.VM) {
-	tint := wren_get_object[Sprite](vm, 0).tint
+	tint := wren_get_node[Sprite](vm, 0).tint
 	wren_push_foreign[rl.Color](vm, 0, 1, 'Color', tint)
 }
 
 fn sprite_wren_set_tint(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.tint = *wren_get_object[rl.Color](vm, 1)
 }
 
 // frames
 
 fn sprite_wren_get_h_frames(vm &wren.VM) {
-	vm.set_slot_double(0, wren_get_object[Sprite](vm, 0).h_frames)
+	vm.set_slot_double(0, wren_get_node[Sprite](vm, 0).h_frames)
 }
 
 fn sprite_wren_set_h_frames(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.h_frames = wren_get_int(vm, 1)
 }
 
 fn sprite_wren_get_v_frames(vm &wren.VM) {
-	vm.set_slot_double(0, wren_get_object[Sprite](vm, 0).v_frames)
+	vm.set_slot_double(0, wren_get_node[Sprite](vm, 0).v_frames)
 }
 
 fn sprite_wren_set_v_frames(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.v_frames = wren_get_int(vm, 1)
 }
 
 fn sprite_wren_get_current_frame(vm &wren.VM) {
-	vm.set_slot_double(0, wren_get_object[Sprite](vm, 0).current_frame)
+	vm.set_slot_double(0, wren_get_node[Sprite](vm, 0).current_frame)
 }
 
 fn sprite_wren_set_current_frame(vm &wren.VM) {
-	mut s := wren_get_object[Sprite](vm, 0)
+	mut s := wren_get_node[Sprite](vm, 0)
 	s.current_frame = wren_get_int(vm, 1)
 }
 

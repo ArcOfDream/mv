@@ -133,7 +133,9 @@ pub fn (mut t SignalTable) emit(signal string, sender voidptr, args []SignalArg,
 	for mut h in handlers {
 		match mut h {
 			VSignalHandler {
-				if h.once { has_once = true }
+				if h.once {
+					has_once = true
+				}
 				receiver := h.receiver or { unsafe { nil } }
 				h.func(receiver, sender, args)
 			}

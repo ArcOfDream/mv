@@ -14,7 +14,7 @@ pub:
 	src []int @[json: 'src'] // [src_x, src_y] in the tileset image
 	f   int   @[json: 'f']   // flip bitmask: 0=none, 1=X, 2=Y, 3=both
 	t   int   @[json: 't']   // tile uid within the tileset
-	a   f32   @[json: 'a']   // alpha, 0.0–1.0
+	a   f32   @[json: 'a']   // alpha, 0.0-1.0
 }
 
 pub fn (t &Tile) flip_flags() FlipFlags {

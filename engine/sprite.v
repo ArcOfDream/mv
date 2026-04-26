@@ -4,6 +4,7 @@ import raylib as rl
 import core { Vec2 }
 import resourcemanager { Handle, ShaderResource, TextureResource }
 import math
+import os
 
 @[heap]
 pub struct Sprite {
@@ -81,8 +82,10 @@ pub fn (s &Sprite) get_texture() ?&TextureResource {
 pub fn (mut s Sprite) set_texture_id(val string) !Handle[TextureResource] {
 	s.texture.release()
 	s.texture = s.app.textures.get_handle(val) or {
-		s.texture = Handle[TextureResource]{}
-		return error('texture not found: ${val}')
+		s.app.textures.load(val, val) or {
+			s.texture = Handle[TextureResource]{}
+			return error('texture not found: ${val}')
+		}
 	}
 	return s.texture
 }
@@ -116,8 +119,13 @@ pub fn (s &Sprite) get_shader() ?&ShaderResource {
 pub fn (mut s Sprite) set_shader_id(val string) !Handle[ShaderResource] {
 	s.shader.release()
 	s.shader = s.app.shaders.get_handle(val) or {
-		s.shader = Handle[ShaderResource]{}
-		return error('shader not found: ${val}')
+		ext := os.file_ext(val).to_lower()
+		vs := if ext in ['.vert', '.vs'] { val } else { '' }
+		fs := if ext in ['.frag', '.fs', '.glsl'] { val } else { '' }
+		s.app.shaders.load(val, vs, fs) or {
+			s.shader = Handle[ShaderResource]{}
+			return error('shader not found: ${val}')
+		}
 	}
 	return s.shader
 }
@@ -138,11 +146,13 @@ pub fn (s &Sprite) get_shader_id() ?string {
 
 @[inline]
 fn (s &Sprite) get_source_rect(res &TextureResource) rl.Rectangle {
-	frame_w := res.tex.width / s.h_frames
-	frame_h := res.tex.height / s.v_frames
+	hf := if s.h_frames > 0 { s.h_frames } else { 1 }
+	vf := if s.v_frames > 0 { s.v_frames } else { 1 }
+	frame_w := res.tex.width / hf
+	frame_h := res.tex.height / vf
 
-	fx := (s.current_frame % s.h_frames) * frame_w
-	fy := (s.current_frame / s.v_frames) * frame_h
+	fx := (s.current_frame % hf) * frame_w
+	fy := (s.current_frame / vf) * frame_h
 
 	// vfmt off
     return rl.Rectangle{

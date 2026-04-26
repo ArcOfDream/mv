@@ -2,6 +2,35 @@ module resourcemanager
 
 import raylib as rl
 import rres
+import os
+import json
+
+struct AtlasRegion {
+	name string
+	x    int
+	y    int
+	w    int
+	h    int
+}
+
+struct AtlasFile {
+	regions []AtlasRegion
+}
+
+fn try_load_atlas(mut res TextureResource, tex_path string) {
+	base := tex_path.all_before_last('.')
+	for _, candidate in [base + '.atlas.json', base + '.json'] {
+		src := os.read_file(candidate) or { continue }
+		af := json.decode(AtlasFile, src) or { continue }
+		if af.regions.len == 0 {
+			continue
+		}
+		for r in af.regions {
+			res.frames << rl.Rectangle{f32(r.x), f32(r.y), f32(r.w), f32(r.h)}
+		}
+		return
+	}
+}
 
 pub struct TextureResource {
 pub:
@@ -86,14 +115,16 @@ pub fn (mut rm ResourceManager[TextureResource]) load(name string, path string) 
 		if t.id <= 0 {
 			return none
 		}
-		return TextureResource{ tex: t }
+		return TextureResource{
+			tex: t
+		}
 	})?
 
-	// apply_sampler_modes is only needed on the fresh-insert path, but
-	// applying it on cache hits is harmless (idempotent) and keeps this
-	// simple.
 	if mut res := h.get() {
 		res.apply_sampler_modes()
+		if res.frames.len == 0 {
+			try_load_atlas(mut res, path)
+		}
 	}
 	return h
 }
@@ -103,7 +134,9 @@ pub fn (mut rm ResourceManager[TextureResource]) add_texture(name string, tex rl
 		if tex.id <= 0 {
 			return none
 		}
-		return TextureResource{ tex: tex }
+		return TextureResource{
+			tex: tex
+		}
 	})?
 	if mut res := h.get() {
 		res.apply_sampler_modes()
@@ -117,12 +150,44 @@ pub fn (mut rm ResourceManager[TextureResource]) load_from_image(name string, im
 		if tex.id <= 0 {
 			return none
 		}
-		return TextureResource{ tex: tex }
+		return TextureResource{
+			tex: tex
+		}
 	})?
 	if mut res := h.get() {
 		res.apply_sampler_modes()
 	}
 	return h
+}
+
+// update_from_image pushes new pixel data from img into the existing GPU texture
+// using UpdateTexture, keeping the same texture ID. The image must have the same
+// dimensions and pixel format as the original texture.
+// If no resource with that name exists yet, delegates to load_from_image.
+// The caller is responsible for unloading img after this returns.
+pub fn (mut rm ResourceManager[TextureResource]) update_from_image(name string, img rl.Image) ?Handle[TextureResource] {
+	if idx := rm.names[name] {
+		mut slot := &rm.slots[idx]
+		if slot.is_active {
+			pixels := rl.load_image_colors(img)
+			rl.update_texture(slot.resource.tex, pixels)
+			rl.unload_image_colors(pixels)
+			return Handle[TextureResource]{
+				manager:    rm
+				id:         idx
+				generation: slot.generation
+			}
+		}
+	}
+	return rm.load_from_image(name, img)
+}
+
+// update_from_image pushes new pixel data from img into this texture using
+// UpdateTexture. The image must match the texture's dimensions and pixel format.
+pub fn (tr &TextureResource) update_from_image(img rl.Image) {
+	pixels := rl.load_image_colors(img)
+	rl.update_texture(tr.tex, pixels)
+	rl.unload_image_colors(pixels)
 }
 
 // load_from_rres loads an IMGE chunk named rres_name, promotes it to a
@@ -143,7 +208,9 @@ pub fn (mut rm ResourceManager[TextureResource]) load_from_rres(loader &rres.Rre
 		if tex.id <= 0 {
 			return none
 		}
-		return TextureResource{ tex: tex }
+		return TextureResource{
+			tex: tex
+		}
 	})?
 	if mut res := h.get() {
 		res.apply_sampler_modes()

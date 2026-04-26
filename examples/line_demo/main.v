@@ -21,7 +21,7 @@ mut:
 }
 
 fn (mut g Game) setup() {
-	g.app = App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none)
 	if mut app := g.app {
 		app.run()
 	}

@@ -28,7 +28,11 @@ pub interface INode {
 	app() &App
 	wren_class_name() string
 	get_child_count() int
-	find_child(child &INode) int
+	find_child(child INode) int
+	// node_ptr returns the address of the concrete struct, stable across interface
+	// conversions. used by find_child to compare nodes without relying on interface
+	// struct addresses (which differ for every implicit conversion).
+	node_ptr() voidptr
 	get_pos() Vec2
 	get_scale() Vec2
 	get_angle_deg() f32
@@ -47,7 +51,7 @@ mut:
 	global_matrix  rl.Matrix
 	local_matrix_f rm.Float16
 	parent         ?&INode
-	children       []&INode
+	children       []INode
 	wren_handle    ?&wren.Handle
 
 	get_global_matrix() rl.Matrix
@@ -58,6 +62,7 @@ mut:
 	get_global_angle_rad() f32
 	get_global_angle_deg() f32
 
+	set_name(val string)
 	set_pos(val Vec2)
 	set_scale(val Vec2)
 	set_angle_deg(val f32)
@@ -71,7 +76,7 @@ mut:
 	push_mat_internal()
 	pop_mat_internal()
 
-	get_children() []&INode
+	get_children() []INode
 	add_child(mut child INode)
 	remove_child(index int)
 	insert_child_at(index int, mut child INode)

@@ -4,25 +4,30 @@ import raylib as rl
 import raylib.raygui as gui
 import physics as phys
 import math
-import mv.resourcemanager { Handle, FontResource }
+import mv.resourcemanager { FontResource, Handle }
+import core { Vec2 }
 
 // DebugPanel - screen-space raygui overlay.
 //
-// Call at the end of the main loop, inside begin_drawing/end_drawing,
+// call at the end of the main loop, inside begin_drawing/end_drawing,
 // after draw_texture_pro has composited the viewport:
 //
 //   rl.draw_texture_pro(...)
 //   app.draw_debug_panel()
+//   app.draw_inspector_panel()
+//   app.draw_input_panel()
 //   rl.end_drawing()
 //
-// Physics overlay runs in world space inside the viewport texture pass.
-// Add this inside begin_texture_mode, after begin_mode_2d:
+// physics overlay runs in world space inside the viewport texture pass.
+// add this inside begin_texture_mode, after begin_mode_2d:
 //
 //   if app.debug.section_enabled('physics') {
 //       app.draw_physics_overlay()
 //   }
 //
-// Toggle panel visibility: F3
+// toggle panel visibility: F3
+// inspector panel: toolbar 'Insp' button (floating, node tree + properties)
+// input panel: toolbar 'Input' button (floating, mouse + keyboard monitor)
 
 // ---- constants ---------------------------------------------------------------
 
@@ -33,17 +38,65 @@ const dbg_indent = f32(10)
 const dbg_title_h = f32(24)
 const dbg_toolbar_h = f32(24)
 const dbg_col_sep = f32(130)
-const dbg_node_max_h = f32(200) // max visible height of the scrollable node tree
+const insp_panel_ph = f32(460)
+const input_panel_ph = f32(120)
+
+// ---- floating panel structs --------------------------------------------------
+
+@[heap]
+pub struct InspectorPanel {
+pub mut:
+	px          f32
+	py          f32 = 30
+	positioned  bool
+	dragging    bool
+	drag_ox     f32
+	drag_oy     f32
+	tree_open   bool = true
+	insp_open   bool = true
+	tree_scroll rl.Vector2
+}
+
+@[heap]
+pub struct InputPanel {
+pub mut:
+	px         f32
+	py         f32 = 500
+	positioned bool
+	dragging   bool
+	drag_ox    f32
+	drag_oy    f32
+}
 
 // ---- section registry --------------------------------------------------------
 
+struct NodeInspectorCache {
+mut:
+	valid            bool
+	name             string
+	type_name        string
+	pos              Vec2
+	scale            Vec2
+	angle_deg        f32
+	global_pos       Vec2
+	global_scale     Vec2
+	global_angle_deg f32
+	child_count      int
+	wren_owned       bool
+	process_flags    ProcessFlags
+	// pending writes applied by draw_node_rows next frame
+	pending_pos   ?Vec2
+	pending_angle ?f32
+}
+
 pub struct DebugSection {
 pub mut:
-	id      string
-	label   string
-	title   string
-	enabled bool = true
-	open    bool = true
+	id       string
+	label    string
+	title    string
+	enabled  bool = true
+	open     bool = true
+	floating bool // toolbar-only: drives a separate floating panel, not an inline section
 }
 
 // ---- panel struct ------------------------------------------------------------
@@ -53,7 +106,7 @@ pub struct DebugPanel {
 pub mut:
 	visible bool = true
 	x       f32  = 10
-	y       f32  = 10
+	y       f32  = 30
 
 	sections       []DebugSection
 	watches        map[string]string
@@ -63,12 +116,30 @@ pub mut:
 	drag_off_x f32
 	drag_off_y f32
 
-	// node tree scroll state
-	node_scroll rl.Vector2
-	// outer panel scissor rect, saved each frame so the nodes branch can restore it
-	scissor_rect rl.Rectangle
-	
 	debug_font Handle[FontResource]
+
+	selected_node_ptr voidptr
+	inspector_cache   NodeInspectorCache
+
+	inspector_panel InspectorPanel
+	input_panel     InputPanel
+
+	// sparkline - ring buffer of raw frame times
+	ft_buf  [120]f32
+	ft_head int
+
+	// time control
+	time_scale f32 = 1.0
+	paused     bool
+	step_frame bool
+
+	// inspector float editors: 0=pos.x  1=pos.y  2=angle
+	insp_edit int = -1
+	insp_bufs [3][32]u8
+
+	// input panel - recent key presses
+	key_log      [8]string
+	key_log_head int
 }
 
 pub fn DebugPanel.new() &DebugPanel {
@@ -96,21 +167,56 @@ pub fn DebugPanel.new() &DebugPanel {
 			open:    true
 		},
 		DebugSection{
-			id:      'nodes'
-			label:   'Tree'
-			title:   'Scene tree'
-			enabled: false
-			open:    false
-		},
-		DebugSection{
 			id:      'watches'
 			label:   'Watch'
 			title:   'Watches'
 			enabled: true
 			open:    true
 		},
+		DebugSection{
+			id:      'time'
+			label:   'Time'
+			title:   'Time'
+			enabled: true
+			open:    true
+		},
+		DebugSection{
+			id:       'inspector'
+			label:    'Insp'
+			title:    'Inspector'
+			enabled:  false
+			open:     false
+			floating: true
+		},
+		DebugSection{
+			id:       'input'
+			label:    'Input'
+			title:    'Input'
+			enabled:  false
+			open:     false
+			floating: true
+		},
 	]
 	return p
+}
+
+pub fn (mut p DebugPanel) consume_step() bool {
+	if p.step_frame {
+		p.step_frame = false
+		return true
+	}
+	return false
+}
+
+fn (mut d DebugPanel) update_key_log() {
+	for {
+		k := rl.get_key_pressed()
+		if k == 0 {
+			break
+		}
+		d.key_log[d.key_log_head % 8] = dbg_key_name(k)
+		d.key_log_head++
+	}
 }
 
 // register_section adds a new entry to the toolbar and draw loop at runtime.
@@ -132,7 +238,6 @@ pub fn (p &DebugPanel) section_enabled(id string) bool {
 }
 
 // watch sets a named value shown in the Watches section.
-// Pair with clear_watches() at the top of each frame.
 pub fn (mut p DebugPanel) watch(name string, value string) {
 	p.watches[name] = value
 }
@@ -152,9 +257,12 @@ pub fn (mut app App) draw_debug_panel() {
 	}
 
 	mut d := app.debug
+
+	d.ft_buf[d.ft_head % 120] = rl.get_frame_time()
+	d.ft_head++
+
 	mp := rl.get_mouse_position()
 
-	// drag via title bar
 	title_rect := rl.Rectangle{
 		x:      d.x
 		y:      d.y
@@ -175,10 +283,9 @@ pub fn (mut app App) draw_debug_panel() {
 		d.y = mp.y - d.drag_off_y
 	}
 
-	// compute total height
 	mut content_h := dbg_title_h + dbg_toolbar_h
 	for s in d.sections {
-		if !s.enabled {
+		if !s.enabled || s.floating {
 			continue
 		}
 		content_h += dbg_row_h
@@ -197,7 +304,7 @@ pub fn (mut app App) draw_debug_panel() {
 		width:  dbg_w
 		height: panel_h
 	}
-	
+
 	if font := app.debug.debug_font.get() {
 		gui.gui_set_font(font.fnt)
 	}
@@ -209,52 +316,377 @@ pub fn (mut app App) draw_debug_panel() {
 		return
 	}
 
-	// save so inner scroll panel can restore it after overriding scissor mode
-	d.scissor_rect = rl.Rectangle{
+	scissor_r := rl.Rectangle{
 		x:      d.x
 		y:      d.y + dbg_title_h
 		width:  dbg_w
 		height: panel_h - dbg_title_h
 	}
-	rl.begin_scissor_mode(int(d.scissor_rect.x), int(d.scissor_rect.y), int(d.scissor_rect.width),
-		int(d.scissor_rect.height))
+	rl.begin_scissor_mode(int(scissor_r.x), int(scissor_r.y), int(scissor_r.width), int(scissor_r.height))
 
 	dbg_draw_toolbar(d.x, d.y + dbg_title_h, mut d.sections)
 
 	mut cy := d.y + dbg_title_h + dbg_toolbar_h + dbg_pad / 2
 
 	for mut s in d.sections {
-		if !s.enabled {
+		if !s.enabled || s.floating {
 			continue
 		}
 		s.open = dbg_section_header(s.title, d.x, cy, s.open)
 		cy += dbg_row_h
 		if s.open {
-			app.dbg_draw_section(s.id, d, d.x, mut cy)
+			app.dbg_draw_section(s.id, d.x, mut cy)
 		}
 	}
 
 	rl.end_scissor_mode()
 }
 
+// ---- inspector floating panel -----------------------------------------------
+
+pub fn (mut app App) draw_inspector_panel() {
+	mut insp_enabled := false
+	for s in app.debug.sections {
+		if s.id == 'inspector' {
+			insp_enabled = s.enabled
+			break
+		}
+	}
+	if !insp_enabled {
+		return
+	}
+
+	mut panel := &app.debug.inspector_panel
+	mp := rl.get_mouse_position()
+	sw := f32(rl.get_screen_width())
+	sh := f32(rl.get_screen_height())
+
+	if !panel.positioned {
+		panel.px = app.debug.x + dbg_w + 10
+		panel.py = app.debug.y
+		panel.positioned = true
+	}
+
+	title_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py
+		width:  dbg_w
+		height: dbg_title_h
+	}
+	if rl.is_mouse_button_pressed(int(rl.MouseButton.mouse_button_left))
+		&& rl.check_collision_point_rec(mp, title_r) {
+		panel.dragging = true
+		panel.drag_ox = mp.x - panel.px
+		panel.drag_oy = mp.y - panel.py
+	}
+	if rl.is_mouse_button_released(int(rl.MouseButton.mouse_button_left)) {
+		panel.dragging = false
+	}
+	if panel.dragging {
+		panel.px = mp.x - panel.drag_ox
+		panel.py = mp.y - panel.drag_oy
+		if panel.px < 0 {
+			panel.px = 0
+		}
+		if panel.px + dbg_w > sw {
+			panel.px = sw - dbg_w
+		}
+		if panel.py < 0 {
+			panel.py = 0
+		}
+		if panel.py + insp_panel_ph > sh {
+			panel.py = sh - insp_panel_ph
+		}
+	}
+
+	ph := if panel.py + insp_panel_ph > sh - 10 { sh - panel.py - 10 } else { insp_panel_ph }
+	panel_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py
+		width:  dbg_w
+		height: ph
+	}
+
+	if font := app.debug.debug_font.get() {
+		gui.gui_set_font(font.fnt)
+	}
+	saved := dbg_push_dark_style()
+	defer { dbg_pop_style(saved) }
+
+	if gui.gui_window_box(panel_r, 'Inspector') == 1 {
+		for mut s in app.debug.sections {
+			if s.id == 'inspector' {
+				s.enabled = false
+			}
+		}
+		return
+	}
+
+	scissor_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py + dbg_title_h
+		width:  dbg_w
+		height: ph - dbg_title_h
+	}
+	rl.begin_scissor_mode(int(scissor_r.x), int(scissor_r.y), int(scissor_r.width), int(scissor_r.height))
+
+	mut cy := panel.py + dbg_title_h + dbg_pad * 0.5
+
+	// --- scene tree ---
+	panel.tree_open = dbg_section_header('Scene Tree', panel.px, cy, panel.tree_open)
+	cy += dbg_row_h
+
+	if panel.tree_open {
+		// invalidate only when tree is drawn - keeps Properties visible while tree is collapsed
+		app.debug.inspector_cache.valid = false
+		if mut root := app.scene_root {
+			node_count := app.count_visible_nodes(mut root, 0)
+			content_h := f32(node_count) * dbg_row_h
+			tree_vis_h := f32(160)
+			visible_h := if content_h < tree_vis_h { content_h } else { tree_vis_h }
+
+			scroll_bounds := rl.Rectangle{
+				x:      panel.px
+				y:      cy
+				width:  dbg_w
+				height: visible_h
+			}
+			content_rect := rl.Rectangle{
+				x:      panel.px
+				y:      cy
+				width:  dbg_w - 14
+				height: content_h
+			}
+			mut view_rect := rl.Rectangle{}
+
+			rl.end_scissor_mode()
+			gui.gui_scroll_panel(scroll_bounds, '', content_rect, &panel.tree_scroll,
+				&view_rect)
+			rl.begin_scissor_mode(int(view_rect.x), int(view_rect.y), int(view_rect.width),
+				int(view_rect.height))
+			mut draw_cy := view_rect.y + panel.tree_scroll.y
+			app.draw_node_rows(mut root, panel.px, mut &draw_cy, 0)
+			rl.end_scissor_mode()
+			rl.begin_scissor_mode(int(scissor_r.x), int(scissor_r.y), int(scissor_r.width),
+				int(scissor_r.height))
+
+			cy += visible_h
+		} else {
+			dbg_label_row('(no scene root)', panel.px, cy)
+			cy += dbg_row_h
+		}
+	}
+
+	// --- properties ---
+	panel.insp_open = dbg_section_header('Properties', panel.px, cy, panel.insp_open)
+	cy += dbg_row_h
+
+	if panel.insp_open {
+		if !app.debug.inspector_cache.valid {
+			dbg_label_row('(no node selected)', panel.px, cy)
+			cy += dbg_row_h
+		} else {
+			cache := &app.debug.inspector_cache
+			dbg_kv_row('name', cache.name, panel.px, cy)
+			cy += dbg_row_h
+			dbg_kv_row('type', cache.type_name, panel.px, cy)
+			cy += dbg_row_h
+			lbl_w := f32(24)
+			half_w := (dbg_w - dbg_pad * 2 - lbl_w * 2 - 4) * 0.5
+			bx := panel.px + dbg_pad
+			gui.gui_label(rl.Rectangle{bx, cy, lbl_w, dbg_row_h}, 'pos')
+			x_r := rl.Rectangle{bx + lbl_w, cy, half_w, dbg_row_h - 2}
+			y_r := rl.Rectangle{bx + lbl_w + half_w + 4, cy, half_w, dbg_row_h - 2}
+			if unsafe { C.GuiValueBoxFloat(x_r, c'', &app.debug.insp_bufs[0][0], &cache.pos.x,
+				app.debug.insp_edit == 0) } == 1 {
+				if app.debug.insp_edit == 0 {
+					app.debug.inspector_cache.pending_pos = Vec2{cache.pos.x, cache.pos.y}
+					app.debug.insp_edit = -1
+				} else {
+					app.debug.insp_edit = 0
+				}
+			}
+			if unsafe { C.GuiValueBoxFloat(y_r, c'', &app.debug.insp_bufs[1][0], &cache.pos.y,
+				app.debug.insp_edit == 1) } == 1 {
+				if app.debug.insp_edit == 1 {
+					app.debug.inspector_cache.pending_pos = Vec2{cache.pos.x, cache.pos.y}
+					app.debug.insp_edit = -1
+				} else {
+					app.debug.insp_edit = 1
+				}
+			}
+			cy += dbg_row_h
+			dbg_kv_row('scale', '(${cache.scale.x:.2f}, ${cache.scale.y:.2f})', panel.px,
+				cy)
+			cy += dbg_row_h
+			gui.gui_label(rl.Rectangle{bx, cy, lbl_w, dbg_row_h}, 'ang')
+			a_r := rl.Rectangle{bx + lbl_w, cy, dbg_w - dbg_pad * 2 - lbl_w, dbg_row_h - 2}
+			if unsafe { C.GuiValueBoxFloat(a_r, c'', &app.debug.insp_bufs[2][0], &cache.angle_deg,
+				app.debug.insp_edit == 2) } == 1 {
+				if app.debug.insp_edit == 2 {
+					app.debug.inspector_cache.pending_angle = cache.angle_deg
+					app.debug.insp_edit = -1
+				} else {
+					app.debug.insp_edit = 2
+				}
+			}
+			cy += dbg_row_h
+			dbg_kv_row('gpos', '(${cache.global_pos.x:.1f}, ${cache.global_pos.y:.1f})',
+				panel.px, cy)
+			cy += dbg_row_h
+			dbg_kv_row('gscale', '(${cache.global_scale.x:.2f}, ${cache.global_scale.y:.2f})',
+				panel.px, cy)
+			cy += dbg_row_h
+			dbg_kv_row('gangle', '${cache.global_angle_deg:.1f}', panel.px, cy)
+			cy += dbg_row_h
+			dbg_kv_row('children', '${cache.child_count}', panel.px, cy)
+			cy += dbg_row_h
+		}
+	}
+
+	rl.end_scissor_mode()
+}
+
+// ---- input floating panel ---------------------------------------------------
+
+pub fn (mut app App) draw_input_panel() {
+	mut input_enabled := false
+	for s in app.debug.sections {
+		if s.id == 'input' {
+			input_enabled = s.enabled
+			break
+		}
+	}
+	if !input_enabled {
+		return
+	}
+
+	app.debug.update_key_log()
+
+	mut panel := &app.debug.input_panel
+	mp := rl.get_mouse_position()
+	sw := f32(rl.get_screen_width())
+	sh := f32(rl.get_screen_height())
+
+	if !panel.positioned {
+		panel.px = app.debug.x + dbg_w + 10
+		panel.py = app.debug.y + insp_panel_ph + 10
+		panel.positioned = true
+	}
+
+	title_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py
+		width:  dbg_w
+		height: dbg_title_h
+	}
+	if rl.is_mouse_button_pressed(int(rl.MouseButton.mouse_button_left))
+		&& rl.check_collision_point_rec(mp, title_r) {
+		panel.dragging = true
+		panel.drag_ox = mp.x - panel.px
+		panel.drag_oy = mp.y - panel.py
+	}
+	if rl.is_mouse_button_released(int(rl.MouseButton.mouse_button_left)) {
+		panel.dragging = false
+	}
+	if panel.dragging {
+		panel.px = mp.x - panel.drag_ox
+		panel.py = mp.y - panel.drag_oy
+		if panel.px < 0 {
+			panel.px = 0
+		}
+		if panel.px + dbg_w > sw {
+			panel.px = sw - dbg_w
+		}
+		if panel.py < 0 {
+			panel.py = 0
+		}
+		if panel.py + input_panel_ph > sh {
+			panel.py = sh - input_panel_ph
+		}
+	}
+
+	panel_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py
+		width:  dbg_w
+		height: input_panel_ph
+	}
+
+	if font := app.debug.debug_font.get() {
+		gui.gui_set_font(font.fnt)
+	}
+	saved := dbg_push_dark_style()
+	defer { dbg_pop_style(saved) }
+
+	if gui.gui_window_box(panel_r, 'Input') == 1 {
+		for mut s in app.debug.sections {
+			if s.id == 'input' {
+				s.enabled = false
+			}
+		}
+		return
+	}
+
+	scissor_r := rl.Rectangle{
+		x:      panel.px
+		y:      panel.py + dbg_title_h
+		width:  dbg_w
+		height: input_panel_ph - dbg_title_h
+	}
+	rl.begin_scissor_mode(int(scissor_r.x), int(scissor_r.y), int(scissor_r.width), int(scissor_r.height))
+
+	mut cy := panel.py + dbg_title_h + dbg_pad * 0.5
+	px := panel.px
+
+	dbg_kv_row('screen', '(${int(mp.x)}, ${int(mp.y)})', px, cy)
+	cy += dbg_row_h
+	if cam := app.active_camera {
+		wp := rl.get_screen_to_world_2d(mp, cam.camera)
+		dbg_kv_row('world', '(${int(wp.x)}, ${int(wp.y)})', px, cy)
+	} else {
+		dbg_kv_row('world', '(no camera)', px, cy)
+	}
+	cy += dbg_row_h
+	mb_str := '${if rl.is_mouse_button_down(0) { 'L' } else { '-' }}${if rl.is_mouse_button_down(1) {
+		'R'
+	} else {
+		'-'
+	}}${if rl.is_mouse_button_down(2) { 'M' } else { '-' }}'
+	dbg_kv_row('mouse btn', mb_str, px, cy)
+	cy += dbg_row_h
+	mut keys_str := ''
+	n_show := if app.debug.key_log_head < 8 { app.debug.key_log_head } else { 8 }
+	for i in 0 .. n_show {
+		idx := (app.debug.key_log_head - 1 - i + 8) % 8
+		k := app.debug.key_log[idx]
+		if k.len > 0 {
+			if keys_str.len > 0 {
+				keys_str += ' '
+			}
+			keys_str += k
+		}
+	}
+	dbg_kv_row('keys', if keys_str.len > 0 { keys_str } else { '-' }, px, cy)
+
+	rl.end_scissor_mode()
+}
+
 // ---- physics overlay --------------------------------------------------------
 
-// draw_physics_overlay must be called inside begin_texture_mode + begin_mode_2d.
-// Iterates app.bodies directly; derives display bounds from shape fields without
-// needing a mutable body reference.
 pub fn (app &App) draw_physics_overlay() {
 	static_color := rl.Color{
 		r: 80
 		g: 200
 		b: 255
 		a: 160
-	} // blue  - static
+	}
 	dynamic_color := rl.Color{
 		r: 80
 		g: 255
 		b: 100
 		a: 180
-	} // green - kinematic
+	}
 
 	for _, body in app.bodies {
 		col := if body.body_type == .static_body { static_color } else { dynamic_color }
@@ -268,9 +700,6 @@ pub fn (app &App) draw_physics_overlay() {
 	}
 }
 
-// dbg_body_rect derives a screen-space rl.Rectangle from a body's shape and
-// current position without requiring a mutable receiver.
-// Uses body.transform.translation + shape_offset as the world origin.
 fn dbg_body_rect(body &PhysicsBody) ?rl.Rectangle {
 	pos := body.transform.translation + body.shape_offset
 	return match body.shape {
@@ -310,6 +739,19 @@ fn dbg_body_rect(body &PhysicsBody) ?rl.Rectangle {
 
 // ---- toolbar ----------------------------------------------------------------
 
+fn dbg_section_icon(id string) int {
+	return match id {
+		'perf' { int(gui.GuiIconName.icon_cpu) }
+		'camera' { int(gui.GuiIconName.icon_camera) }
+		'physics' { int(gui.GuiIconName.icon_tools) }
+		'watches' { int(gui.GuiIconName.icon_eye_on) }
+		'inspector' { int(gui.GuiIconName.icon_lens) }
+		'time' { int(gui.GuiIconName.icon_sand_timer) }
+		'input' { int(gui.GuiIconName.icon_cursor_classic) }
+		else { int(gui.GuiIconName.icon_none) }
+	}
+}
+
 fn dbg_draw_toolbar(px f32, py f32, mut sections []DebugSection) {
 	n := sections.len
 	if n == 0 {
@@ -319,10 +761,6 @@ fn dbg_draw_toolbar(px f32, py f32, mut sections []DebugSection) {
 	btn_h := dbg_toolbar_h - 4
 	btn_w := (dbg_w - dbg_pad * 2 - btn_gap * f32(n - 1)) / f32(n)
 
-	ctrl_btn := int(gui.GuiControl.button)
-	prop_base := int(gui.GuiControlProperty.base_color_normal)
-	prop_text := int(gui.GuiControlProperty.text_color_normal)
-
 	for i, mut s in sections {
 		bx := px + dbg_pad + f32(i) * (btn_w + btn_gap)
 		r := rl.Rectangle{
@@ -331,27 +769,18 @@ fn dbg_draw_toolbar(px f32, py f32, mut sections []DebugSection) {
 			width:  btn_w
 			height: btn_h
 		}
-
-		if !s.enabled {
-			gui.gui_set_style(ctrl_btn, prop_base, 0x18181e) // darker than normal dark base
-			gui.gui_set_style(ctrl_btn, prop_text, 0x505060) // clearly dimmed
-		}
-		if gui.gui_button(r, s.label) == 1 {
-			s.enabled = !s.enabled
-			if s.enabled {
-				s.open = true
-			}
-		}
-		if !s.enabled {
-			gui.gui_set_style(ctrl_btn, prop_base, 0x2a2a42) // back to dark normal base
-			gui.gui_set_style(ctrl_btn, prop_text, 0xcccccc)
+		lbl := gui.gui_icon_text(dbg_section_icon(s.id), '')
+		was := s.enabled
+		gui.gui_toggle(r, lbl, &s.enabled)
+		if !s.floating && s.enabled && !was {
+			s.open = true
 		}
 	}
 }
 
 // --- section dispatch ---
 
-fn (app &App) dbg_draw_section(id string, d &DebugPanel, px f32, mut cy &f32) {
+fn (mut app App) dbg_draw_section(id string, px f32, mut cy &f32) {
 	match id {
 		'perf' {
 			fps := rl.get_fps()
@@ -360,10 +789,12 @@ fn (app &App) dbg_draw_section(id string, d &DebugPanel, px f32, mut cy &f32) {
 			cy += dbg_row_h
 			dbg_kv_row('frame time', '${ft_ms:.2f} ms', px, cy)
 			cy += dbg_row_h
+			dbg_draw_sparkline(app.debug.ft_buf, app.debug.ft_head, px, cy)
+			cy += 44
 		}
 		'camera' {
 			if cam := app.active_camera {
-				c := cam.camera // rl.Camera2D
+				c := cam.camera
 				dbg_kv_row('target', '(${c.target.x:.1f}, ${c.target.y:.1f})', px, cy)
 				cy += dbg_row_h
 				dbg_kv_row('offset', '(${c.offset.x:.1f}, ${c.offset.y:.1f})', px, cy)
@@ -393,62 +824,48 @@ fn (app &App) dbg_draw_section(id string, d &DebugPanel, px f32, mut cy &f32) {
 			cy += dbg_row_h
 			dbg_kv_row('hash cells', '${cell_count}', px, cy)
 			cy += dbg_row_h
-			dbg_kv_row('overlay', if d.section_enabled('physics') { 'on (mode2d)' } else { 'off' },
-				px, cy)
+			dbg_kv_row('overlay', if app.debug.section_enabled('physics') {
+				'on (mode2d)'
+			} else {
+				'off'
+			}, px, cy)
 			cy += dbg_row_h
 		}
-		'nodes' {
-			if mut root := app.scene_root {
-				node_count := app.count_visible_nodes(mut root, 0)
-				content_h := f32(node_count) * dbg_row_h
-				visible_h := if content_h < dbg_node_max_h { content_h } else { dbg_node_max_h }
-
-				scroll_bounds := rl.Rectangle{
-					x:      px
-					y:      cy
-					width:  dbg_w
-					height: visible_h
-				}
-				content_rect := rl.Rectangle{
-					x:      px
-					y:      cy
-					width:  dbg_w - 14
-					height: content_h
-				}
-				mut view_rect := rl.Rectangle{}
-
-				// gui_scroll_panel overrides the active scissor mode, so we end
-				// the outer one first, then restore it after.
-				rl.end_scissor_mode()
-				gui.gui_scroll_panel(scroll_bounds, '', content_rect, &d.node_scroll,
-					&view_rect)
-
-				rl.begin_scissor_mode(int(view_rect.x), int(view_rect.y), int(view_rect.width),
-					int(view_rect.height))
-				mut draw_cy := *cy + d.node_scroll.y
-				app.draw_node_rows(mut root, px, mut &draw_cy, 0)
-				rl.end_scissor_mode()
-
-				// restore outer panel scissor for any sections drawn after this one
-				rl.begin_scissor_mode(int(d.scissor_rect.x), int(d.scissor_rect.y), int(d.scissor_rect.width),
-					int(d.scissor_rect.height))
-
-				cy += visible_h
-			} else {
-				dbg_label_row('(no scene root)', px, cy)
-				cy += dbg_row_h
-			}
-		}
 		'watches' {
-			if d.watches.len == 0 {
+			if app.debug.watches.len == 0 {
 				dbg_label_row('(none)', px, cy)
 				cy += dbg_row_h
 			} else {
-				for name, val in d.watches {
+				for name, val in app.debug.watches {
 					dbg_kv_row(name, val, px, cy)
 					cy += dbg_row_h
 				}
 			}
+		}
+		'time' {
+			lbl_w := f32(52)
+			bx := px + dbg_pad
+			fw := dbg_w - dbg_pad * 2
+			gui.gui_label(rl.Rectangle{bx, cy, lbl_w, dbg_row_h}, 'scale')
+			gui.gui_slider(rl.Rectangle{bx + lbl_w, cy, fw - lbl_w - 34, dbg_row_h - 2},
+				'', '${app.debug.time_scale:.2f}x', &app.debug.time_scale, 0.0, 2.0)
+			cy += dbg_row_h
+			pause_lbl := gui.gui_icon_text(int(gui.GuiIconName.icon_player_pause), if app.debug.paused {
+				'Resume'
+			} else {
+				'Pause'
+			})
+			gui.gui_toggle(rl.Rectangle{bx, cy, fw, dbg_row_h - 2}, pause_lbl, &app.debug.paused)
+			cy += dbg_row_h
+			if app.debug.paused {
+				step_lbl := gui.gui_icon_text(int(gui.GuiIconName.icon_step_over), 'Step frame')
+				if gui.gui_button(rl.Rectangle{bx, cy, fw, dbg_row_h - 2}, step_lbl) == 1 {
+					app.debug.step_frame = true
+				}
+			} else {
+				dbg_label_row('(pause to step)', px, cy)
+			}
+			cy += dbg_row_h
 		}
 		else {
 			dbg_label_row('(external)', px, cy)
@@ -460,7 +877,7 @@ fn (app &App) dbg_draw_section(id string, d &DebugPanel, px f32, mut cy &f32) {
 fn (app &App) dbg_section_row_count(id string) f32 {
 	return match id {
 		'perf' {
-			f32(2)
+			f32(2) + 44.0 / dbg_row_h
 		}
 		'camera' {
 			f32(4)
@@ -468,23 +885,12 @@ fn (app &App) dbg_section_row_count(id string) f32 {
 		'physics' {
 			f32(3)
 		}
-		'nodes' {
-			node_count := if mut root := app.scene_root {
-				f32(app.count_visible_nodes(mut root, 0))
-			} else {
-				f32(1)
-			}
-			cap := dbg_node_max_h / dbg_row_h
-			if node_count < cap {
-				node_count
-			} else {
-				cap
-			}
-		}
 		'watches' {
-			watches_len := app.debug.watches.len
-			n := if watches_len == 0 { 1 } else { watches_len }
+			n := if app.debug.watches.len == 0 { 1 } else { app.debug.watches.len }
 			f32(n)
+		}
+		'time' {
+			f32(3)
 		}
 		else {
 			f32(1)
@@ -494,12 +900,51 @@ fn (app &App) dbg_section_row_count(id string) f32 {
 
 // --- node tree ---
 
-fn (app &App) draw_node_rows(mut node INode, px f32, mut cy &f32, depth int) {
+fn (mut app App) draw_node_rows(mut node INode, px f32, mut cy &f32, depth int) {
 	if depth > app.debug.max_node_depth {
 		return
 	}
 	indent_x := px + dbg_pad + f32(depth) * dbg_indent
 	avail_w := dbg_w - (indent_x - px) - dbg_pad
+	row_r := rl.Rectangle{
+		x:      indent_x
+		y:      cy
+		width:  avail_w
+		height: dbg_row_h
+	}
+	if rl.check_collision_point_rec(rl.get_mouse_position(), row_r)
+		&& rl.is_mouse_button_pressed(int(rl.MouseButton.mouse_button_left)) {
+		if app.debug.selected_node_ptr != node.node_ptr() {
+			app.debug.insp_edit = -1
+		}
+		app.debug.selected_node_ptr = node.node_ptr()
+	}
+	if app.debug.selected_node_ptr != unsafe { nil }
+		&& node.node_ptr() == app.debug.selected_node_ptr {
+		// apply pending inspector edits before refreshing cache
+		if pos := app.debug.inspector_cache.pending_pos {
+			node.set_pos(pos)
+		}
+		if angle := app.debug.inspector_cache.pending_angle {
+			node.set_angle_deg(angle)
+		}
+		rl.draw_rectangle_rec(row_r, rl.Color{60, 80, 120, 160})
+		// struct replacement clears pending_pos/pending_angle (default to none)
+		app.debug.inspector_cache = NodeInspectorCache{
+			valid:            true
+			name:             node.name()
+			type_name:        node.wren_class_name()
+			pos:              node.get_pos()
+			scale:            node.get_scale()
+			angle_deg:        node.get_angle_deg()
+			global_pos:       node.get_global_pos()
+			global_scale:     node.get_global_scale()
+			global_angle_deg: node.get_global_angle_deg()
+			child_count:      node.get_child_count()
+			wren_owned:       node.wren_owned
+			process_flags:    node.process_flags
+		}
+	}
 	name_r := rl.Rectangle{
 		x:      indent_x
 		y:      cy
@@ -513,7 +958,7 @@ fn (app &App) draw_node_rows(mut node INode, px f32, mut cy &f32, depth int) {
 		height: dbg_row_h
 	}
 	gui.gui_label(name_r, node.name())
-	gui.gui_label(type_r, node.wren_class_name()) // typeof(node).name simply returns the INode type...
+	gui.gui_label(type_r, node.wren_class_name())
 	cy += dbg_row_h
 	for mut child in node.get_children() {
 		app.draw_node_rows(mut child, px, mut cy, depth + 1)
@@ -533,19 +978,14 @@ fn (app &App) count_visible_nodes(mut node INode, depth int) int {
 
 // --- dark theme style ---
 
-// DbgSavedStyle holds the raygui style properties that dbg_push_dark_style
-// overrides, so dbg_pop_style can fully restore global state afterward.
 struct DbgSavedStyle {
-	// GuiControl.default
-	d_bg      int // GuiDefaultProperty.background_color (19)
-	d_line    int // GuiDefaultProperty.line_color       (18)
-	d_text_sz int // GuiDefaultProperty.text_size        (16)
-	d_text    int
-	d_base    int
-	d_border  int
-	// GuiControl.label
-	l_text int
-	// GuiControl.button - all three interaction states
+	d_bg       int
+	d_line     int
+	d_text_sz  int
+	d_text     int
+	d_base     int
+	d_border   int
+	l_text     int
 	b_base_n   int
 	b_text_n   int
 	b_border_n int
@@ -557,9 +997,6 @@ struct DbgSavedStyle {
 	b_border_p int
 }
 
-// dbg_push_dark_style saves the current raygui style, applies a dark theme and
-// a slightly larger font, and returns the saved state for later restoration.
-// Call before gui_window_box; restore with dbg_pop_style after end_scissor_mode.
 fn dbg_push_dark_style() DbgSavedStyle {
 	d := int(gui.GuiControl.default)
 	lbl := int(gui.GuiControl.label)
@@ -597,30 +1034,28 @@ fn dbg_push_dark_style() DbgSavedStyle {
 		b_border_p: gui.gui_get_style(btn, pbp)
 	}
 
-	// apply dark theme
-	gui.gui_set_style(d, pbg, 0x1e1e30ff) // panel body fill
-	gui.gui_set_style(d, pli, 0x3c3c58ff) // title bar separator line
-	gui.gui_set_style(d, pts, 16) // text size
-	gui.gui_set_style(d, ptn, 0x7a7a8aff) // default text (approx 0xd4d4d4, R capped)
-	gui.gui_set_style(d, pan, 0x242432ff) // default control base
-	gui.gui_set_style(d, pbn, 0x3c3c58ff) // default border
+	gui.gui_set_style(d, pbg, 0x1e1e30ff)
+	gui.gui_set_style(d, pli, 0x3c3c58ff)
+	gui.gui_set_style(d, pts, 16)
+	gui.gui_set_style(d, ptn, 0x7a7a8aff)
+	gui.gui_set_style(d, pan, 0x242432ff)
+	gui.gui_set_style(d, pbn, 0x3c3c58ff)
 
-	gui.gui_set_style(lbl, ptn, 0x7a7a8aff) // label text
+	gui.gui_set_style(lbl, ptn, 0x7a7a8aff)
 
-	gui.gui_set_style(btn, pan, 0x2a2a42ff) // button base normal
-	gui.gui_set_style(btn, ptn, 0x6e6e8aff) // button text normal (approx 0xcccccc, R capped)
-	gui.gui_set_style(btn, pbn, 0x505078ff) // button border normal
-	gui.gui_set_style(btn, paf, 0x353558ff) // button base focused
-	gui.gui_set_style(btn, ptf, 0x7e7ea8ff) // button text focused (approx 0xffffff, R capped)
-	gui.gui_set_style(btn, pbf, 0x6060a0ff) // button border focused
-	gui.gui_set_style(btn, pap, 0x4a4a78ff) // button base pressed (unchanged, already valid)
-	gui.gui_set_style(btn, ptp, 0x7e7ea8ff) // button text pressed (approx 0xffffff, R capped)
-	gui.gui_set_style(btn, pbp, 0x7878c0ff) // button border pressed
+	gui.gui_set_style(btn, pan, 0x2a2a42ff)
+	gui.gui_set_style(btn, ptn, 0x6e6e8aff)
+	gui.gui_set_style(btn, pbn, 0x505078ff)
+	gui.gui_set_style(btn, paf, 0x353558ff)
+	gui.gui_set_style(btn, ptf, 0x7e7ea8ff)
+	gui.gui_set_style(btn, pbf, 0x6060a0ff)
+	gui.gui_set_style(btn, pap, 0x4a4a78ff)
+	gui.gui_set_style(btn, ptp, 0x7e7ea8ff)
+	gui.gui_set_style(btn, pbp, 0x7878c0ff)
 
 	return saved
 }
 
-// dbg_pop_style restores the raygui style saved by dbg_push_dark_style.
 fn dbg_pop_style(s DbgSavedStyle) {
 	d := int(gui.GuiControl.default)
 	lbl := int(gui.GuiControl.label)
@@ -657,10 +1092,65 @@ fn dbg_pop_style(s DbgSavedStyle) {
 	gui.gui_set_style(btn, pbp, s.b_border_p)
 }
 
+// ---- sparkline + key helpers ------------------------------------------------
+
+fn dbg_draw_sparkline(ft_buf [120]f32, head int, px f32, cy f32) {
+	w := dbg_w - dbg_pad * 2
+	h := f32(40)
+	bx := px + dbg_pad
+	target := f32(1.0 / 60.0)
+	max_ft := target * 3.0
+	bar_w := w / 120.0
+
+	rl.draw_rectangle_rec(rl.Rectangle{bx, cy, w, h}, rl.Color{0x10, 0x10, 0x18, 0xff})
+	for i in 0 .. 120 {
+		ft := ft_buf[(head + i) % 120]
+		ratio := if f64(ft) / f64(max_ft) < 1.0 { f64(ft) / f64(max_ft) } else { 1.0 }
+		bar_h := f32(ratio) * h
+		col := if ft <= target * 1.1 {
+			rl.Color{0x40, 0xff, 0x40, 0xff}
+		} else if ft <= target * 2.0 {
+			rl.Color{0xff, 0xcc, 0x00, 0xff}
+		} else {
+			rl.Color{0xff, 0x44, 0x44, 0xff}
+		}
+		rl.draw_rectangle(int(bx + f32(i) * bar_w), int(cy + h - bar_h), if bar_w >= 1.0 {
+			int(bar_w)
+		} else {
+			1
+		}, int(bar_h), col)
+	}
+	y60 := cy + h - h * (target / max_ft)
+	y30 := cy + h - h * (target * 2.0 / max_ft)
+	rl.draw_line(int(bx), int(y60), int(bx + w), int(y60), rl.Color{0x40, 0xff, 0x40, 0x50})
+	rl.draw_line(int(bx), int(y30), int(bx + w), int(y30), rl.Color{0xff, 0xcc, 0x00, 0x50})
+}
+
+fn dbg_key_name(k int) string {
+	return match k {
+		32 { 'SPC' }
+		13 { 'ENT' }
+		27 { 'ESC' }
+		9 { 'TAB' }
+		int(rl.KeyboardKey.key_left) { 'left' }
+		int(rl.KeyboardKey.key_right) { 'right' }
+		int(rl.KeyboardKey.key_up) { 'up' }
+		int(rl.KeyboardKey.key_down) { 'down' }
+		65...90 { rune(k).str() }
+		48...57 { rune(k).str() }
+		else { '#${k}' }
+	}
+}
+
 // ---- row helpers ------------------------------------------------------------
 
 fn dbg_section_header(title string, px f32, py f32, open bool) bool {
-	label := '${if open { '[-]' } else { '[+]' }} ${title}'
+	arrow := if open {
+		int(gui.GuiIconName.icon_arrow_down_fill)
+	} else {
+		int(gui.GuiIconName.icon_arrow_right_fill)
+	}
+	label := '${gui.gui_icon_text(arrow, '')} ${title}'
 	r := rl.Rectangle{
 		x:      px + dbg_pad
 		y:      py
@@ -692,7 +1182,7 @@ fn dbg_kv_row(key string, val string, px f32, py f32) {
 	}
 	gui.gui_label(key_r, key)
 	prev := gui.gui_get_style(ctrl_lbl, prop_text)
-	gui.gui_set_style(ctrl_lbl, prop_text, 0x5ecf8a)
+	gui.gui_set_style(ctrl_lbl, prop_text, 0x8eff8a)
 	gui.gui_label(val_r, val)
 	gui.gui_set_style(ctrl_lbl, prop_text, prev)
 }
@@ -713,10 +1203,9 @@ fn dbg_label_row(text string, px f32, py f32) {
 }
 
 // ---- App str() --------------------------------------------------------------
-// Explicit str() prevents V from auto-generating one that traverses into
+// explicit str() prevents V from auto-generating one that traverses into
 // rl.Sound (via App.sounds -> SoundResource), where the V binding uses
-// snake_case field names that don't match the C struct (e.g. frame_count vs
-// frameCount), causing a C compile error.
+// snake_case field names that don't match the C struct.
 pub fn (a &App) str() string {
 	return 'App{}'
 }

@@ -93,6 +93,7 @@ pub:
 pub struct PhysicsBody {
 	Node
 pub mut:
+	body_id          int
 	body_type        BodyType      = .kinematic
 	shape            physics.Shape = physics.AABB{}
 	shape_offset     Vec2
@@ -127,7 +128,7 @@ fn (n &PhysicsBody) wren_class_name() string {
 
 // layer funcs
 
-// sets a single layer bit (1-indexed, 1–32)
+// sets a single layer bit (1-indexed, 1-32)
 @[inline]
 pub fn (mut b PhysicsBody) set_layer(layer int) {
 	b.collision_layer |= 1 << (layer - 1)
@@ -157,18 +158,18 @@ pub fn (b &PhysicsBody) can_collide_with(other &PhysicsBody) bool {
 // tree callbacks
 
 fn (mut b PhysicsBody) ready_internal() {
-	id := int(voidptr(b))
-	b.app.bodies[id] = b
+	b.body_id = b.app.bodies_next_id
+	b.app.bodies_next_id++
+	b.app.bodies[b.body_id] = b
 	if b.body_type == .static_body {
-		b.app.physics_world.hash.register_static_shape(id, b.world_shape())
+		b.app.physics_world.hash.register_static_shape(b.body_id, b.world_shape())
 	}
 }
 
 fn (mut b PhysicsBody) exit_tree_internal() {
-	id := int(voidptr(b))
-	b.app.bodies.delete(id)
+	b.app.bodies.delete(b.body_id)
 	if b.body_type == .static_body {
-		b.app.physics_world.hash.unregister_static(id)
+		b.app.physics_world.hash.unregister_static(b.body_id)
 	}
 }
 
@@ -176,8 +177,7 @@ fn (mut b PhysicsBody) update_internal(_dt f32) {
 	if b.body_type == .static_body {
 		return
 	}
-	id := int(voidptr(b))
-	b.app.physics_world.hash.register_shape(id, b.world_shape())
+	b.app.physics_world.hash.register_shape(b.body_id, b.world_shape())
 }
 
 // --- shape helpers ---
@@ -283,7 +283,7 @@ fn (b &PhysicsBody) translated_xtransform(delta Vec2) physics.XTransform {
 // all hits. it does NOT move the node -- the caller is responsible for applying
 // position changes based on the results.
 pub fn (mut b PhysicsBody) move_and_collide(velocity Vec2) []CollisionResult {
-	self_id := int(voidptr(b))
+	self_id := b.body_id
 	cur_shape := b.world_shape()
 	proposed := b.translated_shape(velocity)
 	proposed_xf := b.translated_xtransform(velocity)

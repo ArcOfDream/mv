@@ -217,7 +217,7 @@ pub fn (mut rm ResourceManager[T]) clear() {
 
 // name_of is a reverse lookup used by serialization write-paths.
 // O(n) over names; adequate for scene save where it's called once per
-// exported resource reference. 
+// exported resource reference.
 // TODO: add a slot->name cache if this becomes hot.
 pub fn (rm &ResourceManager[T]) name_of(id int) ?string {
 	for name, stored_id in rm.names {

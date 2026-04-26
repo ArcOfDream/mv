@@ -94,7 +94,7 @@ pub fn sweep_aabb(mover AABB, obstacle AABB, vel_x f32, vel_y f32) SweepResult {
 }
 
 // lb_clip performs one Liang-Barsky slab test.
-// Updates the entry time ti1 (and its normal) and exit time ti2.
+// updates the entry time ti1 (and its normal) and exit time ti2.
 // Returns false if the segment is entirely outside this slab.
 @[inline]
 fn lb_clip(p f32, q f32, mut ti1 &f32, mut ti2 &f32, mut nx &f32, mut ny &f32, nxi f32, nyi f32) bool {

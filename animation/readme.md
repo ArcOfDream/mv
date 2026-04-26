@@ -4,7 +4,7 @@
 
 ## Easing functions
 
-`EaseFn` is a type alias for `fn (f32) f32`: a function that maps a normalised input `t ∈ [0, 1]` to a shaped output. The full standard set is provided:
+`EaseFn` is a type alias for `fn (f32) f32`: a function that maps a normalised input `t in [0, 1]` to a shaped output. The full standard set is provided:
 
 `linear`, `step`, `in_sine` / `out_sine` / `in_out_sine`, `in_quad` / `out_quad` / `in_out_quad`, `in_cubic` / `out_cubic` / `in_out_cubic`, `in_quart` / `out_quart` / `in_out_quart`, `in_quint` / `out_quint` / `in_out_quint`, `in_expo` / `out_expo` / `in_out_expo`, `in_circ` / `out_circ` / `in_out_circ`, `in_back` / `out_back` / `in_out_back`, `in_elastic` / `out_elastic` / `in_out_elastic`, `in_bounce` / `out_bounce` / `in_out_bounce`.
 

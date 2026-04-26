@@ -18,7 +18,7 @@ fn (s Shape) c2_type() CollisionType {
 
 // Polygon.from_rect builds a rectangle polygon centred at the origin
 // with the given width and height. Vertices are wound counter-clockwise.
-// Rotate at collision time via XTransform: do not bake rotation into vertices.
+// rotate at collision time via XTransform: do not bake rotation into vertices.
 pub fn Polygon.from_rect(w f32, h f32) Polygon {
 	hw := w * 0.5
 	hh := h * 0.5

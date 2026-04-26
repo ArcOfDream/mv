@@ -47,7 +47,7 @@ pub const sig_group_finished = 'group_finished'
 
 // BurstGroup coordinates multiple BurstEmitters, firing them simultaneously
 // and emitting sig_group_finished only after every emitter's particles have expired.
-// Add emitters via add_emitter() before or after entering the tree.
+// add emitters via add_emitter() before or after entering the tree.
 @[heap]
 pub struct BurstGroup {
 	Node
@@ -80,7 +80,7 @@ fn (g &BurstGroup) wren_class_name() string {
 }
 
 // add_emitter registers an emitter with this group and connects its finished signal.
-// Call before burst(): emitters added after a burst is in progress are not
+// call before burst(): emitters added after a burst is in progress are not
 // counted toward that burst's completion.
 pub fn (mut g BurstGroup) add_emitter(mut emitter BurstEmitter) {
 	g.emitters << &emitter

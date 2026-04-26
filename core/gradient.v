@@ -49,7 +49,7 @@ pub fn (g &Gradient) bake(resolution int) rl.Texture2D {
 	assert resolution >= 2
 	img := gen_image_gradient_linear(resolution, 1, g, Vec2{0.0, 0.5}, Vec2{1.0, 0.5})
 	tex := rl.load_texture_from_image(img)
-	// rl.unload_image(img)
+	rl.unload_image(img)
 	return tex
 }
 
@@ -165,7 +165,7 @@ fn catmull_rom_color(p0 Color, p1 Color, p2 Color, p3 Color, t f32) Color {
 }
 
 // Fritsch-Carlson monotone cubic interpolation for one channel.
-// Takes the full slice of (x, y) knots plus the already-found segment [lo, hi]
+// takes the full slice of (x, y) knots plus the already-found segment [lo, hi]
 // and local t, so we only allocate tangents once per sample call via the
 // per-channel wrapper below.
 fn fc_channel_with_tangents(ys []f32, ms []f32, xs []f32, lo int, hi int, t f32) f32 {

@@ -249,7 +249,7 @@ fn (mut s AnimatedSprite) update_internal(dt f32) {
 fn (mut s AnimatedSprite) draw_internal() {
 	sf := s.frames or { return }
 	anim := sf.get_animation(s.current_animation) or { return }
-	if anim.frames.len == 0 {
+	if anim.frames.len == 0 || s.current_frame >= anim.frames.len {
 		return
 	}
 

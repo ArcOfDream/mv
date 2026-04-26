@@ -20,7 +20,9 @@ pub fn (mut rm ResourceManager[FontResource]) load(name string, path string) ?Ha
 		if !rl.is_font_valid(f) {
 			return none
 		}
-		return FontResource{ fnt: f }
+		return FontResource{
+			fnt: f
+		}
 	})
 }
 
@@ -29,13 +31,15 @@ pub fn (mut rm ResourceManager[FontResource]) load(name string, path string) ?Ha
 // NOTE: raylib expects a unicode character set (runes in V) to be passed as codepoints, but passing nil assumes an ASCII character set
 pub fn (mut rm ResourceManager[FontResource]) load_from_memory(name string, size int, data []u8) ?Handle[FontResource] {
 	return rm.acquire_or_insert(name, fn [size, data] () ?FontResource {
-		//ascii := get_ascii_printable().runes()
+		// ascii := get_ascii_printable().runes()
 		f := rl.load_font_from_memory('.ttf', data.data, data.element_size * (data.len - 1),
 			size, unsafe { nil }, 0)
 		if !rl.is_font_valid(f) {
 			return none
 		}
-		return FontResource{ fnt: f }
+		return FontResource{
+			fnt: f
+		}
 	})
 }
 
@@ -50,7 +54,9 @@ pub fn (mut rm ResourceManager[FontResource]) load_from_rres(loader &rres.RresLo
 		if !rl.is_font_valid(fnt) {
 			return none
 		}
-		return FontResource{ fnt: fnt }
+		return FontResource{
+			fnt: fnt
+		}
 	})
 }
 

@@ -89,7 +89,7 @@ pub fn tex_coord2f(x f32, y f32) {
 }
 
 // set_texture binds a texture by its OpenGL id for subsequent rlgl draw calls.
-// Pass 0 to unbind (reverts to the default 1x1 white pixel).
+// pass 0 to unbind (reverts to the default 1x1 white pixel).
 fn C.rlSetTexture(id u32)
 @[inline]
 pub fn set_texture(id u32) {

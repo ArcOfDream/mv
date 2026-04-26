@@ -35,7 +35,7 @@ const line_max_miter_scale = f32(4.0)
 const line_round_cap_segs = int(10)
 const line_round_joint_segs = int(6)
 
-// Internal vertex type
+// internal vertex type
 struct LineVertex {
 	left   Vec2
 	right  Vec2
@@ -324,9 +324,6 @@ fn emit_round_cap(center Vec2, tangent Vec2, half_w f32, col rl.Color, u f32) {
 		set_color(col)
 		tex_coord2f(u, 0)
 		vertex2f(v0x, v0y)
-		set_color(col)
-		tex_coord2f(u, 0)
-		vertex2f(v1x, v1y)
 		set_color(col)
 		tex_coord2f(u, 0)
 		vertex2f(v1x, v1y)

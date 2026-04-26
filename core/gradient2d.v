@@ -57,10 +57,12 @@ fn write_pixel(mut pixels []u8, idx int, c Color) {
 	pixels[idx * 4 + 3] = c.a
 }
 
-// allocates a pixel buffer that raylib can own and free via rl.unload_image
+// allocates a pixel buffer that raylib can own and free via rl.unload_image.
+// uses C.malloc (not V's GC-tracked malloc) so Boehm never collects the buffer
+// while Image.data holds the only reference in an opaque voidptr field.
 fn alloc_pixels(width int, height int) []u8 {
 	size := width * height * 4
-	return unsafe { malloc(size).vbytes(size) }
+	return unsafe { C.malloc(size).vbytes(size) }
 }
 
 fn image_from_pixels(width int, height int, pixels []u8) rl.Image {
@@ -154,7 +156,7 @@ pub fn gen_image_gradient_radial_focal(width int, height int, gradient &Gradient
 				// pixel is exactly at focal point t = 0.
 				t = 0.0
 			} else {
-				// quadratic: |F + s*(P-F) - C|² = R²
+				// quadratic: |F + s*(P-F) - C|^2 = R^2
 				// let o = F - C
 				ox := fx - cx
 				oy := fy - cy

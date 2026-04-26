@@ -159,6 +159,7 @@ fn (s EmissionShape) spawn(mode EmissionMode) (Vec2, Vec2) {
 					outward.scale(s.radius)
 				}
 			}
+
 			return pos, outward
 		}
 		RectEmission {
@@ -253,7 +254,7 @@ pub mut:
 	// flat acceleration applied every simulation tick
 	gravity Vec2
 
-	// lifecycle curves: sampled at t = age / lifetime ∈ [0, 1]
+	// lifecycle curves: sampled at t = age / lifetime in [0, 1]
 	scale_over_lifetime ?&BakedCurve
 	alpha_over_lifetime ?&BakedCurve
 	color_over_lifetime ?&Gradient
@@ -342,6 +343,13 @@ pub fn (mut e ParticleEmitter) set_texture_id(val string) !Handle[TextureResourc
 pub fn (mut e ParticleEmitter) set_texture_handle(h Handle[TextureResource]) {
 	e.texture.release()
 	e.texture = h
+}
+
+pub fn (e &ParticleEmitter) get_texture_id() ?string {
+	if !e.texture.is_valid() {
+		return none
+	}
+	return e.app.textures.name_of(e.texture.id)
 }
 
 // tree callbacks
@@ -474,7 +482,7 @@ fn (mut e ParticleEmitter) simulate(dt f32) {
 		dist := f32(math.sqrt(f64(from_origin.x * from_origin.x + from_origin.y * from_origin.y)))
 		if dist > 0.001 {
 			outward := from_origin.scale(1.0 / dist) // unit vector away from emitter
-			tangent := Vec2{-outward.y, outward.x} // 90° CCW
+			tangent := Vec2{-outward.y, outward.x} // 90 deg CCW
 			p.velocity = p.velocity + outward.scale(p.radial_accel * dt)
 			p.velocity = p.velocity + tangent.scale(p.tangential_accel * dt)
 		}

@@ -17,7 +17,7 @@ BurstEmitter: usage example
 BurstEmitter is a curve-driven one-shot particle system adapted from
 BurstParticles2D by Ian Sly (MIT). Unlike ParticleEmitter, particles have
 no velocity or forces: position is computed each frame as a pure function
-of normalised lifetime t ∈ [0,1] via authored BakedCurve instances.
+of normalised lifetime t in [0,1] via authored BakedCurve instances.
 Use it for stylised hit sparks, magic bursts, and effects that need a
 hand-crafted feel rather than simulated motion.
 
@@ -90,7 +90,7 @@ pub enum BlendMode {
 // BurstParticle stores only the values that are fixed at spawn time.
 struct BurstParticle {
 mut:
-	t         f32 // normalised lifetime; advances ±dt/lifetime per tick
+	t         f32 // normalised lifetime; advances +/-dt/lifetime per tick
 	lifetime  f32
 	start_dir f32  // launch direction in radians, fixed at spawn
 	end_dir   f32  // direction at t=1 after direction_rotation, fixed at spawn

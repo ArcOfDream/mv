@@ -213,9 +213,13 @@ pub fn (p &Pxtone) notes() []Note {
 			continue
 		}
 		match ev.kind {
-			.key      { keys[u] = ev.value }
-			.velocity { vels[u] = ev.value }
-			.on       {
+			.key {
+				keys[u] = ev.value
+			}
+			.velocity {
+				vels[u] = ev.value
+			}
+			.on {
 				result << Note{
 					unit_no:  ev.unit_no
 					clock:    ev.clock

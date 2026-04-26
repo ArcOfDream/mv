@@ -18,7 +18,9 @@ pub fn (mut rm ResourceManager[ShaderResource]) load(name string, vs string, fs 
 		if s.id <= 0 {
 			return none
 		}
-		return ShaderResource{ shd: s }
+		return ShaderResource{
+			shd: s
+		}
 	})
 }
 
@@ -28,7 +30,9 @@ pub fn (mut rm ResourceManager[ShaderResource]) load_from_source(name string, vs
 		if shd.id <= 0 {
 			return none
 		}
-		return ShaderResource{ shd: shd }
+		return ShaderResource{
+			shd: shd
+		}
 	})
 }
 
@@ -58,6 +62,8 @@ pub fn (mut rm ResourceManager[ShaderResource]) load_from_rres(loader &rres.Rres
 		if shd.id <= 0 {
 			return none
 		}
-		return ShaderResource{ shd: shd }
+		return ShaderResource{
+			shd: shd
+		}
 	})
 }

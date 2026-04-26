@@ -75,7 +75,7 @@ mut:
 }
 
 fn (mut g Game) setup() {
-	g.app = App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none)
 
 	g.app.set_window_title('mv: physics demo')
 	g.app.set_window_size(800, 600)

@@ -18,7 +18,9 @@ pub fn (mut rm ResourceManager[SoundResource]) load(name string, path string) ?H
 		if !rl.is_sound_valid(s) {
 			return none
 		}
-		return SoundResource{ snd: s }
+		return SoundResource{
+			snd: s
+		}
 	})
 }
 
@@ -30,7 +32,9 @@ pub fn (mut rm ResourceManager[SoundResource]) load_from_wave(name string, wave 
 		if !rl.is_sound_valid(snd) {
 			return none
 		}
-		return SoundResource{ snd: snd }
+		return SoundResource{
+			snd: snd
+		}
 	})
 }
 
@@ -51,6 +55,8 @@ pub fn (mut rm ResourceManager[SoundResource]) load_from_rres(loader &rres.RresL
 		if !rl.is_sound_valid(snd) {
 			return none
 		}
-		return SoundResource{ snd: snd }
+		return SoundResource{
+			snd: snd
+		}
 	})
 }

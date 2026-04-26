@@ -14,7 +14,7 @@ mut:
 	app            &App
 	node_name      string
 	parent         ?&INode
-	children       []&INode
+	children       []INode
 	local_matrix   rl.Matrix
 	global_matrix  rl.Matrix
 	local_matrix_f rm.Float16
@@ -27,6 +27,12 @@ mut:
 	wren_owned  bool
 pub mut:
 	process_flags ProcessFlags = .transform | .draw
+	// script_class/script_module: Wren class to attach on ready.
+	// script_module is the import path (e.g. "game/player"); empty = "main".
+	// script_class is the Wren class name (e.g. "Player").
+	script_class  string
+	script_module string
+	scene_file    string // non-empty = this node is a scene instance loaded from that path
 	angle_deg     f32
 	angle_rad     f32
 	pos           Vec2
@@ -71,6 +77,18 @@ pub fn (n &Node) app() &App {
 @[inline]
 pub fn (n &Node) name() string {
 	return n.node_name
+}
+
+pub fn (mut n Node) set_name(val string) {
+	n.node_name = val
+}
+
+// node_ptr returns the address of the concrete struct. because Node is always
+// embedded as the first field, this pointer equals the outer struct's address
+// regardless of which concrete type is behind the INode interface.
+@[inline]
+pub fn (n &Node) node_ptr() voidptr {
+	return voidptr(n)
 }
 
 fn (n &Node) wren_class_name() string {
@@ -211,7 +229,7 @@ pub fn (mut n Node) set_global_pos(val Vec2) {
 
 pub fn (mut n Node) set_global_scale(val Vec2) {
 	if p := n.parent {
-		n.set_scale(val - p.transform.scale)
+		n.set_scale(val / p.transform.scale)
 	} else {
 		n.set_scale(val)
 	}
@@ -255,6 +273,49 @@ fn (mut n Node) ready_internal() {}
 
 pub fn (mut n Node) ready() {}
 
+// node_wren_attach runs the Wren script attachment for a node that has
+// script_class set. Must be called via INode so wren_class_name() dispatches
+// to the correct concrete type (e.g. Sprite -> NativeSprite).
+fn node_wren_attach(mut node INode) {
+	if node.wren_owned {
+		return
+	}
+	base := unsafe { &Node(node.node_ptr()) }
+	if base.script_class == '' {
+		return
+	}
+	mut vm := node.app.wren_vm or { return }
+	h := node.app.wren_from_native_handle or { return }
+
+	mod := if base.script_module != '' { base.script_module } else { 'main' }
+	native_cls := match node.wren_class_name() {
+		'Sprite' { 'NativeSprite' }
+		else { 'NativeNode' }
+	}
+
+	// bootstrap into a unique throwaway module to avoid re-defining 'main' and
+	// to sidestep wrenGetVariable limitations - both user class and native class
+	// are imported here so they can be looked up via the bootstrap module name.
+	node.app.wren_bootstrap_seq++
+	bootstrap := '__ready_${node.app.wren_bootstrap_seq}'
+	src := 'import "${mod}" for ${base.script_class}\nimport "mv/node" for ${native_cls}'
+	if vm.interpret(bootstrap, src) != .success {
+		return
+	}
+
+	vm.ensure_slots(3)
+	vm.get_variable(bootstrap, base.script_class, 0)
+	vm.get_variable(bootstrap, native_cls, 2)
+	raw := vm.set_slot_new_foreign(1, 2, sizeof(voidptr))
+	unsafe {
+		*(&voidptr(raw)) = node.node_ptr()
+	}
+	if vm.call(h) != .success {
+		return
+	}
+	node.wren_owned = true
+}
+
 fn (n &Node) exit_tree_internal() {}
 
 pub fn (n &Node) exit_tree() {}
@@ -270,7 +331,7 @@ pub fn (mut n Node) draw() {}
 // --- scene tree funcs ---
 
 @[inline]
-pub fn (mut n Node) get_children() []&INode {
+pub fn (mut n Node) get_children() []INode {
 	return n.children
 }
 
@@ -297,15 +358,13 @@ pub fn (mut n Node) create_and_add_child[T](name string) &T {
 }
 
 @[inline]
-pub fn (n &Node) find_child(child &INode) int {
-	// working around a cgen bug by casting to voidptr here
-	target := voidptr(child)
+pub fn (n &Node) find_child(child INode) int {
+	target := child.node_ptr()
 	for i, c in n.children {
-		if voidptr(c) == target {
+		if c.node_ptr() == target {
 			return i
 		}
 	}
-
 	return -1
 }
 
@@ -329,7 +388,7 @@ pub fn (mut n Node) insert_child_at(index int, mut child INode) {
 
 pub fn (mut n Node) reparent(mut new_parent INode) {
 	if mut p := n.parent {
-		idx := p.find_child(&n)
+		idx := p.find_child(n)
 		if idx != -1 {
 			// remove without clearing parent: we're about to set a new one
 			p.children.delete(idx)
@@ -340,7 +399,7 @@ pub fn (mut n Node) reparent(mut new_parent INode) {
 
 pub fn (mut n Node) replace_by(mut node INode) {
 	if mut p := n.parent {
-		idx := p.find_child(&n)
+		idx := p.find_child(n)
 		if idx != -1 {
 			p.children.delete(idx)
 			p.insert_child_at(idx, mut node)
@@ -414,6 +473,9 @@ pub fn emit_notification(mut node INode, notification Notification) {
 					}
 				}
 
+				// snapshot before rebuild_local_matrix clears node.dirty
+				was_dirty := node.dirty || node.transform.dirty
+
 				if node.dirty {
 					node.rebuild_local_matrix()
 				}
@@ -424,13 +486,13 @@ pub fn emit_notification(mut node INode, notification Notification) {
 					node.global_matrix = node.local_matrix
 				}
 
-				if node.dirty || node.transform.dirty {
+				if was_dirty {
 					node.transform = core.decompose_matrix(node.global_matrix)
+					node.transform.dirty = false
 				}
 			}
 
 			for mut child in node.get_children() {
-				assert child != unsafe { nil }
 				emit_notification(mut child, notification)
 			}
 
@@ -476,6 +538,7 @@ pub fn notify(mut node INode, notification Notification) {
 		.ready {
 			node.ready_internal()
 			node.ready()
+			node_wren_attach(mut node)
 		}
 		.exit_tree {
 			node.exit_tree_internal()

@@ -1,6 +1,6 @@
 module rres
 
-import raylib { Image, Wave, Font, Mesh}
+import raylib { Font, Image, Mesh, Wave }
 
 // Raw / text
 fn C.LoadDataFromResource(chunk ResourceChunk, size &u32) voidptr

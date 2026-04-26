@@ -9,7 +9,7 @@ foreign class Vec2 {
     foreign length
     foreign lengthSqr
     foreign dot(other)
-    foreign cross(other)
+    // foreign cross(other)
     foreign distance(other)
     foreign distanceSqr(other)
     foreign angle(other)
@@ -160,8 +160,13 @@ class Node {
       _inner = NativeNode.new(name)
       _inner.setWrapper(this)
   }
-  
+
   construct fromNative(native) {
+      fromNative(native)
+  }
+
+  // instance method so subclass constructors can super.fromNative(native)
+  fromNative(native) {
       _inner = native
       _inner.setWrapper(this)
   }
@@ -214,6 +219,14 @@ class Node {
 class Sprite is Node {
     construct new(name) {
       super.fromNative(NativeSprite.new(name))
+    }
+
+    construct fromNative(native) {
+        super.fromNative(native)
+    }
+
+    fromNative(native) {
+        super.fromNative(native)
     }
 
     centered         { inner.centered }

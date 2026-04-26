@@ -27,6 +27,7 @@ fn error_fn(vm &wren.VM, error_type wren.ErrorType, const_module &char, const_li
 			println('Runtime error: ${msg}')
 		}
 	}
+
 	unsafe { mod.free() }
 	unsafe { msg.free() }
 }
@@ -57,5 +58,6 @@ fn main() {
 			println('Success!')
 		}
 	}
+
 	wren.free_vm(vm)
 }

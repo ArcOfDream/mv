@@ -39,7 +39,7 @@ pub fn between(val f32, lo f32, hi f32) bool {
 
 // repeat loops t within [0, length), wrapping back to 0 at length.
 // Unlike fmod, handles negative t correctly.
-// Example: repeat(-0.1, 1.0) == 0.9
+// example: repeat(-0.1, 1.0) == 0.9
 @[inline]
 pub fn repeat(t f32, length f32) f32 {
 	return t - math.floorf(t / length) * length
@@ -61,7 +61,7 @@ pub fn sincos(angle f32) (f32, f32) {
 }
 
 // angle_between returns the angle in radians from (x1, y1) to (x2, y2).
-// Result is in [-π, π]; 0 points right, positive values rotate counter-clockwise.
+// result is in [-pi, pi]; 0 points right, positive values rotate counter-clockwise.
 @[inline]
 pub fn angle_between(x1 f32, y1 f32, x2 f32, y2 f32) f32 {
 	return f32(math.atan2(f64(y2 - y1), f64(x2 - x1)))

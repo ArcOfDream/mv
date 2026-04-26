@@ -23,9 +23,14 @@ bin/
 # vweb and database
 *.db
 *.js
-examples/workbench/workbench
 
 # Bug related reproduction code
 *_bug.v
+
+# Generated executables 
+examples/workbench/workbench
 examples/image_gen/image_gen
-examples/serde_workbench/serde_workbench
+
+# WIP for tools
+tools/
+docs/

@@ -1,6 +1,7 @@
 module core
 
 import math
+import raylib as rl
 
 // adapted from prime31's via
 
@@ -14,6 +15,76 @@ pub mut:
 	y f32
 	w f32
 	h f32
+}
+
+@[inline]
+pub fn (r RectF) to_rl() rl.Rectangle {
+	return rl.Rectangle{r.x, r.y, r.w, r.h}
+}
+
+@[inline]
+pub fn RectF.from_rl(r rl.Rectangle) RectF {
+	return RectF{r.x, r.y, r.width, r.height}
+}
+
+// cut_left splits off w pixels from the left edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_left(w f32) (RectF, RectF) {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x, r.y, cw, r.h}, RectF{r.x + cw, r.y, r.w - cw, r.h}
+}
+
+// cut_right splits off w pixels from the right edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_right(w f32) (RectF, RectF) {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x + r.w - cw, r.y, cw, r.h}, RectF{r.x, r.y, r.w - cw, r.h}
+}
+
+// cut_top splits off h pixels from the top edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_top(h f32) (RectF, RectF) {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y, r.w, ch}, RectF{r.x, r.y + ch, r.w, r.h - ch}
+}
+
+// cut_bottom splits off h pixels from the bottom edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_bottom(h f32) (RectF, RectF) {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y + r.h - ch, r.w, ch}, RectF{r.x, r.y, r.w, r.h - ch}
+}
+
+// skip_left advances the left edge by w without returning a slice.
+@[inline]
+pub fn (r RectF) skip_left(w f32) RectF {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x + cw, r.y, r.w - cw, r.h}
+}
+
+// skip_right shrinks the right edge by w without returning a slice.
+@[inline]
+pub fn (r RectF) skip_right(w f32) RectF {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x, r.y, r.w - cw, r.h}
+}
+
+// skip_top advances the top edge by h without returning a slice.
+@[inline]
+pub fn (r RectF) skip_top(h f32) RectF {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y + ch, r.w, r.h - ch}
+}
+
+// skip_bottom shrinks the bottom edge by h without returning a slice.
+@[inline]
+pub fn (r RectF) skip_bottom(h f32) RectF {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y, r.w, r.h - ch}
 }
 
 pub fn (r RectF) str() string {
@@ -72,7 +143,7 @@ pub fn (r RectF) overlaps(other RectF) bool {
 }
 
 // contains returns true if (px, py) lies within the rect.
-// uses a half-open interval: [x, x+w) × [y, y+h).
+// uses a half-open interval: [x, x+w) x [y, y+h).
 @[inline]
 pub fn (r RectF) contains(px f32, py f32) bool {
 	return px >= r.x && px < r.right() && py >= r.y && py < r.bottom()
