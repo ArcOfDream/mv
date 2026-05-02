@@ -1,6 +1,6 @@
 module engine
 
-import wren
+import mv.lib.wren
 import core { Vec2 }
 
 fn wren_ensure_node_handle(vm &wren.VM, slot int, class_slot int, mut node INode) {

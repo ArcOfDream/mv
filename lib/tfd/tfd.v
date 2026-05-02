@@ -2,8 +2,8 @@ module tfd
 
 import raylib as rl
 
-#flag -I @VMODROOT/tfd
-#flag @VMODROOT/tfd/tinyfiledialogs.c
+#flag -I @VMODROOT/lib/tfd
+#flag @VMODROOT/lib/tfd/tinyfiledialogs.c
 #include "tinyfiledialogs.h"
 
 fn C.tinyfd_openFileDialog(title &char, default_path &char, num_filters int, filter_patterns &&char, single_desc &char, allow_multi int) &char

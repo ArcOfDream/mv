@@ -198,6 +198,12 @@ pub fn (rm &ResourceManager[T]) peek_handle(name string) ?Handle[T] {
 // lifetime should use release.
 pub fn (mut rm ResourceManager[T]) unload(name string) {
 	idx := rm.names[name] or { return }
+	mut slot := &rm.slots[idx]
+	if slot.refcount.load() > 0 {
+		eprintln(
+			'[ResourceManager] warning: unload("${name}") called with active handles (refcount=${slot.refcount.load()}). ' +
+			'Outstanding handles will become invalid.')
+	}
 	rm.free_slot(idx)
 }
 
@@ -213,6 +219,15 @@ pub fn (mut rm ResourceManager[T]) clear() {
 	rm.slots.clear()
 	rm.names.clear()
 	rm.free_indices.clear()
+}
+
+// each_active calls f(idx, name) for every active slot, in insertion order.
+pub fn (rm &ResourceManager[T]) each_active(f fn (int, string)) {
+	for name, idx in rm.names {
+		if idx < rm.slots.len && rm.slots[idx].is_active {
+			f(idx, name)
+		}
+	}
 }
 
 // name_of is a reverse lookup used by serialization write-paths.

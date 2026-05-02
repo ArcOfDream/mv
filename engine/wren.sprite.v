@@ -1,7 +1,7 @@
 module engine
 
 import core { Vec2 }
-import wren
+import mv.lib.wren
 import raylib as rl
 
 fn sprite_wren_allocate(vm &wren.VM) {

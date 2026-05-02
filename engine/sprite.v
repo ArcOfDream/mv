@@ -155,12 +155,12 @@ fn (s &Sprite) get_source_rect(res &TextureResource) rl.Rectangle {
 	fy := (s.current_frame / vf) * frame_h
 
 	// vfmt off
-    return rl.Rectangle{
-        if s.flip_h { fx + frame_w } else { fx },
-        if s.flip_v { fy + frame_h } else { fy },
-        if s.flip_h { -frame_w } else { frame_w },
-        if s.flip_v { -frame_h } else { frame_h },
-    }
+	    return rl.Rectangle{
+	        fx,
+	        fy,
+	        if s.flip_h { -frame_w } else { frame_w },
+	        if s.flip_v { -frame_h } else { frame_h },
+	    }
 	// vfmt on
 }
 
@@ -170,7 +170,7 @@ fn (s &Sprite) draw_sprite_internal(t &TextureResource) {
 	src := s.get_source_rect(t)
 
 	if s.centered {
-		origin += Vec2{src.width * 0.5, src.height * 0.5}
+		origin += Vec2{math.abs(src.width) * 0.5, math.abs(src.height) * 0.5}
 	}
 
 	dst := rl.Rectangle{0, 0, math.abs(src.width), math.abs(src.height)}

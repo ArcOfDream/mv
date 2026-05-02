@@ -23,7 +23,7 @@ fn test_save_load_single_node() {
 	tmp := os.join_path(os.temp_dir(), 'scene_test_single.json')
 	app.save_scene(tmp)!
 
-	app.scene_root = none
+	app.scene_root = ?&engine.INode(none)
 	app.load_scene(tmp)!
 
 	mut loaded := app.scene_root or { panic('no scene root after load') }
@@ -50,7 +50,7 @@ fn test_save_load_tree() {
 
 	tmp := os.join_path(os.temp_dir(), 'scene_test_tree.json')
 	app.save_scene(tmp)!
-	app.scene_root = none
+	app.scene_root = ?&engine.INode(none)
 	app.load_scene(tmp)!
 
 	mut loaded := app.scene_root or { panic('no scene root after load') }
@@ -81,7 +81,7 @@ fn test_save_load_sprite_fields() {
 
 	tmp := os.join_path(os.temp_dir(), 'scene_test_sprite.json')
 	app.save_scene(tmp)!
-	app.scene_root = none
+	app.scene_root = ?&engine.INode(none)
 	app.load_scene(tmp)!
 
 	mut loaded_root := app.scene_root or { panic('no scene root after load') }
@@ -118,7 +118,7 @@ fn test_save_load_timer_fields() {
 
 	tmp := os.join_path(os.temp_dir(), 'scene_test_timer.json')
 	app.save_scene(tmp)!
-	app.scene_root = none
+	app.scene_root = ?&engine.INode(none)
 	app.load_scene(tmp)!
 
 	mut loaded_root := app.scene_root or { panic('no scene root after load') }

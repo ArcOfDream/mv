@@ -155,12 +155,12 @@ pub fn (c &Curve) bake(resolution int) BakedCurve {
 // sample linearly interpolates between the two nearest baked samples.
 pub fn (bc &BakedCurve) sample(x f32) f32 {
 	tx := f32(clamp(x, 0.0, 1.0))
-	// Scale x into sample index space.
 	scaled := tx * f32(bc.samples.len - 1)
 	lo := int(scaled)
 	hi := math.min(lo + 1, bc.samples.len - 1)
 	frac := scaled - f32(lo)
-	return bc.samples[lo] + (bc.samples[hi] - bc.samples[lo]) * frac
+	result := bc.samples[lo] + (bc.samples[hi] - bc.samples[lo]) * frac
+	return f32(clamp(result, bc.min_value, bc.max_value))
 }
 
 // sample_unbound skips the min/max clamp, consistent with Curve.sample_unbound.

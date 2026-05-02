@@ -2,7 +2,7 @@ module engine
 
 import core { Vec2 }
 import raylib as rl
-import wren
+import mv.lib.wren
 
 // Color class
 

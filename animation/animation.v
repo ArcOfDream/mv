@@ -14,6 +14,14 @@ mut:
 	tracks []ITrack
 }
 
+// add_track registers a new track that writes animated values into `target`.
+//
+// NOTE: V's closure capture for mutable function parameters (`mut target`)
+// has compiler-version-dependent semantics.  The `fn [T]` below defines a
+// generic closure (type param shadows outer T); `target` is captured from
+// the enclosing scope.  This compiles and works on current V but relies on
+// V's implicit capture of mutable parameters.  See code-review.md item #4
+// for the caveat.
 pub fn (mut anim Animation) add_track[T](mut target T, keys []Keyframe[T], lerp_fn fn (T, T, f32) T) {
 	anim.tracks << Track[T]{
 		keys:      keys

@@ -39,7 +39,7 @@ pub fn (app &App) clone_node(mut node INode) !INode {
 }
 
 pub fn (app &App) save_scene(path string) ! {
-	root := app.scene_root or { return error('save_scene: no scene root') }
+	mut root := app.scene_root or { return error('save_scene: no scene root') }
 	mut enc := typeinfo.JsonEncoder.new()
 	mut root_node := INode(root)
 	save_node(mut root_node, app, mut enc)!

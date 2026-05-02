@@ -497,8 +497,10 @@ pub fn (mut app App) draw_inspector_panel() {
 			gui.gui_label(rl.Rectangle{bx, cy, lbl_w, dbg_row_h}, 'pos')
 			x_r := rl.Rectangle{bx + lbl_w, cy, half_w, dbg_row_h - 2}
 			y_r := rl.Rectangle{bx + lbl_w + half_w + 4, cy, half_w, dbg_row_h - 2}
-			if unsafe { C.GuiValueBoxFloat(x_r, c'', &app.debug.insp_bufs[0][0], &cache.pos.x,
-				app.debug.insp_edit == 0) } == 1 {
+			if unsafe {
+				C.GuiValueBoxFloat(x_r, c'', &app.debug.insp_bufs[0][0], &cache.pos.x,
+					app.debug.insp_edit == 0)
+			} == 1 {
 				if app.debug.insp_edit == 0 {
 					app.debug.inspector_cache.pending_pos = Vec2{cache.pos.x, cache.pos.y}
 					app.debug.insp_edit = -1
@@ -506,8 +508,10 @@ pub fn (mut app App) draw_inspector_panel() {
 					app.debug.insp_edit = 0
 				}
 			}
-			if unsafe { C.GuiValueBoxFloat(y_r, c'', &app.debug.insp_bufs[1][0], &cache.pos.y,
-				app.debug.insp_edit == 1) } == 1 {
+			if unsafe {
+				C.GuiValueBoxFloat(y_r, c'', &app.debug.insp_bufs[1][0], &cache.pos.y,
+					app.debug.insp_edit == 1)
+			} == 1 {
 				if app.debug.insp_edit == 1 {
 					app.debug.inspector_cache.pending_pos = Vec2{cache.pos.x, cache.pos.y}
 					app.debug.insp_edit = -1
@@ -521,8 +525,10 @@ pub fn (mut app App) draw_inspector_panel() {
 			cy += dbg_row_h
 			gui.gui_label(rl.Rectangle{bx, cy, lbl_w, dbg_row_h}, 'ang')
 			a_r := rl.Rectangle{bx + lbl_w, cy, dbg_w - dbg_pad * 2 - lbl_w, dbg_row_h - 2}
-			if unsafe { C.GuiValueBoxFloat(a_r, c'', &app.debug.insp_bufs[2][0], &cache.angle_deg,
-				app.debug.insp_edit == 2) } == 1 {
+			if unsafe {
+				C.GuiValueBoxFloat(a_r, c'', &app.debug.insp_bufs[2][0], &cache.angle_deg,
+					app.debug.insp_edit == 2)
+			} == 1 {
 				if app.debug.insp_edit == 2 {
 					app.debug.inspector_cache.pending_angle = cache.angle_deg
 					app.debug.insp_edit = -1

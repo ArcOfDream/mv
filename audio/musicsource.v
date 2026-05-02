@@ -1,7 +1,7 @@
 module audio
 
 import raylib as rl
-import pxtn { Pxtone }
+import mv.lib.pxtn { Pxtone }
 
 // musicsource.v implements the types of audio streams handled by the engine
 
@@ -49,7 +49,7 @@ fn pause_source(s &MusicSource) {
 fn resume_source(s &MusicSource) {
 	match s {
 		RaylibMusic { rl.resume_music_stream(s.music) }
-		PxtoneMusic { rl.play_audio_stream(s.stream) }
+		PxtoneMusic { rl.resume_audio_stream(s.stream) }
 	}
 }
 
@@ -120,5 +120,13 @@ fn update_source(mut s MusicSource) bool {
 			}
 			return false
 		}
+	}
+}
+
+@[inline]
+fn get_source_pos(s &MusicSource) usize {
+	return match s {
+		RaylibMusic { 0 }
+		PxtoneMusic { s.handle.current_sample() }
 	}
 }

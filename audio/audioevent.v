@@ -67,4 +67,10 @@ pub:
 	id StreamID
 }
 
-pub type AudioEvent = StreamFinishedEvent
+pub struct StreamPosEvent {
+pub:
+	id     StreamID
+	sample usize
+}
+
+pub type AudioEvent = StreamFinishedEvent | StreamPosEvent

@@ -69,3 +69,16 @@ pub fn (mut tl Timeline) step_by(frames int) {
 		tl.step()
 	}
 }
+
+pub fn (tl &Timeline) current_frame() int {
+	return tl.current
+}
+
+pub fn (tl &Timeline) is_playing() bool {
+	return tl.playing
+}
+
+// done returns true when all scheduled events have been dispatched.
+pub fn (tl &Timeline) done() bool {
+	return tl.cursor >= tl.events.len
+}

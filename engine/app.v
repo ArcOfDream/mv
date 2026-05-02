@@ -7,7 +7,7 @@ import core { GameState, StringNameMap, Vec2 }
 import physics as phys
 import resourcemanager { FontResource, Handle, ResourceManager, ShaderResource, SoundResource, TextureResource }
 import audio
-import wren
+import mv.lib.wren
 
 pub const plex_font = $embed_file('res/plex.ttf')
 pub const plex_mono = $embed_file('res/plex_mono.ttf')
@@ -48,7 +48,7 @@ pub mut:
 
 	wren                ?WrenSetup
 	wren_module_sources []string
-	scene_root          ?&Node
+	scene_root          ?&INode
 
 	textures ResourceManager[TextureResource]
 	shaders  ResourceManager[ShaderResource]
@@ -62,11 +62,13 @@ pub mut:
 	bodies_next_id int
 	input_map      &core.InputMap
 
-	init_func          ?fn ()
-	update_func        ?fn (f32)
-	draw_func          ?fn ()
-	backdrop_draw_func ?fn ()
-	run_func           ?fn (&App)
+	init_func             ?fn ()
+	update_func           ?fn (f32)
+	draw_func             ?fn ()
+	backdrop_draw_func    ?fn ()
+	viewport_overlay_func ?fn ()
+	blit_shader           ?Handle[ShaderResource]
+	run_func              ?fn (&App)
 }
 
 pub fn App.new(init ?fn (), update ?fn (f32), draw ?fn (), backdrop ?fn ()) &App {
@@ -151,6 +153,20 @@ pub fn (app &App) get_viewport_size() Vec2 {
 	return app.viewport_size
 }
 
+// view_bounds returns the world-space rectangle currently visible through the
+// active camera. Accounts for camera target, offset, and zoom.
+// Falls back to the viewport rect when no camera is active.
+pub fn (app &App) view_bounds() rl.Rectangle {
+	vp := app.viewport_size
+	if cam := app.active_camera {
+		zoom := if cam.camera.zoom > 0.001 { cam.camera.zoom } else { f32(1) }
+		x := cam.camera.target.x - cam.camera.offset.x / zoom
+		y := cam.camera.target.y - cam.camera.offset.y / zoom
+		return rl.Rectangle{x, y, vp.x / zoom, vp.y / zoom}
+	}
+	return rl.Rectangle{0, 0, vp.x, vp.y}
+}
+
 pub fn (mut app App) set_integer_scale(value bool) {
 	app.integer_scale = value
 }
@@ -187,13 +203,50 @@ pub fn (mut app App) set_active_camera(cam &CameraNode) {
 	app.active_camera = cam
 }
 
+// --- node path ---
+
+// get_node resolves path starting from `from`. Absolute paths (starting with /)
+// begin at scene_root; relative paths begin at `from`.
+pub fn (app &App) get_node(from INode, path NodePath) ?INode {
+	mut current := if path.absolute {
+		root := app.scene_root or { return none }
+		unsafe { *root }
+	} else {
+		from
+	}
+	for part in path.parts {
+		match part {
+			path_self {
+				continue
+			}
+			path_parent {
+				p := current.parent or { return none }
+				current = unsafe { *p }
+			}
+			else {
+				current = find_child_by_name(current, part) or { return none }
+			}
+		}
+	}
+	return current
+}
+
+fn find_child_by_name(node INode, name string) ?INode {
+	for child in node.children {
+		if child.name() == name {
+			return child
+		}
+	}
+	return none
+}
+
 fn (mut app App) process_update() {
 	if !app.debug.paused || app.debug.consume_step() {
 		app.physics_world.hash.clear()
 		app.audio_server.process()
 
 		if update := app.update_func {
-			update(app.state.dt)
+			update(app.state.dt())
 		}
 
 		if mut root := app.scene_root {
@@ -262,6 +315,16 @@ pub fn (mut app App) run() {
 	rl.init_audio_device()
 	rl.set_target_fps(app.target_fps)
 
+	$if opengl_es2 ? {
+		vs_default := $embed_file('glsl/default_100.vert.glsl').to_string()
+		app.shaders.load_from_source('gradient_map', vs_default, $embed_file('glsl/gradient_map_100.frag.glsl').to_string()) or {}
+		app.shaders.load_from_source('gradient_map_add', vs_default, $embed_file('glsl/gradient_map_add_100.frag.glsl').to_string()) or {}
+	} $else {
+		vs_default := $embed_file('glsl/default_330.vert.glsl').to_string()
+		app.shaders.load_from_source('gradient_map', vs_default, $embed_file('glsl/gradient_map_330.frag.glsl').to_string()) or {}
+		app.shaders.load_from_source('gradient_map_add', vs_default, $embed_file('glsl/gradient_map_add_330.frag.glsl').to_string()) or {}
+	}
+
 	app.debug.debug_font = app.fonts.load_from_memory('debug', 16, plex_font.to_bytes()) or {
 		Handle[FontResource]{}
 	}
@@ -291,7 +354,7 @@ pub fn (mut app App) run() {
 		}
 
 		mut scale := m.min(f64(rl.get_screen_width()) / app.viewport_size.x, f64(rl.get_screen_height()) / app.viewport_size.y)
-		app.state.dt = rl.get_frame_time() * app.debug.time_scale
+		app.state.set_dt(rl.get_frame_time() * app.debug.time_scale)
 
 		if app.integer_scale {
 			scale = m.floor(scale)
@@ -332,6 +395,9 @@ pub fn (mut app App) run() {
 		if _ := app.active_camera {
 			rl.end_mode_2d()
 		}
+		if overlay := app.viewport_overlay_func {
+			overlay()
+		}
 		rl.end_texture_mode()
 
 		rl.begin_drawing()
@@ -341,7 +407,17 @@ pub fn (mut app App) run() {
 			backdrop_draw()
 		}
 
+		mut shader_active := false
+		if blit_shdr := app.blit_shader {
+			if sr := blit_shdr.get() {
+				rl.begin_shader_mode(sr.shd)
+				shader_active = true
+			}
+		}
 		rl.draw_texture_pro(app.viewport.texture, vp_source, vp_dest, Vec2{}, 0, rl.white)
+		if shader_active {
+			rl.end_shader_mode()
+		}
 		app.draw_debug_panel()
 		app.draw_inspector_panel()
 		app.draw_input_panel()

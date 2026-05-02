@@ -3,8 +3,8 @@ module main
 import raylib as rl { Color }
 import mv.engine { App, CameraNode, MusicPlayer, Node, Polygon, Sprite }
 import mv.core { Vec2 }
-import mv.pxtn
-import mv.rres
+import mv.lib.pxtn
+import mv.lib.rres
 import mv.ldtk as _
 
 // this is less of an example and more of a testbed for me to test some features

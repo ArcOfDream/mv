@@ -28,10 +28,10 @@ pub fn (t &Tile) flip_flags() FlipFlags {
 @[minify]
 pub struct FieldInstance {
 pub:
-	identifier string @[json: '__identifier']
-	typ        string @[json: '__type']
-	value      string @[json: '__value'] // raw JSON: decode per typ
-	def_uid    int    @[json: 'defUid']
+	identifier string  @[json: '__identifier']
+	typ        string  @[json: '__type']
+	value      ?string @[json: '__value'] // raw JSON: decode per typ; null when field is unset
+	def_uid    int     @[json: 'defUid']
 }
 
 // entity instances

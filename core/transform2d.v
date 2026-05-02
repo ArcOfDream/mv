@@ -45,7 +45,7 @@ pub fn decompose_matrix(mat rl.Matrix) Transform2D {
 	// vfmt on
 
 	mut r := f32(math.atan2(mat.m1, mat.m0))
-	if r == math.nan() {
+	if math.is_nan(r) {
 		r = 0
 	}
 

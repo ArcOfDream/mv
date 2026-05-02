@@ -1,6 +1,6 @@
 module rres
 
-#flag -I @VMODROOT/rres/c
+#flag -I @VMODROOT/lib/rres/c
 #define QOI_IMPLEMENTATION
 #define RRES_IMPLEMENTATION
 #define RRES_RAYLIB_IMPLEMENTATION

@@ -2,7 +2,7 @@ module engine
 
 import os
 import mv.typeinfo
-import rres
+import mv.lib.rres
 import core
 import raylib as rl
 

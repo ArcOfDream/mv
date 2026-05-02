@@ -53,7 +53,12 @@ pub fn (tr &Track[T]) sample(time f32) {
 
 	a := tr.keys[lo]
 	b := tr.keys[hi]
-	local_time := (time - a.time) / (b.time - a.time)
+	span := b.time - a.time
+	if span == 0 {
+		tr.setter_cb(b.value)
+		return
+	}
+	local_time := (time - a.time) / span
 	eased_time := b.ease(local_time)
 	tr.setter_cb(tr.lerp_fn(a.value, b.value, eased_time))
 }

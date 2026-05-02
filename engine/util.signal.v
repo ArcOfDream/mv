@@ -1,6 +1,6 @@
 module engine
 
-import wren
+import mv.lib.wren
 import core { Vec2 }
 
 /*

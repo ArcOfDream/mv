@@ -3,7 +3,7 @@ module engine
 import raylib as rl
 import raylib.raymath as rm
 import math
-import wren
+import mv.lib.wren
 import core { Transform2D, Vec2 }
 
 @[heap]
@@ -40,6 +40,8 @@ pub mut:
 	transform     Transform2D = Transform2D{
 		dirty: true
 	}
+
+	path_cache map[string]?INode
 }
 
 pub fn Node.instantiate(app &App, name string) &Node {
@@ -75,6 +77,11 @@ pub fn (n &Node) app() &App {
 }
 
 @[inline]
+pub fn (n &Node) get_parent() ?&INode {
+	return n.parent
+}
+
+@[inline]
 pub fn (n &Node) name() string {
 	return n.node_name
 }
@@ -102,6 +109,7 @@ pub fn (n &Node) get_pos() Vec2 {
 	return n.pos
 }
 
+@[inline]
 pub fn (mut n Node) set_pos(val Vec2) {
 	if n.pos != val {
 		n.dirty = true
@@ -115,6 +123,7 @@ pub fn (n &Node) get_scale() Vec2 {
 	return n.scale
 }
 
+@[inline]
 pub fn (mut n Node) set_scale(val Vec2) {
 	if n.scale != val {
 		n.dirty = true
@@ -128,6 +137,7 @@ pub fn (n &Node) get_angle_deg() f32 {
 	return n.angle_deg
 }
 
+@[inline]
 pub fn (mut n Node) set_angle_deg(val f32) {
 	if n.angle_deg != val {
 		n.dirty = true
@@ -142,6 +152,7 @@ pub fn (n &Node) get_angle_rad() f32 {
 	return n.angle_rad
 }
 
+@[inline]
 pub fn (mut n Node) set_angle_rad(val f32) {
 	if n.angle_rad != val {
 		n.dirty = true
@@ -217,6 +228,7 @@ pub fn (mut n Node) get_global_angle_deg() f32 {
 
 // --- global setters ---
 
+@[inline]
 pub fn (mut n Node) set_global_pos(val Vec2) {
 	if p := n.parent {
 		inv_mat := rm.matrix_invert(p.global_matrix)
@@ -227,6 +239,7 @@ pub fn (mut n Node) set_global_pos(val Vec2) {
 	n.transform.dirty = true
 }
 
+@[inline]
 pub fn (mut n Node) set_global_scale(val Vec2) {
 	if p := n.parent {
 		n.set_scale(val / p.transform.scale)
@@ -236,6 +249,7 @@ pub fn (mut n Node) set_global_scale(val Vec2) {
 	n.transform.dirty = true
 }
 
+@[inline]
 pub fn (mut n Node) set_global_angle_rad(val f32) {
 	if p := n.parent {
 		n.set_angle_rad(val - p.transform.rotation)
@@ -245,6 +259,7 @@ pub fn (mut n Node) set_global_angle_rad(val f32) {
 	n.transform.dirty = true
 }
 
+@[inline]
 pub fn (mut n Node) set_global_angle_deg(val f32) {
 	if p := n.parent {
 		n.set_angle_deg(val - f32(math.degrees(p.transform.rotation)))
@@ -256,15 +271,26 @@ pub fn (mut n Node) set_global_angle_deg(val f32) {
 
 // --- overridable functions ---
 
+@[inline]
 fn (mut n Node) push_mat_internal() {
 	push_matrix()
 	mult_matrix_f(n.local_matrix_f)
 }
 
+// push_local_matrix is for external node types overriding push_mat_internal.
+// Call it in the .fix branch to replicate standard Node matrix behaviour.
+@[inline]
+pub fn (mut n Node) push_local_matrix() {
+	push_matrix()
+	mult_matrix_f(n.local_matrix_f)
+}
+
+@[inline]
 fn (mut n Node) pop_mat_internal() {
 	pop_matrix()
 }
 
+@[inline]
 fn (n &Node) init_internal() {}
 
 pub fn (n &Node) init() {}
@@ -320,10 +346,12 @@ fn (n &Node) exit_tree_internal() {}
 
 pub fn (n &Node) exit_tree() {}
 
+@[inline]
 fn (mut n Node) update_internal(_dt f32) {}
 
 pub fn (mut n Node) update(_dt f32) {}
 
+@[inline]
 fn (mut n Node) draw_internal() {}
 
 pub fn (mut n Node) draw() {}
@@ -341,9 +369,27 @@ pub fn (n &Node) get_child_count() int {
 }
 
 pub fn (mut n Node) add_child(mut child INode) {
+	child.set_name(n.unique_child_name(child.name()))
 	child.parent = n
 	n.children << child
+	n.path_cache.clear()
 	emit_notification(mut child, .ready)
+}
+
+fn (n &Node) unique_child_name(desired string) string {
+	existing := n.children.map(it.name())
+	if desired !in existing {
+		return desired
+	}
+	mut i := 2
+	for {
+		candidate := '${desired}${i}'
+		if candidate !in existing {
+			return candidate
+		}
+		i++
+	}
+	return desired
 }
 
 pub fn (mut n Node) create_and_add_child[T](name string) &T {
@@ -376,11 +422,14 @@ pub fn (mut n Node) remove_child(index int) {
 
 	mut child := n.children[index]
 	child.parent = ?&INode(none)
+	n.path_cache.clear()
+	child.path_cache.clear()
 	emit_notification(mut child, .exit_tree)
 	n.children.delete(index)
 }
 
 pub fn (mut n Node) insert_child_at(index int, mut child INode) {
+	child.set_name(n.unique_child_name(child.name()))
 	child.parent = n
 	n.children.insert(index, child)
 	emit_notification(mut child, .ready)
@@ -390,10 +439,11 @@ pub fn (mut n Node) reparent(mut new_parent INode) {
 	if mut p := n.parent {
 		idx := p.find_child(n)
 		if idx != -1 {
-			// remove without clearing parent: we're about to set a new one
 			p.children.delete(idx)
+			p.path_cache.clear()
 		}
 	}
+	n.path_cache.clear()
 	new_parent.add_child(mut n)
 }
 
@@ -402,10 +452,12 @@ pub fn (mut n Node) replace_by(mut node INode) {
 		idx := p.find_child(n)
 		if idx != -1 {
 			p.children.delete(idx)
+			p.path_cache.clear()
 			p.insert_child_at(idx, mut node)
 		}
 	}
 	emit_notification(mut n, .exit_tree)
+	n.path_cache.clear()
 	n.parent = ?&INode(none)
 }
 
@@ -416,6 +468,7 @@ pub fn (mut n Node) move_child(index int, to int) {
 	child := n.children[index]
 	n.children.delete(index)
 	n.children.insert(to, child)
+	n.path_cache.clear()
 }
 
 pub fn (mut n Node) swap_children(index_a int, index_b int) {
@@ -430,6 +483,69 @@ pub fn (mut n Node) queue_free() {
 	if !n.queued_free {
 		n.queued_free = true
 		n.app.pending_free << n
+	}
+}
+
+// --- node path ---
+
+pub fn (node &Node) get_path() NodePath {
+	mut parts := []string{}
+	mut cur_ptr := node.node_ptr()
+	for {
+		cur := unsafe { &Node(cur_ptr) }
+		parts.prepend(cur.name())
+		if p := cur.parent {
+			cur_ptr = p.node_ptr()
+		} else {
+			break
+		}
+	}
+	return NodePath{
+		parts:    parts
+		absolute: true
+		raw:      '/' + parts.join('/')
+	}
+}
+
+pub fn (mut n Node) get_node(path NodePath) ?INode {
+	key := path.raw
+	if key in n.path_cache {
+		return n.path_cache[key]
+	}
+	result := n.app.get_node(INode(n), path)
+	n.path_cache[key] = result
+	return result
+}
+
+pub fn (node &Node) get_path_to(target &INode) NodePath {
+	// Find lowest common ancestor, then build relative path
+	src_parts := node.get_path().parts
+	tgt_parts := target.get_path().parts
+
+	// Find where they diverge
+	mut common := 0
+	for common < src_parts.len && common < tgt_parts.len {
+		if src_parts[common] != tgt_parts[common] {
+			break
+		}
+		common++
+	}
+
+	// Steps up from src to common ancestor
+	ups := src_parts.len - common
+
+	mut parts := []string{}
+	for _ in 0 .. ups {
+		parts << '..'
+	}
+
+	// Steps down from common ancestor to target
+	parts << tgt_parts[common..]
+
+	return NodePath{
+		parts:    parts
+		absolute: false
+		raw:      parts.join('/')
 	}
 }
 
@@ -545,8 +661,8 @@ pub fn notify(mut node INode, notification Notification) {
 			node.exit_tree()
 		}
 		.update {
-			node.update_internal(node.app.state.dt)
-			node.update(node.app.state.dt)
+			node.update_internal(node.app.state.dt())
+			node.update(node.app.state.dt())
 
 			if node.wren_owned {
 				if handle := node.wren_handle {
@@ -554,7 +670,7 @@ pub fn notify(mut node INode, notification Notification) {
 						if update_h := node.app.wren_update_handle {
 							vm.ensure_slots(2)
 							vm.set_slot_handle(0, handle)
-							vm.set_slot_double(1, node.app.state.dt)
+							vm.set_slot_double(1, node.app.state.dt())
 							vm.call(update_h)
 						}
 					}

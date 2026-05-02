@@ -147,16 +147,31 @@ pub:
 	unit_no u8
 }
 
+// PitchPoint is a mid-note KEY event: the pitch changes to key at clock,
+// sliding over the note's portament duration.
+pub struct PitchPoint {
+pub:
+	clock i32
+	key   i32
+}
+
 // Note is a reconstructed note-on event with its context resolved.
 // key is a raw PxTone key value; subtract pxtn.basickey to get the semitone
 // offset from A4, then divide by 256 to get whole semitones.
+// waypoints holds any KEY events that fired after ON but before the next ON
+// on the same unit; each one slides the pitch to a new target.
 pub struct Note {
 pub:
-	unit_no  u8
-	clock    i32 // start clock
-	duration i32 // length in clocks (from EVENTKIND_ON value)
-	key      i32 // raw key value (sticky, last KEY event before this ON)
-	velocity i32 // raw velocity (sticky, last VELOCITY event before this ON)
+	unit_no   u8
+	clock     i32 // start clock
+	duration  i32 // length in clocks (from EVENTKIND_ON value)
+	key       i32 // pitch at note start
+	velocity  i32
+	volume    int // unit volume at note-on time (0-128, default 128)
+	portament i32 // slide duration in clocks (sticky, applies to all segments)
+	prev_key  i32 // pitch of preceding note (slide source for initial segment)
+pub mut:
+	waypoints []PitchPoint // mid-note pitch changes, sorted by clock
 }
 
 // basickey is the raw key value that corresponds to A4 (440 Hz).
@@ -194,39 +209,91 @@ pub fn (p &Pxtone) events() []EventRecord {
 	})
 }
 
-// notes reconstructs Note events by replaying KEY and VELOCITY state per unit.
-// key and velocity are sticky: each unit inherits the last set value before
-// an ON event, defaulting to A4 (basickey) and 104 respectively.
+// notes reconstructs Note events by replaying sticky state per unit.
+// KEY, VELOCITY, and PORTAMENT are all sticky.
+// Portamento fires on every note where ports[u] > 0, sliding from the
+// previous note's pitch (prev_keys[u]) to this note's pitch (keys[u]).
 pub fn (p &Pxtone) notes() []Note {
 	n_units := int(p.unit_count())
 	if n_units == 0 {
 		return []
 	}
 
+	all_events := p.events()
+
 	mut keys := []i32{len: n_units, init: basickey}
-	mut vels := []i32{len: n_units, init: 104} // EVENTDEFAULT_VELOCITY
+	mut vels := []i32{len: n_units, init: 104}
+	mut vols := []i32{len: n_units, init: 128}
+	mut ports := []i32{len: n_units, init: 0}
+	mut prev_keys := []i32{len: n_units, init: basickey}
+	mut last_note_idx := []int{len: n_units, init: -1} // result index of sounding note
 
 	mut result := []Note{}
-	for ev in p.events() {
+	for ev in all_events {
 		u := int(ev.unit_no)
 		if u >= n_units {
 			continue
 		}
 		match ev.kind {
 			.key {
+				idx := last_note_idx[u]
+				if idx >= 0 && ev.clock > result[idx].clock {
+					// Mid-note KEY: slide the sounding note to a new pitch.
+					mut n := result[idx]
+					n.waypoints << PitchPoint{
+						clock: ev.clock
+						key:   ev.value
+					}
+					result[idx] = n
+				}
 				keys[u] = ev.value
 			}
 			.velocity {
 				vels[u] = ev.value
 			}
+			.volume {
+				vols[u] = ev.value
+			}
+			.portament {
+				ports[u] = ev.value
+			}
 			.on {
-				result << Note{
-					unit_no:  ev.unit_no
-					clock:    ev.clock
-					duration: ev.value
-					key:      keys[u]
-					velocity: vels[u]
+				idx := last_note_idx[u]
+				if idx >= 0 {
+					prev := result[idx]
+					if prev.clock + prev.duration > ev.clock {
+						new_dur := ev.clock - prev.clock
+						mut trimmed_wps := []PitchPoint{}
+						for wp in prev.waypoints {
+							if wp.clock < prev.clock + new_dur {
+								trimmed_wps << wp
+							}
+						}
+						result[idx] = Note{
+							unit_no:   prev.unit_no
+							clock:     prev.clock
+							duration:  new_dur
+							key:       prev.key
+							velocity:  prev.velocity
+							volume:    prev.volume
+							portament: prev.portament
+							prev_key:  prev.prev_key
+							waypoints: trimmed_wps
+						}
+					}
 				}
+				result << Note{
+					unit_no:   ev.unit_no
+					clock:     ev.clock
+					duration:  ev.value
+					key:       keys[u]
+					velocity:  vels[u]
+					volume:    int(vols[u])
+					portament: ports[u]
+					prev_key:  prev_keys[u]
+				}
+				last_note_idx[u] = result.len - 1
+				prev_keys[u] = keys[u]
 			}
 			else {}
 		}

@@ -1,6 +1,6 @@
 module main
 
-import wren
+import mv.lib.wren
 import mv.engine
 
 fn timer_wren_allocate(vm &wren.VM) {

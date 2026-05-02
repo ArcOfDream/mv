@@ -1,7 +1,7 @@
 module resourcemanager
 
 import raylib as rl
-import rres
+import mv.lib.rres
 import strings
 
 pub struct FontResource {

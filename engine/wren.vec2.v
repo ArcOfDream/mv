@@ -1,7 +1,7 @@
 module engine
 
 import core { Vec2 }
-import wren
+import mv.lib.wren
 
 fn vec2_wren_allocate(vm &wren.VM) {
 	mut ptr := wren_alloc[Vec2](vm)

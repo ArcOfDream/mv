@@ -2,7 +2,7 @@ module engine
 
 import os
 import mv.typeinfo
-import rres
+import mv.lib.rres
 import core
 
 // load_curve_from_file reads a .curve.json file and deserialises it.

@@ -1,6 +1,6 @@
 module audio
 
-import pxtn
+import mv.lib.pxtn
 import raylib as rl
 
 pub type StreamID = u32
@@ -18,10 +18,13 @@ pub:
 
 pub struct AudioServer {
 mut:
-	next_id      StreamID
-	streams      map[StreamID]StreamEntry
-	buses        map[string]AudioBus
-	audio_thread AudioThread
+	next_id          StreamID
+	streams          map[StreamID]StreamEntry
+	stream_positions map[StreamID]usize
+	buses            map[string]AudioBus
+	audio_thread     AudioThread
+	waveform         []f32
+	waveform_time    i64 // fill_time from the audio thread (not main-thread receive time)
 }
 
 pub fn AudioServer.new() AudioServer {
@@ -48,21 +51,43 @@ pub fn (mut s AudioServer) process() {
 	for {
 		select {
 			ev := <-s.audio_thread.event_ch {
-				// only one type of event is implemented, so we just use AudioEvent directly
-				// and assume it's StreamFinishedEvent
-				s.streams.delete(ev.id)
+				match ev {
+					StreamFinishedEvent {
+						s.streams.delete(ev.id)
+						s.stream_positions.delete(ev.id)
+					}
+					StreamPosEvent {
+						s.stream_positions[ev.id] = ev.sample
+					}
+				}
 			}
 			else {
 				break
 			}
 		}
-
-		// match ev {
-		//	StreamFinishedEvent {
-		//		s.streams.delete(ev.id)
-		//	}
-		//}
 	}
+	// Drain waveform snapshots; keep the latest.
+	for {
+		select {
+			msg := <-s.audio_thread.waveform_ch {
+				s.waveform = msg.data
+				s.waveform_time = msg.fill_time
+			}
+			else {
+				break
+			}
+		}
+	}
+}
+
+// latest_waveform returns the most recent mono waveform snapshot (f32, range ~+/-0.5).
+pub fn (s &AudioServer) latest_waveform() []f32 {
+	return s.waveform
+}
+
+// latest_waveform_time returns the unix_nano timestamp of the most recent waveform capture.
+pub fn (s &AudioServer) latest_waveform_time() i64 {
+	return s.waveform_time
 }
 
 pub fn (mut s AudioServer) shutdown() {
@@ -83,8 +108,8 @@ pub fn (mut s AudioServer) alloc_id() !StreamID {
 
 // loads a .ptcop from memory and begins playback
 pub fn (mut s AudioServer) play_pxtone(data []u8, bus string) !StreamID {
-	id := s.alloc_id()!
 	handle := pxtn.from_memory(data)!
+	id := s.alloc_id()!
 
 	rl.set_audio_stream_buffer_size_default(buffer_frames)
 	stream := rl.load_audio_stream(pxtn_sps, pxtn_bps, pxtn_channels)
@@ -207,8 +232,20 @@ pub fn (s &AudioServer) loop(id StreamID, toggle bool) {
 	}
 }
 
+// sample_pos returns the last known playback position in sample frames for id.
+// Returns 0 if id is unknown or no position event has arrived yet.
+pub fn (s &AudioServer) sample_pos(id StreamID) usize {
+	return s.stream_positions[id] or { 0 }
+}
+
+// is_stream_alive returns true while the stream is still active (not yet finished or unloaded).
+pub fn (s &AudioServer) is_stream_alive(id StreamID) bool {
+	return id in s.streams
+}
+
 pub fn (mut s AudioServer) unload(id StreamID) {
 	s.streams.delete(id)
+	s.stream_positions.delete(id)
 	s.audio_thread.cmd_ch <- UnloadMsg{
 		id: id
 	}

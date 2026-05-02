@@ -215,11 +215,19 @@ fn (mut g Game) spawn_explosion(pos Vec2, color_idx int) {
 
 	glow_h := app.textures.get_handle('glow_lg') or { return }
 
-	baked_dist := unsafe { &g.curves['burst_dist'] }
-	baked_alpha := unsafe { &g.curves['burst_alpha'] }
-	baked_scale := unsafe { &g.curves['burst_scale'] }
-	baked_shim_alpha := unsafe { &g.curves['shim_alpha'] }
-	baked_shim_scale := unsafe { &g.curves['shim_scale'] }
+	// All curves are baked in init() above, so the map should contain them.
+	// Guard with an explicit check — access via map returns zero-value + nil
+	// samples if the key is missing, leading to UB on .sample().
+	baked_dist := &g.curves['burst_dist']
+	if baked_dist.samples.len == 0 { return }
+	baked_alpha := &g.curves['burst_alpha']
+	if baked_alpha.samples.len == 0 { return }
+	baked_scale := &g.curves['burst_scale']
+	if baked_scale.samples.len == 0 { return }
+	baked_shim_alpha := &g.curves['shim_alpha']
+	if baked_shim_alpha.samples.len == 0 { return }
+	baked_shim_scale := &g.curves['shim_scale']
+	if baked_shim_scale.samples.len == 0 { return }
 
 	// --- main burst: 24 saturated particles spread over full circle ---
 	mut main_e := BurstEmitter.new(app, 'burst_main')
@@ -271,8 +279,17 @@ fn (mut g Game) spawn_explosion(pos Vec2, color_idx int) {
 	group.add_emitter(mut shim_e)
 	group.add_child(mut shim_e)
 
+	// Guard against the signal firing synchronously during burst() if
+	// the group finishes instantly (e.g. zero particles).  Without this,
+	// queue_free() would run while burst() is still on the call stack,
+	// causing a use-after-free on the BurstGroup.
+	mut group_finished := false
 	group.signals.connect(engine.sig_group_finished, VSignalHandler{
-		func:     fn (recv voidptr, _ voidptr, _ []SignalArg) {
+		func:     fn [&group_finished](recv voidptr, _ voidptr, _ []SignalArg) {
+			if group_finished {
+				return
+			}
+			group_finished = true
 			mut grp := unsafe { &BurstGroup(recv) }
 			grp.queue_free()
 		}

@@ -77,8 +77,14 @@ fn write_array_field[E](arr []E, registry &typeinfo.TypeRegistry, mut enc typein
 // scale. (a) also maps 1:1 with write_struct, which matters for mental model.
 
 pub fn read_struct[T](mut dst T, registry &typeinfo.TypeRegistry, mut dec typeinfo.JsonDecoder) ! {
+	mut entered := false
 	dec.enter_object()!
-	defer { dec.exit_object() or {} }
+	entered = true
+	defer {
+		if entered {
+			dec.exit_object() or {}
+		}
+	}
 
 	// collect all keys present in the JSON object up-front so we can do
 	// field-driven lookup. the alternative is to let JsonDecoder expose a

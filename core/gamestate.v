@@ -1,14 +1,21 @@
 module core
 
-type StateValue = bool | f32 | i64 | string
+type StateValue = Vec2 | bool | f32 | i64 | string
 
 @[heap]
 pub struct GameState {
 mut:
 	user_data voidptr = unsafe { nil }
 	data      map[string]StateValue
-pub mut:
-	dt f32
+	dt        f32
+}
+
+pub fn (gs &GameState) dt() f32 {
+	return gs.dt
+}
+
+pub fn (mut gs GameState) set_dt(val f32) {
+	gs.dt = val
 }
 
 pub fn (mut gs GameState) set(key string, val StateValue) {

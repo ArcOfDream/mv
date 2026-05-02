@@ -29,7 +29,8 @@ pub fn sweep_aabb(mover AABB, obstacle AABB, vel_x f32, vel_y f32) SweepResult {
 	py := mover.min.y
 
 	// Already overlapping: find minimum separation direction
-	if px > diff_min_x && px < diff_max_x && py > diff_min_y && py < diff_max_y {
+	// Use >= / <= so a mover exactly flush with an obstacle edge is detected.
+	if px >= diff_min_x && px <= diff_max_x && py >= diff_min_y && py <= diff_max_y {
 		left := px - diff_min_x
 		right := diff_max_x - px
 		top := py - diff_min_y

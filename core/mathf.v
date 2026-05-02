@@ -20,14 +20,22 @@ pub fn approach(start f32, target f32, shift f32) f32 {
 // returns values outside 0..1 when x is outside [a, b].
 @[inline]
 pub fn unlerp(a f32, b f32, x f32) f32 {
-	return (x - a) / (b - a)
+	denom := b - a
+	if denom == 0 {
+		return 0.0
+	}
+	return (x - a) / denom
 }
 
 // remap maps x from the range [a, b] to the range [c, d] without clamping.
 // equivalent to lerp(c, d, unlerp(a, b, x)).
 @[inline]
 pub fn remap(a f32, b f32, c f32, d f32, x f32) f32 {
-	t := (x - a) / (b - a)
+	denom := b - a
+	if denom == 0 {
+		return c
+	}
+	t := (x - a) / denom
 	return c + t * (d - c)
 }
 

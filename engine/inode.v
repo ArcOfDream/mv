@@ -3,7 +3,7 @@ module engine
 import core { Transform2D, Vec2 }
 import raylib as rl
 import raylib.raymath as rm
-import wren
+import mv.lib.wren
 
 pub enum Notification {
 	init
@@ -33,6 +33,8 @@ pub interface INode {
 	// conversions. used by find_child to compare nodes without relying on interface
 	// struct addresses (which differ for every implicit conversion).
 	node_ptr() voidptr
+	get_path() NodePath
+	get_path_to(target &INode) NodePath
 	get_pos() Vec2
 	get_scale() Vec2
 	get_angle_deg() f32
@@ -52,7 +54,11 @@ mut:
 	local_matrix_f rm.Float16
 	parent         ?&INode
 	children       []INode
+	path_cache     map[string]?INode
 	wren_handle    ?&wren.Handle
+
+	get_node(path NodePath) ?INode
+	get_parent() ?&INode
 
 	get_global_matrix() rl.Matrix
 	get_local_matrix() rl.Matrix

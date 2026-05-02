@@ -3,7 +3,7 @@
 
 module main
 
-import wren
+import mv.lib.wren
 
 @[manualfree]
 fn write_fn(vm &wren.VM, const_text &char) {

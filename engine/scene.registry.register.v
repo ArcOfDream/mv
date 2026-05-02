@@ -1046,6 +1046,64 @@ pub fn register_builtin_nodes(mut r SceneRegistry, app &App) {
 		})
 	})
 
+	r.register('Meter', SceneNodeReg{
+		construct: fn (name string, app &App) INode {
+			mut n := Meter.instantiate(unsafe { app }, name)
+			emit_notification(mut n, .init)
+			return INode(n)
+		}
+		write:     fn (src voidptr, app &App, mut enc typeinfo.JsonEncoder) ! {
+			m := unsafe { &Meter(src) }
+			enc.key('value')
+			enc.write_f64(f64(m.value))!
+			enc.key('fill_mode')
+			enc.write_i64(i64(m.fill_mode))!
+			enc.key('screen_space')
+			enc.write_bool(m.screen_space)!
+			enc.key('size')
+			write_vec2_scene(m.size, mut enc)!
+			enc.key('tint')
+			write_color_scene(m.tint, mut enc)!
+		}
+		read:      fn (mut dec typeinfo.JsonDecoder, dst voidptr, app &App) ! {
+			mut m := unsafe { &Meter(dst) }
+			dec.seek_key('value') or {}
+			m.value = f32(dec.read_f64() or { 1.0 })
+			dec.seek_key('fill_mode') or {}
+			m.fill_mode = unsafe { MeterFillMode(int(dec.read_i64() or { 0 })) }
+			dec.seek_key('screen_space') or {}
+			m.screen_space = dec.read_bool() or { true }
+			dec.seek_key('size') or {}
+			m.size = read_vec2_scene(mut dec) or { Vec2{} }
+			dec.seek_key('tint') or {}
+			m.tint = read_color_scene(mut dec) or { rl.white }
+		}
+		inspect:   SceneInspectFn(fn (node_ptr voidptr, app &App, mut ctx IInspectCtx) bool {
+			mut m := unsafe { &Meter(node_ptr) }
+			mut changed := false
+			if ctx.row_f32('value', &m.value) {
+				changed = true
+			}
+			fm_idx := int(m.fill_mode)
+			new_fm := ctx.row_enum_btn('fill_mode', ['L→R', 'R→L', 'T→B', 'B→T'],
+				fm_idx)
+			if new_fm != fm_idx {
+				m.fill_mode = unsafe { MeterFillMode(new_fm) }
+				changed = true
+			}
+			if ctx.row_bool('screen_space', &m.screen_space) {
+				changed = true
+			}
+			if ctx.row_vec2('size', &m.size) {
+				changed = true
+			}
+			if ctx.row_color('tint', &m.tint) {
+				changed = true
+			}
+			return changed
+		})
+	})
+
 	r.register('BurstEmitter', SceneNodeReg{
 		construct: fn (name string, app &App) INode {
 			mut n := BurstEmitter.instantiate(unsafe { app }, name)

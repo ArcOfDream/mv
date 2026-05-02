@@ -32,7 +32,11 @@ pub fn (mut ap AnimationPlayer) stop() {
 }
 
 pub fn (mut ap AnimationPlayer) pause() {
-	ap.playing = !ap.playing
+	ap.playing = false
+}
+
+pub fn (mut ap AnimationPlayer) resume() {
+	ap.playing = true
 }
 
 pub fn (mut ap AnimationPlayer) seek(time f32) {
