@@ -32,7 +32,11 @@ pub fn (mut ap AnimationPlayer) stop() {
 }
 
 pub fn (mut ap AnimationPlayer) pause() {
-	ap.playing = !ap.playing
+	ap.playing = false
+}
+
+pub fn (mut ap AnimationPlayer) resume() {
+	ap.playing = true
 }
 
 pub fn (mut ap AnimationPlayer) seek(time f32) {
@@ -64,7 +68,7 @@ pub fn (mut ap AnimationPlayer) update(dt f32) {
 			}
 		}
 		.loop {
-			// Wrap — also resets call track crossing detection cleanly
+			// Wrap: also resets call track crossing detection cleanly
 			if ap.time >= anim.duration {
 				anim.reset()
 				ap.time = ap.time - anim.duration
@@ -82,6 +86,6 @@ pub fn (mut ap AnimationPlayer) update(dt f32) {
 	}
 
 	anim.sample(ap.time)
-	// Write back — map returns a copy in V
+	// Write back: map returns a copy in V
 	ap.library[ap.current] = anim
 }

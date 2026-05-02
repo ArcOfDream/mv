@@ -14,7 +14,7 @@ pub:
 	src []int @[json: 'src'] // [src_x, src_y] in the tileset image
 	f   int   @[json: 'f']   // flip bitmask: 0=none, 1=X, 2=Y, 3=both
 	t   int   @[json: 't']   // tile uid within the tileset
-	a   f32   @[json: 'a']   // alpha, 0.0–1.0
+	a   f32   @[json: 'a']   // alpha, 0.0-1.0
 }
 
 pub fn (t &Tile) flip_flags() FlipFlags {
@@ -28,10 +28,10 @@ pub fn (t &Tile) flip_flags() FlipFlags {
 @[minify]
 pub struct FieldInstance {
 pub:
-	identifier string @[json: '__identifier']
-	typ        string @[json: '__type']
-	value      string @[json: '__value'] // raw JSON — decode per typ
-	def_uid    int    @[json: 'defUid']
+	identifier string  @[json: '__identifier']
+	typ        string  @[json: '__type']
+	value      ?string @[json: '__value'] // raw JSON: decode per typ; null when field is unset
+	def_uid    int     @[json: 'defUid']
 }
 
 // entity instances
@@ -133,7 +133,7 @@ pub:
 
 	// An array containing all Layer instances. IMPORTANT: if the project option "Save levels separately" is enabled, this field will be null.
 	// This array is sorted in display order: the 1st layer is the top-most and the last is behind.
-	// null when using external level files — call load_external_level() to fill it
+	// null when using external level files: call load_external_level() to fill it
 	layer_instances ?[]LayerInstance @[json: 'layerInstances']
 
 	// This value is not null if the project option "Save levels separately" is enabled. In this case, this relative path points to the level Json file.

@@ -1,6 +1,6 @@
 module audio
 
-// commands (main → audio thread)
+// commands (main -> audio thread)
 
 pub struct LoadMsg {
 pub:
@@ -60,11 +60,17 @@ pub type AudioMessage = LoadMsg
 	| LoopMsg
 	| GlobalCmd
 
-// events (audio thread → main)
+// events (audio thread -> main)
 
 pub struct StreamFinishedEvent {
 pub:
 	id StreamID
 }
 
-pub type AudioEvent = StreamFinishedEvent
+pub struct StreamPosEvent {
+pub:
+	id     StreamID
+	sample usize
+}
+
+pub type AudioEvent = StreamFinishedEvent | StreamPosEvent

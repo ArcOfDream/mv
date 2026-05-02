@@ -20,14 +20,22 @@ pub fn approach(start f32, target f32, shift f32) f32 {
 // returns values outside 0..1 when x is outside [a, b].
 @[inline]
 pub fn unlerp(a f32, b f32, x f32) f32 {
-	return (x - a) / (b - a)
+	denom := b - a
+	if denom == 0 {
+		return 0.0
+	}
+	return (x - a) / denom
 }
 
 // remap maps x from the range [a, b] to the range [c, d] without clamping.
 // equivalent to lerp(c, d, unlerp(a, b, x)).
 @[inline]
 pub fn remap(a f32, b f32, c f32, d f32, x f32) f32 {
-	t := (x - a) / (b - a)
+	denom := b - a
+	if denom == 0 {
+		return c
+	}
+	t := (x - a) / denom
 	return c + t * (d - c)
 }
 
@@ -39,7 +47,7 @@ pub fn between(val f32, lo f32, hi f32) bool {
 
 // repeat loops t within [0, length), wrapping back to 0 at length.
 // Unlike fmod, handles negative t correctly.
-// Example: repeat(-0.1, 1.0) == 0.9
+// example: repeat(-0.1, 1.0) == 0.9
 @[inline]
 pub fn repeat(t f32, length f32) f32 {
 	return t - math.floorf(t / length) * length
@@ -61,7 +69,7 @@ pub fn sincos(angle f32) (f32, f32) {
 }
 
 // angle_between returns the angle in radians from (x1, y1) to (x2, y2).
-// Result is in [-π, π]; 0 points right, positive values rotate counter-clockwise.
+// result is in [-pi, pi]; 0 points right, positive values rotate counter-clockwise.
 @[inline]
 pub fn angle_between(x1 f32, y1 f32, x2 f32, y2 f32) f32 {
 	return f32(math.atan2(f64(y2 - y1), f64(x2 - x1)))

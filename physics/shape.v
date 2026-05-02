@@ -18,7 +18,7 @@ fn (s Shape) c2_type() CollisionType {
 
 // Polygon.from_rect builds a rectangle polygon centred at the origin
 // with the given width and height. Vertices are wound counter-clockwise.
-// Rotate at collision time via XTransform — do not bake rotation into vertices.
+// rotate at collision time via XTransform: do not bake rotation into vertices.
 pub fn Polygon.from_rect(w f32, h f32) Polygon {
 	hw := w * 0.5
 	hh := h * 0.5
@@ -26,15 +26,19 @@ pub fn Polygon.from_rect(w f32, h f32) Polygon {
 		count: 4
 	}
 	p.verts[0] = Vec{-hw, -hh} // top-left
-	p.verts[1] = Vec{ hw, -hh} // top-right
-	p.verts[2] = Vec{ hw,  hh} // bottom-right
-	p.verts[3] = Vec{-hw,  hh} // bottom-left
+	p.verts[1] = Vec{hw, -hh} // top-right
+	p.verts[2] = Vec{hw, hh} // bottom-right
+	p.verts[3] = Vec{-hw, hh} // bottom-left
 	make_poly(mut p)
 	return p
 }
 
 // Polygon.from_aabb converts an existing AABB into an equivalent polygon.
 // Useful when you need to rotate geometry that was originally defined as an AABB.
+//
+// The resulting polygon is centred at the AABB's centre (i.e. local space),
+// consistent with from_rect which centres at the origin.  Both keep the shape
+// centred so XTransform rotation works around the shape's own centre.
 pub fn Polygon.from_aabb(aabb AABB) Polygon {
 	w := aabb.max.x - aabb.min.x
 	h := aabb.max.y - aabb.min.y
@@ -58,13 +62,47 @@ pub fn Polygon.from_aabb(aabb AABB) Polygon {
 
 @[inline]
 pub fn check_collision(s1 Shape, s2 Shape) bool {
-	// identity transform for primitives (c2 ignores these for non-polygons)
 	xf := xtransform_identity
-
-	// we use unsafe to get the address of the shape data
-	// because c2Collided expects a voidptr to the raw struct.
-	unsafe {
-		return C.c2Collided(&s1, &xf, int(s1.c2_type()), &s2, &xf, int(s2.c2_type())) != 0
+	match s1 {
+		Circle {
+			return match s2 {
+				Circle { circle_to_circle(s1, s2) }
+				AABB { circle_to_aabb(s1, s2) }
+				Capsule { circle_to_capsule(s1, s2) }
+				Polygon { circle_to_poly(s1, &s2, &xf) }
+				else { false }
+			}
+		}
+		AABB {
+			return match s2 {
+				Circle { circle_to_aabb(s2, s1) }
+				AABB { aabb_to_aabb(s1, s2) }
+				Capsule { aabb_to_capsule(s1, s2) }
+				Polygon { aabb_to_poly(s1, &s2, &xf) }
+				else { false }
+			}
+		}
+		Capsule {
+			return match s2 {
+				Circle { circle_to_capsule(s2, s1) }
+				AABB { aabb_to_capsule(s2, s1) }
+				Capsule { capsule_to_capsule(s1, s2) }
+				Polygon { capsule_to_poly(s1, &s2, &xf) }
+				else { false }
+			}
+		}
+		Polygon {
+			return match s2 {
+				Circle { circle_to_poly(s2, &s1, &xf) }
+				AABB { aabb_to_poly(s2, &s1, &xf) }
+				Capsule { capsule_to_poly(s2, &s1, &xf) }
+				Polygon { poly_to_poly(&s1, &xf, &s2, &xf) }
+				else { false }
+			}
+		}
+		else {
+			return false
+		}
 	}
 }
 

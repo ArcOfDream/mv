@@ -1,7 +1,7 @@
 module main
 
 import raylib as rl
-import mv
+import mv.engine { App, Node, Sprite }
 import mv.core { Gradient, Vec2 }
 
 // Image generation workbench: 4×3 grid of 64×64 generated textures
@@ -16,11 +16,11 @@ const cols = 4
 @[heap]
 struct Game {
 mut:
-	app ?&mv.App
+	app ?&App
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none)
 	if mut app := g.app {
 		app.run()
 	}
@@ -34,7 +34,7 @@ fn (mut g Game) init() {
 		app.set_target_fps(60)
 		app.set_clear_color(rl.Color{20, 20, 20, 255})
 
-		mut r := mv.Node.new(app, 'root')
+		mut r := Node.new(app, 'root')
 		app.scene_root = r
 
 		// gradients
@@ -91,51 +91,51 @@ fn (mut g Game) init() {
 		// generate & register images
 
 		// [0] solid fill
-		app.textures.load_from_image('fill',
-			core.gen_image_fill(img_size, img_size, rl.Color{30, 160, 180, 255}))
+		app.textures.load_from_image('fill', core.gen_image_fill(img_size, img_size, rl.Color{30, 160, 180, 255}))
 
 		// [1] checkerboard
-		app.textures.load_from_image('checker',
-			core.gen_image_checker(img_size, img_size, 8, 8, rl.Color{240, 40, 240, 255}, rl.Color{40, 40, 40, 255}))
+		app.textures.load_from_image('checker', core.gen_image_checker(img_size, img_size,
+			8, 8, rl.Color{240, 40, 240, 255}, rl.Color{40, 40, 40, 255}))
 
 		// [2] grid
-		app.textures.load_from_image('grid',
-			core.gen_image_grid(img_size, img_size, 4, 4, 2, rl.Color{30, 30, 30, 255}, rl.Color{100, 200, 120, 255}))
+		app.textures.load_from_image('grid', core.gen_image_grid(img_size, img_size, 4,
+			4, 2, rl.Color{30, 30, 30, 255}, rl.Color{100, 200, 120, 255}))
 
 		// [3] linear horizontal: sunset
-		app.textures.load_from_image('linear_h', core.gen_image_gradient_linear(img_size, img_size,
-			&sunset, Vec2{0.0, 0.5}, Vec2{1.0, 0.5}))
+		app.textures.load_from_image('linear_h', core.gen_image_gradient_linear(img_size,
+			img_size, &sunset, Vec2{0.0, 0.5}, Vec2{1.0, 0.5}))
 
 		// [4] linear vertical: sky
-		app.textures.load_from_image('linear_v', core.gen_image_gradient_linear(img_size, img_size,
-			&sky, Vec2{0.5, 0.0}, Vec2{0.5, 1.0}))
+		app.textures.load_from_image('linear_v', core.gen_image_gradient_linear(img_size,
+			img_size, &sky, Vec2{0.5, 0.0}, Vec2{0.5, 1.0}))
 
 		// [5] linear diagonal
 		app.textures.load_from_image('linear_diag', core.gen_image_gradient_linear(img_size,
 			img_size, &rainbow, Vec2{0.0, 0.0}, Vec2{1.0, 1.0}))
 
 		// [6] radial vignette
-		app.textures.load_from_image('radial', core.gen_image_gradient_radial(img_size, img_size,
-			&vignette, Vec2{0.5, 0.5}, 0.5))
+		app.textures.load_from_image('radial', core.gen_image_gradient_radial(img_size,
+			img_size, &vignette, Vec2{0.5, 0.5}, 0.5))
 
 		// [7] radial focal: sphere shading
 		app.textures.load_from_image('radial_focal', core.gen_image_gradient_radial_focal(img_size,
 			img_size, &sphere_grad, Vec2{0.5, 0.5}, 0.5, Vec2{0.35, 0.3}))
 
 		// [8] conic: rainbow sweep
-		app.textures.load_from_image('conic', core.gen_image_gradient_conic(img_size, img_size,
-			&rainbow, Vec2{0.5, 0.5}, 0.0))
+		app.textures.load_from_image('conic', core.gen_image_gradient_conic(img_size,
+			img_size, &rainbow, Vec2{0.5, 0.5}, 0.0))
 
 		// [9] xor: rainbow
-		app.textures.load_from_image('xor_rainbow',
-			core.gen_image_xor(img_size, img_size, &rainbow))
+		app.textures.load_from_image('xor_rainbow', core.gen_image_xor(img_size, img_size,
+			&rainbow))
 
 		// [10] xor: two-tone
-		app.textures.load_from_image('xor_two', core.gen_image_xor(img_size, img_size, &two_tone))
+		app.textures.load_from_image('xor_two', core.gen_image_xor(img_size, img_size,
+			&two_tone))
 
 		// [11] sdf circle: soft glow
-		app.textures.load_from_image('sdf_glow', core.gen_image_sdf_circle(img_size, img_size, Vec2{0.5, 0.5},
-			0.35, 0.15, &glow))
+		app.textures.load_from_image('sdf_glow', core.gen_image_sdf_circle(img_size, img_size,
+			Vec2{0.5, 0.5}, 0.35, 0.15, &glow))
 
 		// lay out sprites in a 4×3 grid
 
@@ -155,7 +155,7 @@ fn (mut g Game) init() {
 		]
 
 		for i, name in names {
-			mut sprite := mv.Sprite.new(app, name, name)
+			mut sprite := Sprite.new(app, name, name)
 			r.add_child(mut sprite)
 			sprite.set_centered(false)
 			sprite.set_pos(Vec2{f32((i % cols) * img_size), f32((i / cols) * img_size)})

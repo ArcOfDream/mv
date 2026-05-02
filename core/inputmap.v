@@ -23,7 +23,7 @@ pub fn key(k rl.KeyboardKey) InputBinding {
 
 pub fn mouse_btn(b rl.MouseButton) InputBinding {
 	return InputBinding{
-		device: .keyboard
+		device: .mouse_button
 		code:   int(b)
 	}
 }
@@ -70,6 +70,7 @@ pub fn (mut im InputMap) update() {
 				.keyboard { rl.is_key_down(b.code) }
 				.mouse_button { rl.is_mouse_button_down(b.code) }
 			}
+
 			if down {
 				any_down = true
 				break

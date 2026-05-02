@@ -6,6 +6,7 @@ rayv
 *.so
 *.dylib
 *.dll
+*.o
 
 # Ignore binary output folders
 bin/
@@ -23,7 +24,18 @@ bin/
 # vweb and database
 *.db
 *.js
-examples/workbench/workbench
 
 # Bug related reproduction code
 *_bug.v
+
+# Generated executables
+examples/workbench/workbench
+examples/image_gen/image_gen
+examples/basic_window/basic_window
+examples/physics_demo/physics_demo
+examples/threadloader/threadloader
+examples/line_demo/line_demo
+examples/fireworks/fireworks
+
+# WIP
+docs/

@@ -1,77 +1,77 @@
 module main
 
-import wren
-import mv
+import mv.lib.wren
+import mv.engine
 
 fn timer_wren_allocate(vm &wren.VM) {
-	mut t := mv.wren_alloc[Timer](vm)
-	t.duration = mv.wren_get_f32(vm, 1)
+	mut t := engine.wren_alloc[Timer](vm)
+	t.duration = engine.wren_get_f32(vm, 1)
 	t.looping = vm.get_slot_bool(2)
 	t.elapsed = 0
 	t.running = false
 }
 
 pub fn timer_wren_class_methods() wren.ForeignClassMethods {
-	return mv.wren_class(timer_wren_allocate, mv.wren_noop_finalize)
+	return engine.wren_class(timer_wren_allocate, engine.wren_noop_finalize)
 }
 
-// control 
+// control
 
 fn timer_wren_start(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
+	mut t := engine.wren_get_object[Timer](vm, 0)
 	t.start()
 }
 
 fn timer_wren_stop(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
+	mut t := engine.wren_get_object[Timer](vm, 0)
 	t.stop()
 }
 
 fn timer_wren_reset(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
+	mut t := engine.wren_get_object[Timer](vm, 0)
 	t.reset()
 }
 
 fn timer_wren_tick(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
-	vm.set_slot_bool(0, t.tick(mv.wren_get_f32(vm, 1)))
+	mut t := engine.wren_get_object[Timer](vm, 0)
+	vm.set_slot_bool(0, t.tick(engine.wren_get_f32(vm, 1)))
 }
 
 // getters
 
 fn timer_wren_get_progress(vm &wren.VM) {
-	vm.set_slot_double(0, mv.wren_get_object[Timer](vm, 0).progress())
+	vm.set_slot_double(0, engine.wren_get_object[Timer](vm, 0).progress())
 }
 
 fn timer_wren_get_is_done(vm &wren.VM) {
-	vm.set_slot_bool(0, mv.wren_get_object[Timer](vm, 0).is_done())
+	vm.set_slot_bool(0, engine.wren_get_object[Timer](vm, 0).is_done())
 }
 
 fn timer_wren_get_time_left(vm &wren.VM) {
-	vm.set_slot_double(0, mv.wren_get_object[Timer](vm, 0).time_left())
+	vm.set_slot_double(0, engine.wren_get_object[Timer](vm, 0).time_left())
 }
 
 fn timer_wren_get_running(vm &wren.VM) {
-	vm.set_slot_bool(0, mv.wren_get_object[Timer](vm, 0).running)
+	vm.set_slot_bool(0, engine.wren_get_object[Timer](vm, 0).running)
 }
 
 fn timer_wren_get_duration(vm &wren.VM) {
-	vm.set_slot_double(0, mv.wren_get_object[Timer](vm, 0).duration)
+	vm.set_slot_double(0, engine.wren_get_object[Timer](vm, 0).duration)
 }
 
 fn timer_wren_get_looping(vm &wren.VM) {
-	vm.set_slot_bool(0, mv.wren_get_object[Timer](vm, 0).looping)
+	vm.set_slot_bool(0, engine.wren_get_object[Timer](vm, 0).looping)
 }
 
 // setters
 
 fn timer_wren_set_duration(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
-	t.duration = mv.wren_get_f32(vm, 1)
+	mut t := engine.wren_get_object[Timer](vm, 0)
+	t.duration = engine.wren_get_f32(vm, 1)
 }
 
 fn timer_wren_set_looping(vm &wren.VM) {
-	mut t := mv.wren_get_object[Timer](vm, 0)
+	mut t := engine.wren_get_object[Timer](vm, 0)
 	t.looping = vm.get_slot_bool(1)
 }
 

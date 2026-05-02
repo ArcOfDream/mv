@@ -16,7 +16,7 @@
 
 **`ShaderResource`**: wraps `rl.Shader`. Supports loading from file paths (GLSL source files), from source strings already in memory (`load_from_source`), or from rres `TEXT` chunks. Either stage (vertex or fragment) can be left empty to use Raylib's default shader for that stage.
 
-**`ThreadLoader`**: a background worker that handles the CPU-side phase of asset loading (file I/O, image decoding, wave decoding, shader source reading) off the main thread. Communicates with the caller via two buffered channels: `commands` (caller → worker, capacity 64) and `events` (worker → caller, capacity 64). The split between CPU work (done in the worker) and GPU work (done on the main thread) is intentional: Raylib's OpenGL context is single-threaded, so `rl.load_texture_from_image` and `rl.load_sound_from_wave` must happen on the main thread after the worker sends back the decoded `rl.Image` or `rl.Wave`.
+**`ThreadLoader`**: a background worker that handles the CPU-side phase of asset loading (file I/O, image decoding, wave decoding, shader source reading) off the main thread. Communicates with the caller via two buffered channels: `commands` (caller -> worker, capacity 64) and `events` (worker -> caller, capacity 64). The split between CPU work (done in the worker) and GPU work (done on the main thread) is intentional: Raylib's OpenGL context is single-threaded, so `rl.load_texture_from_image` and `rl.load_sound_from_wave` must happen on the main thread after the worker sends back the decoded `rl.Image` or `rl.Wave`.
 
 The typical per-frame pattern is:
 

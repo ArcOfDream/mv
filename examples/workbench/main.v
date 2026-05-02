@@ -1,9 +1,10 @@
 module main
 
 import raylib as rl { Color }
-import mv
+import mv.engine { App, CameraNode, MusicPlayer, Node, Polygon, Sprite }
 import mv.core { Vec2 }
-import mv.rres
+import mv.lib.pxtn
+import mv.lib.rres
 import mv.ldtk as _
 
 // this is less of an example and more of a testbed for me to test some features
@@ -15,14 +16,13 @@ const test_pxtone = $embed_file('assets/test.ptcop')
 @[heap]
 struct Game {
 mut:
-	app ?&mv.App
+	app ?&App
 
-	root ?&mv.Node
-	cam  ?&mv.CameraNode
+	cam ?&CameraNode
 }
 
 fn (mut g Game) setup() {
-	g.app = mv.App.new(g.init, g.update, g.draw, none, none)
+	g.app = App.new(g.init, g.update, g.draw, none)
 
 	if mut app := g.app {
 		app.run()
@@ -44,80 +44,101 @@ fn (mut g Game) init() {
 			l.unload()
 		}
 
-		g.root = app.new_node[mv.Node]('root', 0, 0)
+		mut root := Node.new(app, 'root')
+		app.scene_root = root
 
-		if mut r := g.root {
-			mut child := TestNode.new(app, 'child')
-			child.set_scale(Vec2{0.4, 0.4})
-			r.add_child(mut child)
+		mut child := TestNode.new(app, 'child')
+		child.set_texture_id('bnuy') or {}
+		child.set_scale(Vec2{0.4, 0.4})
+		root.add_child(mut child)
 
-			mut c := mv.CameraNode.new(app, 'camera')
-			r.add_child(mut c)
-			g.cam = c
-			c.register()
+		mut player := MusicPlayer.new(app, 'player')
+		root.add_child(mut player)
+		player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
+		player.loop(true)
 
-			mut player := mv.MusicPlayer.new(app, 'player')
-			r.add_child(mut player)
-			player.play_pxtone(test_pxtone.to_bytes()) or { eprintln(err) }
-			player.loop(true)
-
-			mut sphere_grad := core.Gradient.from_colors([
-				Color{255, 255, 240, 255}, // near-white highlight
-				Color{60, 80, 160, 255}, // mid blue
-				Color{10, 15, 40, 255}, // dark edge
-			])
-			sphere_grad.interpolation = .monotone_cubic
-			mut rainbow_grad := core.Gradient.from_colors([
-				rl.red,
-				rl.orange,
-				rl.yellow,
-				rl.green,
-				rl.skyblue,
-				rl.darkblue,
-				rl.purple,
-				rl.violet,
-			])
-			rainbow_grad.interpolation = .constant
-
-			sphere_tex := core.Gradient2D{
-				gradient: sphere_grad
-				fill:     .radial_focal
-				center:   Vec2{0.5, 0.5} // outer circle sits in the middle
-				radius:   0.5
-				focal:    Vec2{0.35, 0.3} // highlight pushed upper-left
-				width:    64
-				height:   64
-			}.bake()
-			app.textures.add_texture('sphere', sphere_tex)
-
-			mut sprite := mv.Sprite.new(app, 'gradient', 'sphere')
-			r.add_child(mut sprite)
-			sprite.set_centered(false)
-			sprite.set_pos(Vec2{0, 0})
-
-			mut img_xor := core.gen_image_xor(64, 64, rainbow_grad)
-			app.textures.load_from_image('xor', img_xor)
-			mut sprite2 := mv.Sprite.new(app, 'xor', 'xor')
-			r.add_child(mut sprite2)
-			sprite2.set_centered(false)
-			sprite2.set_pos(Vec2{64, 0})
-
-			mv.emit_notification(mut r, .ready)
+		if pt := pxtn.from_memory(test_pxtone.to_bytes()) {
+			m := pt.master()
+			println('--- pxtone metadata ---')
+			println('tempo: ${m.beat_tempo} bpm  beat: ${m.beat_num}/${m.beat_clock}  measures: ${m.meas_num}  loop at: ${m.meas_repeat}')
+			println('units: ${pt.unit_count()}')
+			notes := pt.notes()
+			println('notes: ${notes.len}')
+			for n in notes {
+				semitone := (n.key - pxtn.basickey) / 256
+				println('  unit=${n.unit_no}  clock=${n.clock}  dur=${n.duration}  key=${n.key} (${semitone:+d} st from A4)  vel=${n.velocity}')
+			}
+			pt.close()
+		} else {
+			eprintln('pxtn dump: failed to load test.ptcop')
 		}
+
+		mut sphere_grad := core.Gradient.from_colors([
+			Color{255, 255, 240, 255}, // near-white highlight
+			Color{60, 80, 160, 255}, // mid blue
+			Color{10, 15, 40, 255}, // dark edge
+		])
+		sphere_grad.interpolation = .cubic
+
+		mut rainbow_grad := core.Gradient.from_colors([
+			rl.red,
+			rl.orange,
+			rl.yellow,
+			rl.green,
+			rl.skyblue,
+			rl.darkblue,
+			rl.purple,
+			rl.violet,
+		])
+		rainbow_grad.interpolation = .cubic
+
+		sphere_tex := core.Gradient2D{
+			gradient: sphere_grad
+			fill:     .radial_focal
+			center:   Vec2{0.5, 0.5} // outer circle sits in the middle
+			radius:   0.5
+			focal:    Vec2{0.35, 0.3} // highlight pushed upper-left
+			width:    64
+			height:   64
+		}.bake()
+		app.textures.add_texture('sphere', sphere_tex)
+
+		mut sprite := Sprite.new(app, 'gradient', 'sphere')
+		root.add_child(mut sprite)
+		sprite.set_centered(false)
+		sprite.set_pos(Vec2{0, 0})
+
+		mut img_xor := core.gen_image_xor(64, 64, rainbow_grad)
+		app.textures.load_from_image('xor', img_xor)
+		mut sprite2 := Sprite.new(app, 'xor', 'xor')
+		root.add_child(mut sprite2)
+		sprite2.set_centered(false)
+		sprite2.set_pos(Vec2{64, 0})
+
+		mut poly := Polygon.new(app, 'poly')
+		root.add_child(mut poly)
+		poly.set_texture_id('bnuy') or {}
+		poly.set_pos(Vec2{220, 60})
+		poly.add_point(Vec2{0, -40}) // top
+		poly.add_point(Vec2{35, -10}) // upper-right
+		poly.add_point(Vec2{22, 32}) // lower-right
+		poly.add_point(Vec2{-22, 32}) // lower-left
+		poly.add_point(Vec2{-35, -10}) // upper-left
+
+		mut c := CameraNode.new(app, 'camera')
+		root.add_child(mut c)
+		// c.set_pos(Vec2{-100, 0})
+		g.cam = c
+		c.register()
+
+		engine.emit_notification(mut root, .ready)
 	}
 }
 
 fn (mut g Game) update(_dt f32) {
-	if mut root := g.root {
-		mv.emit_notification(mut root, .update)
-	}
 }
 
 fn (mut g Game) draw() {
-	if mut root := g.root {
-		mv.emit_notification(mut root, .draw)
-	}
-
 	rl.draw_fps(2, 2)
 }
 

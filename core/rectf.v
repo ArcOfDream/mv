@@ -1,6 +1,7 @@
 module core
 
 import math
+import raylib as rl
 
 // adapted from prime31's via
 
@@ -14,6 +15,76 @@ pub mut:
 	y f32
 	w f32
 	h f32
+}
+
+@[inline]
+pub fn (r RectF) to_rl() rl.Rectangle {
+	return rl.Rectangle{r.x, r.y, r.w, r.h}
+}
+
+@[inline]
+pub fn RectF.from_rl(r rl.Rectangle) RectF {
+	return RectF{r.x, r.y, r.width, r.height}
+}
+
+// cut_left splits off w pixels from the left edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_left(w f32) (RectF, RectF) {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x, r.y, cw, r.h}, RectF{r.x + cw, r.y, r.w - cw, r.h}
+}
+
+// cut_right splits off w pixels from the right edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_right(w f32) (RectF, RectF) {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x + r.w - cw, r.y, cw, r.h}, RectF{r.x, r.y, r.w - cw, r.h}
+}
+
+// cut_top splits off h pixels from the top edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_top(h f32) (RectF, RectF) {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y, r.w, ch}, RectF{r.x, r.y + ch, r.w, r.h - ch}
+}
+
+// cut_bottom splits off h pixels from the bottom edge.
+// Returns (slice, remainder).
+@[inline]
+pub fn (r RectF) cut_bottom(h f32) (RectF, RectF) {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y + r.h - ch, r.w, ch}, RectF{r.x, r.y, r.w, r.h - ch}
+}
+
+// skip_left advances the left edge by w without returning a slice.
+@[inline]
+pub fn (r RectF) skip_left(w f32) RectF {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x + cw, r.y, r.w - cw, r.h}
+}
+
+// skip_right shrinks the right edge by w without returning a slice.
+@[inline]
+pub fn (r RectF) skip_right(w f32) RectF {
+	cw := if w < r.w { w } else { r.w }
+	return RectF{r.x, r.y, r.w - cw, r.h}
+}
+
+// skip_top advances the top edge by h without returning a slice.
+@[inline]
+pub fn (r RectF) skip_top(h f32) RectF {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y + ch, r.w, r.h - ch}
+}
+
+// skip_bottom shrinks the bottom edge by h without returning a slice.
+@[inline]
+pub fn (r RectF) skip_bottom(h f32) RectF {
+	ch := if h < r.h { h } else { r.h }
+	return RectF{r.x, r.y, r.w, r.h - ch}
 }
 
 pub fn (r RectF) str() string {
@@ -56,9 +127,9 @@ pub fn RectF.from_min_max(min_x f32, min_y f32, max_x f32, max_y f32) RectF {
 @[inline]
 pub fn (r RectF) edge_coord(e Edge) f32 {
 	return match e {
-		.left   { r.x }
-		.right  { r.right() }
-		.top    { r.y }
+		.left { r.x }
+		.right { r.right() }
+		.top { r.y }
 		.bottom { r.bottom() }
 	}
 }
@@ -67,12 +138,12 @@ pub fn (r RectF) edge_coord(e Edge) f32 {
 // touching edges (zero-area overlap) return false.
 @[inline]
 pub fn (r RectF) overlaps(other RectF) bool {
-	return r.x < other.right() && r.right() > other.x &&
-	       r.y < other.bottom() && r.bottom() > other.y
+	return r.x < other.right() && r.right() > other.x && r.y < other.bottom()
+		&& r.bottom() > other.y
 }
 
 // contains returns true if (px, py) lies within the rect.
-// uses a half-open interval: [x, x+w) × [y, y+h).
+// uses a half-open interval: [x, x+w) x [y, y+h).
 @[inline]
 pub fn (r RectF) contains(px f32, py f32) bool {
 	return px >= r.x && px < r.right() && py >= r.y && py < r.bottom()
@@ -81,8 +152,8 @@ pub fn (r RectF) contains(px f32, py f32) bool {
 // contains_rect returns true if other lies entirely within this rect.
 @[inline]
 pub fn (r RectF) contains_rect(other RectF) bool {
-	return other.x >= r.x && other.right() <= r.right() &&
-	       other.y >= r.y && other.bottom() <= r.bottom()
+	return other.x >= r.x && other.right() <= r.right() && other.y >= r.y
+		&& other.bottom() <= r.bottom()
 }
 
 // expand grows the rect directionally by (dx, dy).
@@ -109,9 +180,9 @@ pub fn (r RectF) grow(amount f32) RectF {
 pub fn (r RectF) expand_edge(e Edge, amount f32) RectF {
 	a := math.abs(amount)
 	return match e {
-		.left   { RectF{r.x - a, r.y, r.w + a, r.h} }
-		.right  { RectF{r.x, r.y, r.w + a, r.h} }
-		.top    { RectF{r.x, r.y - a, r.w, r.h + a} }
+		.left { RectF{r.x - a, r.y, r.w + a, r.h} }
+		.right { RectF{r.x, r.y, r.w + a, r.h} }
+		.top { RectF{r.x, r.y - a, r.w, r.h + a} }
 		.bottom { RectF{r.x, r.y, r.w, r.h + a} }
 	}
 }
@@ -119,10 +190,10 @@ pub fn (r RectF) expand_edge(e Edge, amount f32) RectF {
 // half_rect returns the half of the rect on the given edge's side.
 pub fn (r RectF) half_rect(e Edge) RectF {
 	return match e {
-		.top    { RectF{r.x, r.y, r.w, r.h * 0.5} }
+		.top { RectF{r.x, r.y, r.w, r.h * 0.5} }
 		.bottom { RectF{r.x, r.y + r.h * 0.5, r.w, r.h * 0.5} }
-		.left   { RectF{r.x, r.y, r.w * 0.5, r.h} }
-		.right  { RectF{r.x + r.w * 0.5, r.y, r.w * 0.5, r.h} }
+		.left { RectF{r.x, r.y, r.w * 0.5, r.h} }
+		.right { RectF{r.x + r.w * 0.5, r.y, r.w * 0.5, r.h} }
 	}
 }
 

@@ -3,9 +3,15 @@ module audio
 import time
 
 struct AudioThread {
-	cmd_ch   chan AudioMessage // messages to send to the audio thread
-	event_ch chan AudioEvent   // events recieved from the audio thread
-	done_ch  chan bool         // signals clean shutdown
+	cmd_ch      chan AudioMessage // messages to send to the audio thread
+	event_ch    chan AudioEvent   // events recieved from the audio thread
+	done_ch     chan bool         // signals clean shutdown
+	waveform_ch chan WaveformMsg  // latest mono waveform with fill timestamp
+}
+
+struct WaveformMsg {
+	data      []f32
+	fill_time i64 // time.now().unix_nano() recorded in the audio thread at fill time
 }
 
 struct ActiveStream {
@@ -18,21 +24,23 @@ mut:
 
 pub fn start_audio_thread() AudioThread {
 	cmd_ch := chan AudioMessage{cap: 16}
-	event_ch := chan AudioEvent{cap: 16}
+	event_ch := chan AudioEvent{cap: 64}
 	done_ch := chan bool{cap: 1}
+	waveform_ch := chan WaveformMsg{cap: 2}
 
-	spawn fn [cmd_ch, event_ch, done_ch] () {
-		audio_thread_loop(cmd_ch, event_ch, done_ch)
+	spawn fn [cmd_ch, event_ch, done_ch, waveform_ch] () {
+		audio_thread_loop(cmd_ch, event_ch, done_ch, waveform_ch)
 	}()
 
 	return AudioThread{
-		cmd_ch:   cmd_ch
-		event_ch: event_ch
-		done_ch:  done_ch
+		cmd_ch:      cmd_ch
+		event_ch:    event_ch
+		done_ch:     done_ch
+		waveform_ch: waveform_ch
 	}
 }
 
-fn audio_thread_loop(cmd_ch chan AudioMessage, event_ch chan AudioEvent, done_ch chan bool) {
+fn audio_thread_loop(cmd_ch chan AudioMessage, event_ch chan AudioEvent, done_ch chan bool, waveform_ch chan WaveformMsg) {
 	mut streams := map[StreamID]&ActiveStream{}
 
 	for {
@@ -114,9 +122,37 @@ fn audio_thread_loop(cmd_ch chan AudioMessage, event_ch chan AudioEvent, done_ch
 			if !s.playing {
 				continue
 			}
-			if update_source(mut s.src) {
+			finished_now := update_source(mut s.src)
+			if finished_now {
 				s.playing = false
 				finished << id
+			} else {
+				select {
+					event_ch <- StreamPosEvent{
+						id:     id
+						sample: get_source_pos(s.src)
+					} {}
+					else {}
+				}
+				// Capture full buffer as mono f32 for smooth oscilloscope scrolling.
+				if mut s.src is PxtoneMusic {
+					buf := s.src.buffer
+					n := buf.len / 4
+					mut snap := []f32{len: n}
+					for fi in 0 .. n {
+						l := i16(u16(buf[fi * 4]) | (u16(buf[fi * 4 + 1]) << 8))
+						r := i16(u16(buf[fi * 4 + 2]) | (u16(buf[fi * 4 + 3]) << 8))
+						snap[fi] = f32(int(l) + int(r)) / 65536.0
+					}
+					msg := WaveformMsg{
+						data:      snap
+						fill_time: time.now().unix_nano()
+					}
+					select {
+						waveform_ch <- msg {}
+						else {}
+					}
+				}
 			}
 		}
 

@@ -2,7 +2,7 @@ module resourcemanager
 
 import raylib as rl
 import arrays as arr
-import rres { RresLoader }
+import mv.lib.rres { RresLoader }
 import os
 
 pub struct RresSource {
@@ -196,9 +196,10 @@ fn (tl &ThreadLoader) dispatch_rres(cmd LoadCommand, src RresSource) {
 			if chunk := loader.load_single(src.key) {
 				defer { chunk.unload() }
 				bytes, size := rres.load_data_from_resource(chunk)
+				raw := unsafe { arr.carray_to_varray[u8](bytes, int(size)) }
 				tl.events <- LoadEvent{
 					name:    cmd.name
-					content: unsafe { arr.carray_to_varray[u8](bytes, int(size)) }
+					content: raw.clone()
 				}
 				return
 			}

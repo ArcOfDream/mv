@@ -1,7 +1,7 @@
 module main
 
 import raylib as rl
-import mv { Sprite }
+import mv.engine { App, Sprite }
 import mv.core { Vec2 }
 import mv.animation as anim { Keyframe, lerp_f32, lerp_vec2 }
 
@@ -47,7 +47,7 @@ pub fn (mut n TestNode) ready() {
 	n.anim_player.play('loop')
 }
 
-pub fn TestNode.new(app &mv.App, name string) &TestNode {
+pub fn TestNode.new(app &App, name string) &TestNode {
 	return &TestNode{
 		app:       app
 		node_name: name

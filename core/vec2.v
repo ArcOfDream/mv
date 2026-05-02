@@ -25,9 +25,9 @@ pub fn (v Vec2) dot(v2 Vec2) f32 {
 	return rm.vector_2dot_product(v, v2)
 }
 
-pub fn (v Vec2) cross(v2 Vec2) f32 {
-	return rm.vector2_cross_product(v, v2)
-}
+// pub fn (v Vec2) cross(v2 Vec2) f32 {
+//	return rm.vector2_cross_product(v, v2)
+//}
 
 pub fn (v Vec2) distance(v2 Vec2) f32 {
 	return rm.vector_2distance(v, v2)
@@ -153,14 +153,18 @@ pub fn (a Vec2) * (b Vec2) Vec2 {
 }
 
 pub fn (a Vec2) / (b Vec2) Vec2 {
-	if b.x == 0 || b.y == 0 {
-		return Vec2{0, 0}
-	}
-	return Vec2{a.x / b.x, a.y / b.y}
+	x := if b.x == 0 { 0.0 } else { a.x / b.x }
+	y := if b.y == 0 { 0.0 } else { a.y / b.y }
+	return Vec2{x, y}
 }
 
 pub fn (a Vec2) == (b Vec2) bool {
-	return rm.float_equals(a.x, b.x) != 0 && rm.float_equals(a.y, b.y) != 0
+	return a.x == b.x && a.y == b.y
+}
+
+@[inline]
+pub fn (a Vec2) approx_eq(b Vec2, epsilon f32) bool {
+	return math.abs(a.x - b.x) <= epsilon && math.abs(a.y - b.y) <= epsilon
 }
 
 pub fn (a Vec2) < (b Vec2) bool {
@@ -168,15 +172,7 @@ pub fn (a Vec2) < (b Vec2) bool {
 }
 
 pub fn (a Vec2) % (b Vec2) Vec2 {
-	mut x := f32(math.mod(a.x, b.x))
-	mut y := f32(math.mod(a.y, b.y))
-
-	if x == math.nan() {
-		x = 0
-	}
-	if y == math.nan() {
-		y = 0
-	}
-
-	return Vec2{x, y}
+	x := if b.x == 0 { 0.0 } else { f32(math.mod(a.x, b.x)) }
+	y := if b.y == 0 { 0.0 } else { f32(math.mod(a.y, b.y)) }
+	return Vec2{if math.is_nan(x) { 0 } else { x }, if math.is_nan(y) { 0 } else { y }}
 }

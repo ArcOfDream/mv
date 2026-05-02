@@ -44,15 +44,15 @@ The parsed type hierarchy mirrors the LDtk JSON structure directly:
 
 ```
 Project
- ├── defs.tilesets []TilesetDef
- ├── worlds []World          (LDtk 1.0+ multi-world projects)
- │    └── levels []Level
- └── levels []Level          (single-world / pre-1.0 compatibility)
-      └── layer_instances ?[]LayerInstance
-           ├── grid_tiles / auto_layer_tiles []Tile
-           ├── int_grid_csv []int
-           └── entity_instances []EntityInstance
-                └── field_instances []FieldInstance
+  +-- defs.tilesets []TilesetDef
+  +-- worlds []World          (LDtk 1.0+ multi-world projects)
+  |    \-- levels []Level
+  \-- levels []Level          (single-world / pre-1.0 compatibility)
+       \-- layer_instances ?[]LayerInstance
+            +-- grid_tiles / auto_layer_tiles []Tile
+            +-- int_grid_csv []int
+            \-- entity_instances []EntityInstance
+                 \-- field_instances []FieldInstance
 ```
 
 **`Project`**: the root of a `.ldtk` file. `all_levels()` returns every level regardless of whether the project uses the `worlds[]` layout (LDtk 1.0+) or the flat `levels[]` layout, so calling code doesn't need to branch on this. `external_levels` is `true` when the project is saved with "Save levels separately"; in that case each `Level.layer_instances` will be `none` until `load_external_level` is called.

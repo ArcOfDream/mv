@@ -33,7 +33,9 @@ pub fn (mut tw Tweener[T]) update(dt f32) {
 	if cb := tw.setter_cb {
 		cb(tw.lerp_fn(tw.from, tw.to, eased_time))
 	} else if _t := tw.target {
-		_t = tw.lerp_fn(tw.from, tw.to, eased_time)
+		unsafe {
+			*_t = tw.lerp_fn(tw.from, tw.to, eased_time)
+		}
 	}
 
 	if time >= 1.0 {

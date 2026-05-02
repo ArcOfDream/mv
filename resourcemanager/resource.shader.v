@@ -1,7 +1,7 @@
 module resourcemanager
 
 import raylib as rl
-import rres
+import mv.lib.rres
 
 pub struct ShaderResource {
 pub:
@@ -13,60 +13,57 @@ fn (sr ShaderResource) unload() {
 }
 
 pub fn (mut rm ResourceManager[ShaderResource]) load(name string, vs string, fs string) ?Handle[ShaderResource] {
-	if h := rm.get_handle(name) {
-		return h
-	}
-
-	s := rl.load_shader(vs, fs)
-	if s.id <= 0 {
-		return none
-	}
-
-	return rm.add(name, ShaderResource{ shd: s })
+	return rm.acquire_or_insert(name, fn [vs, fs] () ?ShaderResource {
+		s := rl.load_shader(vs, fs)
+		if s.id <= 0 {
+			return none
+		}
+		return ShaderResource{
+			shd: s
+		}
+	})
 }
 
 pub fn (mut rm ResourceManager[ShaderResource]) load_from_source(name string, vs string, fs string) ?Handle[ShaderResource] {
-	if h := rm.get_handle(name) {
-		return h
-	}
-
-	shd := rl.load_shader_from_memory(vs, fs)
-	if shd.id <= 0 {
-		return none
-	}
-
-	return rm.add(name, ShaderResource{ shd: shd })
+	return rm.acquire_or_insert(name, fn [vs, fs] () ?ShaderResource {
+		shd := rl.load_shader_from_memory(vs, fs)
+		if shd.id <= 0 {
+			return none
+		}
+		return ShaderResource{
+			shd: shd
+		}
+	})
 }
 
 // load_from_rres loads two TEXT chunks (vs_rres_name for the vertex shader,
 // fs_rres_name for the fragment shader) and compiles them into a Shader.
-// Pass '' for either name to use raylib's default shader for that stage.
+// pass '' for either name to use raylib's default shader for that stage.
 pub fn (mut rm ResourceManager[ShaderResource]) load_from_rres(loader &rres.RresLoader, name string, vs_rres_name string, fs_rres_name string) ?Handle[ShaderResource] {
-	if h := rm.get_handle(name) {
-		return h
-	}
+	return rm.acquire_or_insert(name, fn [loader, vs_rres_name, fs_rres_name] () ?ShaderResource {
+		mut vs_src := vs_rres_name
+		mut fs_src := fs_rres_name
 
-	mut vs_src := vs_rres_name
-	mut fs_src := fs_rres_name
-
-	if vs_src != '' {
-		if chunk := loader.load_single(vs_rres_name) {
-			vs_src = rres.load_text_from_resource(chunk)
-			chunk.unload()
+		if vs_src != '' {
+			if chunk := loader.load_single(vs_rres_name) {
+				vs_src = rres.load_text_from_resource(chunk)
+				chunk.unload()
+			}
 		}
-	}
 
-	if fs_src != '' {
-		if chunk := loader.load_single(fs_rres_name) {
-			fs_src = rres.load_text_from_resource(chunk)
-			chunk.unload()
+		if fs_src != '' {
+			if chunk := loader.load_single(fs_rres_name) {
+				fs_src = rres.load_text_from_resource(chunk)
+				chunk.unload()
+			}
 		}
-	}
 
-	shd := rl.load_shader_from_memory(vs_src, fs_src)
-	if shd.id <= 0 {
-		return none
-	}
-
-	return rm.add(name, ShaderResource{ shd: shd })
+		shd := rl.load_shader_from_memory(vs_src, fs_src)
+		if shd.id <= 0 {
+			return none
+		}
+		return ShaderResource{
+			shd: shd
+		}
+	})
 }
